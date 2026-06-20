@@ -14,13 +14,8 @@ export const studioCommand = defineCommand({
     },
     port: {
       type: 'string',
-      description: 'Studio UI port',
+      description: 'Studio port (UI + WebSocket)',
       default: '4000',
-    },
-    wsPort: {
-      type: 'string',
-      description: 'WebSocket server port',
-      default: '4001',
     },
     frameworkPort: {
       type: 'string',
@@ -44,25 +39,19 @@ export const studioCommand = defineCommand({
     }
 
     const root = path.resolve(args.root);
-    const wsPort = parseInt(args.wsPort, 10);
+    const wsPort = parseInt(args.port, 10);
     const frameworkPort = parseInt(args.frameworkPort, 10);
 
     console.log(`[studio] Starting Rangka Studio...`);
     console.log(`[studio] Project root: ${root}`);
 
-    const server = await createStudioServer({
+    await createStudioServer({
       wsPort,
       projectRoot: root,
       frameworkPort,
     });
 
-    const shutdown = async () => {
-      console.log(`\n[studio] Shutting down...`);
-      await server.shutdown();
-      process.exit(0);
-    };
-
-    process.on('SIGINT', shutdown);
-    process.on('SIGTERM', shutdown);
+    process.on('SIGINT', () => process.exit(0));
+    process.on('SIGTERM', () => process.exit(0));
   },
 });

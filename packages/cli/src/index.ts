@@ -1,4 +1,5 @@
-#!/usr/bin/env tsx
+#!/usr/bin/env node
+import 'tsx/esm';
 import { defineCommand, runMain } from 'citty';
 import { buildCommand } from './commands/build.js';
 import { startCommand } from './commands/start.js';

@@ -3,6 +3,10 @@
   "version": "0.0.1",
   "license": "AGPL-3.0-only",
   "type": "module",
+  "files": [
+    "dist",
+    "ui"
+  ],
   "exports": {
     ".": {
       "import": "./dist/index.js",
@@ -16,6 +20,7 @@
   "scripts": {
     "prebuild": "tsx scripts/bundle-docs.ts",
     "build": "tsc --build",
+    "prepack": "rm -rf ui && cp -r ../studio-local/dist ui",
     "dev": "tsx src/dev.ts",
     "test": "vitest run --passWithNoTests",
     "lint": "eslint src/"
@@ -29,6 +34,7 @@
     "@rangka/shared": "workspace:*",
     "@sinclair/typebox": "^0.34.0",
     "chokidar": "^4.0.3",
+    "fastify": "^5.3.3",
     "kysely": "^0.29.2",
     "ws": "^8.18.0"
   },

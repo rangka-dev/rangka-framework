@@ -94,7 +94,7 @@ interface StudioContextValue {
 
 const StudioContext = createContext<StudioContextValue | null>(null);
 
-const WS_URL = `ws://${window.location.hostname}:4001`;
+const WS_URL = `ws://${window.location.host}/ws`;
 
 export function StudioProvider({ children }: { children: ReactNode }) {
   const connRef = useRef<StudioConnection | null>(null);

@@ -1,6 +1,9 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import * as http from 'node:http';
+import Fastify from 'fastify';
+import fastifyStatic from '@fastify/static';
 import type { ServerMessage, ClientMessage, FileNode } from './protocol.js';
 import { RuntimeManager } from './runtime-manager.js';
 import { FileWatcher } from './file-watcher.js';
@@ -15,6 +18,8 @@ export interface StudioServerConfig {
 
 export class StudioServer {
   private wss: WebSocketServer | null = null;
+  private httpServer: http.Server | null = null;
+  private uiApp: ReturnType<typeof Fastify> | null = null;
   private runtime: RuntimeManager;
   private fileWatcher: FileWatcher | null = null;
   private agentEngine: AgentEngine | null = null;
@@ -32,13 +37,32 @@ export class StudioServer {
   }
 
   async start(): Promise<void> {
-    this.wss = new WebSocketServer({ port: this.config.wsPort });
+    const studioDir = this.resolveStudioLocalDir();
+    this.uiApp = Fastify({
+      serverFactory: (handler) => {
+        this.httpServer = http.createServer(handler);
+        return this.httpServer;
+      },
+    });
+
+    await this.uiApp.register(fastifyStatic, {
+      root: studioDir,
+      wildcard: false,
+      prefix: '/',
+    });
+
+    this.uiApp.setNotFoundHandler((_req: unknown, reply: { sendFile: (f: string) => void }) => {
+      return reply.sendFile('index.html');
+    });
+
+    this.wss = new WebSocketServer({ server: this.httpServer!, path: '/ws' });
 
     this.wss.on('connection', (ws) => {
       this.handleConnection(ws);
     });
 
-    console.log(`[studio] WebSocket listening on ws://localhost:${this.config.wsPort}`);
+    await this.uiApp.listen({ port: this.config.wsPort, host: '0.0.0.0' });
+    console.log(`[studio] Studio UI + WebSocket on http://localhost:${this.config.wsPort}`);
 
     try {
       await this.runtime.boot();
@@ -530,6 +554,9 @@ export class StudioServer {
     if (this.fileWatcher) {
       await this.fileWatcher.stop();
     }
+    if (this.uiApp) {
+      await this.uiApp.close();
+    }
     if (this.wss) {
       for (const client of this.wss.clients) {
         client.close();
@@ -538,6 +565,25 @@ export class StudioServer {
     }
     await this.runtime.shutdown();
     console.log(`[studio] Shut down.`);
+  }
+
+  private resolveStudioLocalDir(): string {
+    // Published: ui/ is bundled into the package via prepack
+    const bundledDir = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../ui');
+    if (fs.existsSync(path.join(bundledDir, 'index.html'))) {
+      return fs.realpathSync(bundledDir);
+    }
+
+    // Monorepo: resolve relative to this package
+    const monorepoCandidate = path.resolve(
+      path.dirname(new URL(import.meta.url).pathname),
+      '../../studio-local/dist',
+    );
+    if (fs.existsSync(path.join(monorepoCandidate, 'index.html'))) {
+      return fs.realpathSync(monorepoCandidate);
+    }
+
+    throw new Error('Missing studio-local build. Run `pnpm --filter studio-local build` first.');
   }
 }
 

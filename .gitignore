@@ -26,3 +26,7 @@ docs/.vitepress/dist
 
 # Generated files
 packages/studio-core/src/generated/
+packages/studio-core/ui/
+
+# Local publish testing
+.local-registry/

@@ -35,7 +35,7 @@ function packageJson(name: string) {
         private: true,
         type: 'module',
         scripts: {
-          dev: 'rangka start',
+          start: 'rangka start',
           studio: 'rangka studio',
           build: 'rangka build',
         },
@@ -133,10 +133,7 @@ export default defineModel({
   naming: 'title',
   fields: {
     title: field.string({ required: true }),
-    status: field.select({
-      options: ['open', 'in_progress', 'done'],
-      default: 'open',
-    }),
+    status: field.enum(['open', 'in_progress', 'done'], { default: 'open' }),
     due_date: field.date(),
   },
 });
