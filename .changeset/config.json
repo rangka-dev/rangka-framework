@@ -17,5 +17,5 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["rangka-playground", "rangka-integration-tests", "studio-local"]
+  "ignore": ["rangka-integration-tests", "studio-local"]
 }
