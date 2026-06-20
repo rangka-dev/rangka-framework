@@ -1,5 +1,14 @@
 # @rangka/studio-core
 
+## 0.1.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @rangka/shared@0.1.1
+  - @rangka/core@0.1.1
+  - @rangka/client@0.1.1
+
 ## 0.1.0
 
 ### Minor Changes
