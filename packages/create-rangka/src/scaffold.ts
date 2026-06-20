@@ -40,11 +40,11 @@ function packageJson(name: string) {
           build: 'rangka build',
         },
         dependencies: {
-          rangka: '^0.0.1',
-          '@rangka/cli': '^0.0.1',
+          rangka: '^0.1.0',
+          '@rangka/cli': '^0.1.0',
         },
         devDependencies: {
-          '@rangka/studio-core': '^0.0.1',
+          '@rangka/studio-core': '^0.1.0',
           typescript: '^5.8.0',
         },
       },

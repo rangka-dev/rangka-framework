@@ -2,6 +2,15 @@
 import * as p from '@clack/prompts';
 import { scaffold } from './scaffold.js';
 
+function detectPackageManager(): string {
+  const ua = process.env.npm_config_user_agent;
+  if (!ua) return 'npm';
+  if (ua.startsWith('pnpm')) return 'pnpm';
+  if (ua.startsWith('yarn')) return 'yarn';
+  if (ua.startsWith('bun')) return 'bun';
+  return 'npm';
+}
+
 async function main() {
   const dirArg = process.argv[2];
 
@@ -24,10 +33,14 @@ async function main() {
   );
 
   const targetDir = dirArg || options.name;
+  const pm = detectPackageManager();
+  const run = pm === 'npm' ? 'npm run' : pm;
 
   await scaffold({ name: options.name, dir: targetDir });
 
-  p.outro(`Done! Next steps:\n\n  cd ${targetDir}\n  pnpm install\n  pnpm dev`);
+  p.outro(
+    `Done! Next steps:\n\n  cd ${targetDir}\n  ${pm} install\n  ${pm} start          # start the application\n  ${run} studio     # open the AI studio`,
+  );
 }
 
 main().catch((err) => {
