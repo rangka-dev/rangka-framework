@@ -132,10 +132,6 @@ export function getHandler(ctx: HandlerContext) {
     try {
       const { id } = request.params as { id: string };
 
-      if (!isValidUuid(id)) {
-        throw new BadRequestError('INVALID_ID', `Invalid record ID: ${id}`);
-      }
-
       const parser = createParserForModel(ctx);
       const parsed = parser.parse(request.query as Record<string, unknown>);
 
@@ -221,10 +217,6 @@ export function updateHandler(ctx: HandlerContext) {
   return async (request: FastifyRequest, reply: FastifyReply) => {
     const { id } = request.params as { id: string };
 
-    if (!isValidUuid(id)) {
-      throw new BadRequestError('INVALID_ID', `Invalid record ID: ${id}`);
-    }
-
     const body = parseRequestBody(request);
 
     // Validate field rules
@@ -262,10 +254,6 @@ export function deleteHandler(ctx: HandlerContext) {
   return async (request: FastifyRequest, reply: FastifyReply) => {
     const { id } = request.params as { id: string };
 
-    if (!isValidUuid(id)) {
-      throw new BadRequestError('INVALID_ID', `Invalid record ID: ${id}`);
-    }
-
     const authContext = getAuthContext(request);
     const models = createModelAccess({ ...ctx.modelAccessOpts, auth: authContext });
 
@@ -283,9 +271,4 @@ export function deleteHandler(ctx: HandlerContext) {
 
     return reply.status(204).send();
   };
-}
-
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-function isValidUuid(value: string): boolean {
-  return UUID_RE.test(value);
 }
