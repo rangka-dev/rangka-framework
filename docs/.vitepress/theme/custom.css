@@ -1,0 +1,32 @@
+:root {
+  --vp-c-brand-1: #4761d6;
+  --vp-c-brand-2: #3a52c5;
+  --vp-c-brand-3: #2d43b4;
+  --vp-c-brand-soft: #4761d612;
+
+  --vp-c-tip-1: #4761d6;
+  --vp-c-tip-2: #4761d612;
+  --vp-c-tip-3: #4761d608;
+
+  --vp-c-success-1: #297a7a;
+  --vp-c-success-2: #297a7a20;
+  --vp-c-success-3: #297a7a10;
+
+  --vp-c-warning-1: #e8724a;
+  --vp-c-warning-2: #e8724a20;
+  --vp-c-warning-3: #e8724a10;
+
+  --vp-c-danger-1: #d42c27;
+  --vp-c-danger-2: #d42c2720;
+  --vp-c-danger-3: #d42c2710;
+
+  --vp-font-family-base: 'Inter', sans-serif;
+  --vp-font-family-mono: 'DM Mono', ui-monospace, monospace;
+}
+
+.dark {
+  --vp-c-brand-1: #6b80e0;
+  --vp-c-brand-2: #4761d6;
+  --vp-c-brand-3: #3a52c5;
+  --vp-c-brand-soft: #4761d620;
+}

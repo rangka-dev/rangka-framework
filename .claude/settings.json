@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./**/dist/**)",
+      "Read(./**/.turbo/**)",
+      "Read(./**/coverage/**)",
+      "Read(./**/*.tsbuildinfo)",
+      "Read(./packages/studio-core/src/generated/**)",
+      "Read(./docs/.vitepress/cache/**)",
+      "Read(./docs/.vitepress/dist/**)"
+    ]
+  }
+}

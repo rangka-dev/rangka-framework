@@ -1,0 +1,11 @@
+{
+  "name": "rangka-integration-tests",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@rangka/core": "workspace:*",
+    "@rangka/shared": "workspace:*",
+    "kysely": "^0.29.2",
+    "pg": "^8.14.1"
+  }
+}

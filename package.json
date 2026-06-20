@@ -1,0 +1,56 @@
+{
+  "name": "rangka-framework",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "packageManager": "pnpm@9.15.4",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "test": "turbo run test",
+    "test:coverage": "pnpm --filter @rangka/core exec vitest run --coverage",
+    "test:integration": "vitest run --config tests/vitest.config.ts",
+    "lint": "turbo run lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "playground": "tsx packages/cli/src/index.ts start --root ./dev",
+    "playground:build": "tsx packages/cli/src/index.ts build --root ./dev",
+    "studio": "pnpm --filter @rangka/studio-core --filter studio-local -r --parallel dev",
+    "dev:client": "pnpm --filter @rangka/client dev",
+    "dev:studio-local": "pnpm --filter studio-local dev",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs",
+    "prepare": "husky"
+  },
+  "dependencies": {
+    "@rangka/cli": "workspace:*"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,css,html}": [
+      "prettier --write"
+    ]
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@vitest/coverage-v8": "^4.1.8",
+    "eslint": "^10.4.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.7",
+    "prettier": "^3.8.4",
+    "tsx": "^4.19.0",
+    "turbo": "^2.9.16",
+    "typescript": "^5.8.0",
+    "typescript-eslint": "^8.61.0",
+    "vite": "^6.3.0",
+    "vitepress": "^1.6.4",
+    "vitepress-plugin-llms": "^1.13.1",
+    "vitest": "^4.1.8"
+  }
+}

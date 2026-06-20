@@ -1,0 +1,30 @@
+{
+  "name": "rangka",
+  "version": "0.0.1",
+  "description": "Rangka Framework — declarative ERP framework for TypeScript",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "dev": "tsc --build --watch"
+  },
+  "dependencies": {
+    "@rangka/core": "workspace:*",
+    "@rangka/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.0"
+  },
+  "license": "MIT",
+  "keywords": [
+    "erp",
+    "framework",
+    "typescript",
+    "declarative"
+  ]
+}

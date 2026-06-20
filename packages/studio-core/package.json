@@ -1,0 +1,40 @@
+{
+  "name": "@rangka/studio-core",
+  "version": "0.0.1",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./protocol": {
+      "import": "./dist/protocol.js",
+      "types": "./dist/protocol.d.ts"
+    }
+  },
+  "scripts": {
+    "prebuild": "tsx scripts/bundle-docs.ts",
+    "build": "tsc --build",
+    "dev": "tsx src/dev.ts",
+    "test": "vitest run --passWithNoTests",
+    "lint": "eslint src/"
+  },
+  "dependencies": {
+    "@earendil-works/pi-ai": "^0.74.0",
+    "@earendil-works/pi-coding-agent": "^0.74.0",
+    "@fastify/static": "^8.3.0",
+    "@rangka/client": "workspace:*",
+    "@rangka/core": "workspace:*",
+    "@rangka/shared": "workspace:*",
+    "@sinclair/typebox": "^0.34.0",
+    "chokidar": "^4.0.3",
+    "kysely": "^0.29.2",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.18.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.0"
+  }
+}

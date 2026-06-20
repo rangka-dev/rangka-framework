@@ -1,0 +1,28 @@
+node_modules/
+dist/
+.turbo/
+coverage/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+
+# Dev playground
+dev/
+
+# VitePress
+docs/.vitepress/cache
+docs/.vitepress/dist
+
+# Agent configs
+.agents/
+
+# Claude Code (commit settings/skills, ignore local overrides)
+.claude/settings.local.json
+.claude/projects/
+
+# Local notes (not shared)
+.local/
+
+# Generated files
+packages/studio-core/src/generated/

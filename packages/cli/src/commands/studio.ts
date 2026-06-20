@@ -1,0 +1,68 @@
+import { defineCommand } from 'citty';
+import * as path from 'node:path';
+
+export const studioCommand = defineCommand({
+  meta: {
+    name: 'studio',
+    description: 'Start Rangka Studio development environment',
+  },
+  args: {
+    root: {
+      type: 'string',
+      description: 'Project root directory',
+      default: '.',
+    },
+    port: {
+      type: 'string',
+      description: 'Studio UI port',
+      default: '4000',
+    },
+    wsPort: {
+      type: 'string',
+      description: 'WebSocket server port',
+      default: '4001',
+    },
+    frameworkPort: {
+      type: 'string',
+      description: 'Framework preview port',
+      default: '3000',
+    },
+  },
+  async run({ args }) {
+    let createStudioServer: typeof import('@rangka/studio-core').createStudioServer;
+
+    try {
+      const studio = await import('@rangka/studio-core');
+      createStudioServer = studio.createStudioServer;
+    } catch {
+      console.error(
+        `\n  @rangka/studio-core is not installed.\n` +
+          `  Install it as a dev dependency to use the studio command:\n\n` +
+          `    pnpm add -D @rangka/studio-core\n`,
+      );
+      process.exit(1);
+    }
+
+    const root = path.resolve(args.root);
+    const wsPort = parseInt(args.wsPort, 10);
+    const frameworkPort = parseInt(args.frameworkPort, 10);
+
+    console.log(`[studio] Starting Rangka Studio...`);
+    console.log(`[studio] Project root: ${root}`);
+
+    const server = await createStudioServer({
+      wsPort,
+      projectRoot: root,
+      frameworkPort,
+    });
+
+    const shutdown = async () => {
+      console.log(`\n[studio] Shutting down...`);
+      await server.shutdown();
+      process.exit(0);
+    };
+
+    process.on('SIGINT', shutdown);
+    process.on('SIGTERM', shutdown);
+  },
+});

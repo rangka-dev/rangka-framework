@@ -1,0 +1,35 @@
+{
+  "name": "@rangka/core",
+  "version": "0.0.1",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "dev": "tsc --build --watch",
+    "test": "vitest run",
+    "lint": "eslint src/"
+  },
+  "dependencies": {
+    "@fastify/swagger": "^9.7.0",
+    "@fastify/swagger-ui": "^6.0.0",
+    "@rangka/shared": "workspace:*",
+    "fastify": "^5.3.3",
+    "handlebars": "^4.7.8",
+    "kysely": "^0.29.2",
+    "pg": "^8.13.1",
+    "qs": "^6.15.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/pg": "^8.11.6",
+    "@types/qs": "^6.15.1",
+    "typescript": "^5.8.0",
+    "vitest": "^4.1.8"
+  }
+}
