@@ -1,6 +1,6 @@
 {
   "name": "create-rangka",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Scaffold a new Rangka Framework project",
   "type": "module",
   "bin": {
