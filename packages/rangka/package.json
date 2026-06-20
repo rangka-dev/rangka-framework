@@ -1,6 +1,6 @@
 {
   "name": "rangka",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Rangka Framework — declarative ERP framework for TypeScript",
   "type": "module",
   "exports": {

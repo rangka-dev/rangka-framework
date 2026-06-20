@@ -1,5 +1,11 @@
 # create-rangka
 
+## 0.1.1
+
+### Patch Changes
+
+- [`80ff4f6`](https://github.com/rangka-dev/rangka-framework/commit/80ff4f6d718ad7f7ff15d7fe27357932e92ac99e) Thanks [@irfnmzk](https://github.com/irfnmzk)! - Detect user's package manager and display appropriate commands in scaffold output. Update dependency versions to ^0.1.0.
+
 ## 0.1.0
 
 ### Minor Changes
