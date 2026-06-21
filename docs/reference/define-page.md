@@ -21,7 +21,12 @@ export default definePage({
   label: 'Sales Orders',
   type: 'collection',
   actions: [
-    { type: 'button', label: 'New Order', icon: 'plus', action: 'navigate:/sales/orders/new' },
+    {
+      type: 'button',
+      label: 'New Order',
+      icon: 'plus',
+      action: { type: 'navigate', path: '/sales/orders/new' },
+    },
   ],
   body: [
     {
@@ -106,34 +111,39 @@ interface Action {
   label?: string;
   icon?: string;
   variant?: 'primary' | 'secondary' | 'ghost';
-  action?: string;
+  action?: WidgetAction;
   items?: ActionItem[];
 }
 
 interface ActionItem {
   label: string;
-  action: string;
+  action: WidgetAction;
   icon?: string;
 }
 ```
 
 ### Action fields
 
-| Field     | Type         | Description                                   |
-| --------- | ------------ | --------------------------------------------- |
-| `type`    | enum         | `button`, `menu`, `toggle-group`, `separator` |
-| `label`   | string       | Button or menu label                          |
-| `icon`    | string       | Lucide icon identifier                        |
-| `variant` | enum         | Button style. Default: `primary`.             |
-| `action`  | string       | Action string (see below)                     |
-| `items`   | ActionItem[] | Menu items (for `menu` type)                  |
+| Field     | Type         | Description                                        |
+| --------- | ------------ | -------------------------------------------------- |
+| `type`    | enum         | `button`, `menu`, `toggle-group`, `separator`      |
+| `label`   | string       | Button or menu label                               |
+| `icon`    | string       | Lucide icon identifier                             |
+| `variant` | enum         | Button style. Default: `primary`.                  |
+| `action`  | WidgetAction | Structured action (same format as widget triggers) |
+| `items`   | ActionItem[] | Menu items (for `menu` type)                       |
 
-### Action strings
+### Examples
 
-| Prefix           | Behavior                              |
-| ---------------- | ------------------------------------- |
-| `navigate:/path` | Navigate to a route                   |
-| (no prefix)      | Dispatches as a `rangka:action` event |
+```typescript
+// Navigate to a page
+{ type: 'button', label: 'New Order', icon: 'plus', action: { type: 'navigate', path: '/sales/orders/new' } }
+
+// Call a service
+{ type: 'button', label: 'Export', variant: 'secondary', action: { type: 'service', name: 'sales.export' } }
+```
+
+Page actions use the same `WidgetAction` format as widget triggers. See [Actions concept](/concepts/actions) for all available action types.
 
 ## Body
 

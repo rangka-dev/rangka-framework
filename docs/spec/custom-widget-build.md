@@ -478,7 +478,7 @@ export async function buildWidgets(root: string): Promise<BuildResult> {
 
 The agent's typical flow for creating a custom widget:
 
-1. Call `lookup_reference` with topic `define-widget`
+1. Call `read_doc('reference/define-widget')` to get the full widget API reference
 2. Write the widget `.tsx` file to `modules/<mod>/widgets/`
 3. Call `build_widgets` to compile it
 4. Call `apply_changes` to rescan definitions (registers the widget metadata)

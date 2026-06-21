@@ -21,8 +21,8 @@ definePage({
   label: 'Sales Orders',
   type: 'collection',
   actions: [
-    { type: 'button', label: 'New Order', icon: 'plus', action: 'navigate:/sales/orders/new' },
-    { type: 'button', label: 'Export', variant: 'secondary', action: 'export' },
+    { type: 'button', label: 'New Order', icon: 'plus', action: { type: 'navigate', path: '/sales/orders/new' } },
+    { type: 'button', label: 'Export', variant: 'secondary', action: { type: 'service', name: 'sales.export' } },
   ],
   body: [...],
 });
@@ -30,12 +30,33 @@ definePage({
 
 Action types: `button`, `menu`, `toggle-group`, `separator`.
 
-Action string prefixes:
+Page actions use the same `WidgetAction` format as widget triggers. Not all action types are available at page level since some require widget context (form, record, data source).
 
-| Prefix           | Behavior                              |
-| ---------------- | ------------------------------------- |
-| `navigate:/path` | Navigate to a route                   |
-| (no prefix)      | Dispatches as a `rangka:action` event |
+### Context availability
+
+| Action          | Widget | Page | Requires                                        |
+| --------------- | ------ | ---- | ----------------------------------------------- |
+| `navigate`      | Yes    | Yes  | —                                               |
+| `service`       | Yes    | Yes  | Widget passes record; page passes params only   |
+| `model.create`  | Yes    | Yes  | —                                               |
+| `sequence`      | Yes    | Yes  | Only if inner actions are page-compatible       |
+| `setValue`      | Yes    | No   | Record or state context                         |
+| `clearValue`    | Yes    | No   | Record or state context                         |
+| `setValues`     | Yes    | No   | Record or state context                         |
+| `model.update`  | Yes    | No   | Record context (defaults model/id from context) |
+| `model.delete`  | Yes    | No   | Record context (defaults model/id from context) |
+| `model.fetch`   | Yes    | No   | State store (`into` field)                      |
+| `model.list`    | Yes    | No   | State store (`into` field)                      |
+| `refreshSource` | Yes    | No   | Data source context                             |
+| `fetchOptions`  | Yes    | No   | Widget context                                  |
+| `validate`      | Yes    | No   | Form context                                    |
+| `focus`         | Yes    | No   | Form context                                    |
+| `form.submit`   | Yes    | No   | Form context                                    |
+| `form.reset`    | Yes    | No   | Form context                                    |
+| `addRow`        | Yes    | No   | Child table context                             |
+| `removeRow`     | Yes    | No   | Child table context                             |
+| `duplicateRow`  | Yes    | No   | Child table context                             |
+| `conditional`   | Yes    | No   | Context for condition evaluation                |
 
 ## Widget-level actions
 
@@ -185,7 +206,12 @@ definePage({
   label: 'Sales Orders',
   type: 'collection',
   actions: [
-    { type: 'button', label: 'New Order', icon: 'plus', action: 'navigate:/sales/orders/new' },
+    {
+      type: 'button',
+      label: 'New Order',
+      icon: 'plus',
+      action: { type: 'navigate', path: '/sales/orders/new' },
+    },
   ],
   body: [
     {

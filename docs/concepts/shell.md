@@ -46,14 +46,24 @@ Actions are declared per page in `definePage()`:
 
 ```typescript
 actions: [
-  { type: 'button', label: 'Export', variant: 'secondary', action: 'export' },
-  { type: 'button', label: 'New Order', icon: 'plus', action: 'navigate:/sales/orders/new' },
+  {
+    type: 'button',
+    label: 'Export',
+    variant: 'secondary',
+    action: { type: 'service', name: 'sales.export' },
+  },
+  {
+    type: 'button',
+    label: 'New Order',
+    icon: 'plus',
+    action: { type: 'navigate', path: '/sales/orders/new' },
+  },
   {
     type: 'menu',
     label: 'More',
     items: [
-      { label: 'Archive', action: 'archive' },
-      { label: 'Duplicate', action: 'duplicate' },
+      { label: 'Archive', action: { type: 'service', name: 'sales.archive' } },
+      { label: 'Duplicate', action: { type: 'service', name: 'sales.duplicate' } },
     ],
   },
 ];

@@ -657,7 +657,12 @@ describe('Page Builder', () => {
 
   it('page() with actions', () => {
     const actions = [
-      { type: 'button' as const, label: 'Create', action: 'create', variant: 'primary' as const },
+      {
+        type: 'button' as const,
+        label: 'Create',
+        action: { type: 'service' as const, name: 'create' },
+        variant: 'primary' as const,
+      },
     ];
     const def = page('orders', 'Orders', 'collection').actions(actions).toJSON();
     expect(def.actions).toEqual(actions);
@@ -697,7 +702,9 @@ describe('Page Builder', () => {
   it('page() chaining all methods', () => {
     const def = page('orders', 'Orders', 'collection')
       .path('/sales/orders')
-      .actions([{ type: 'button', label: 'New', action: 'create' }])
+      .actions([
+        { type: 'button', label: 'New', action: { type: 'navigate', path: '/orders/new' } },
+      ])
       .body([$group('column').children([$input('customer'), $input('date')])])
       .toJSON();
 

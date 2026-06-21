@@ -32,7 +32,7 @@ import { useModule } from '../context/ModuleContext.js';
 import { useBootContext } from '../boot/BootProvider.js';
 import { useRouter, useRouterState } from '@tanstack/react-router';
 import { useBreadcrumbs } from './useBreadcrumbs.js';
-import type { NavigationTree } from '@rangka/shared';
+import type { NavigationTree, WidgetAction } from '@rangka/shared';
 
 function ShellLayoutInner({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -69,9 +69,16 @@ function ShellLayoutInner({ children }: { children: ReactNode }) {
 
   const crumbs = useBreadcrumbs(currentPath, navigation, pages);
 
-  const handleAction = useCallback((action: string) => {
-    document.dispatchEvent(new CustomEvent('rangka:action', { detail: { action }, bubbles: true }));
-  }, []);
+  const handleAction = useCallback(
+    (action: WidgetAction) => {
+      switch (action.type) {
+        case 'navigate':
+          handleNavigate(action.path);
+          break;
+      }
+    },
+    [handleNavigate],
+  );
 
   const headerActions = currentPage?.actions?.length ? (
     <HeaderActions actions={currentPage.actions} onAction={handleAction} />

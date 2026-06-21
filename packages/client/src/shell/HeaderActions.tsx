@@ -1,10 +1,10 @@
-import type { Action } from '@rangka/shared';
+import type { Action, WidgetAction } from '@rangka/shared';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/Icon';
 
 interface HeaderActionsProps {
   actions: Action[];
-  onAction?: (action: string) => void;
+  onAction?: (action: WidgetAction) => void;
 }
 
 export function HeaderActions({ actions, onAction }: HeaderActionsProps) {

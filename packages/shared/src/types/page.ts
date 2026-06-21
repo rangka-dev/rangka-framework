@@ -1,8 +1,8 @@
-import type { WidgetNode } from './widget.js';
+import type { WidgetAction, WidgetNode } from './widget.js';
 
 export interface ActionItem {
   label: string;
-  action: string;
+  action: WidgetAction;
   icon?: string;
 }
 
@@ -11,7 +11,7 @@ export interface Action {
   label?: string;
   icon?: string;
   variant?: 'primary' | 'secondary' | 'ghost';
-  action?: string;
+  action?: WidgetAction;
   items?: ActionItem[];
 }
 

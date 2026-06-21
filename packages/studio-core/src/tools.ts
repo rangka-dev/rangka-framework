@@ -3,7 +3,7 @@ import { unlink } from 'node:fs/promises';
 import { resolve, relative } from 'node:path';
 import type { RuntimeManager } from './runtime-manager.js';
 import { buildWidgets } from '@rangka/cli/build';
-import { REFERENCE_DOCS } from './generated/reference-docs.js';
+import { DOCS_INDEX, DOCS_CONTENT } from './generated/docs-bundle.js';
 
 export interface ToolDefinition {
   name: string;
@@ -555,32 +555,57 @@ export function createStudioTools(runtime: RuntimeManager, projectRoot?: string)
       },
     },
     {
-      name: 'lookup_reference',
-      label: 'Lookup Reference',
-      description: `Look up the full API reference for a framework primitive. Call this before generating code for any primitive you haven't looked up in this conversation. Available topics: ${Object.keys(REFERENCE_DOCS).join(', ')}`,
+      name: 'list_docs',
+      label: 'List Docs',
+      description:
+        'List available framework documentation. Returns titles and paths. Use read_doc to get the full content. Categories: concepts, guides, reference, contributing, spec, ui.',
       parameters: Type.Object({
-        topic: Type.String({
+        category: Type.Optional(
+          Type.String({
+            description:
+              'Filter by category (concepts, guides, reference, contributing, spec, ui). Omit to list all.',
+          }),
+        ),
+      }),
+      execute: async (_toolCallId: string, params: { category?: string }) => {
+        const entries = params.category
+          ? DOCS_INDEX.filter((d) => d.category === params.category)
+          : DOCS_INDEX;
+        const listing = entries.map((d) => `${d.path} — ${d.title}`).join('\n');
+        return {
+          content: [{ type: 'text' as const, text: listing || 'No docs found for that category.' }],
+          details: { count: entries.length, category: params.category ?? 'all' },
+        };
+      },
+    },
+    {
+      name: 'read_doc',
+      label: 'Read Doc',
+      description:
+        'Read the full content of a framework documentation page. Call list_docs first to discover available paths.',
+      parameters: Type.Object({
+        path: Type.String({
           description:
-            'Reference topic to look up (e.g., define-model, define-page, built-in-widgets)',
+            'Documentation path (e.g., "concepts/models", "reference/define-model", "guides/custom-widgets")',
         }),
       }),
-      execute: async (_toolCallId: string, params: { topic: string }) => {
-        const content = REFERENCE_DOCS[params.topic];
-        if (!content) {
-          const available = Object.keys(REFERENCE_DOCS).join(', ');
+      execute: async (_toolCallId: string, params: { path: string }) => {
+        const doc = DOCS_CONTENT[params.path];
+        if (!doc) {
+          const suggestions = DOCS_INDEX.filter((d) => d.path.includes(params.path))
+            .map((d) => d.path)
+            .slice(0, 5);
+          const hint = suggestions.length
+            ? ` Did you mean: ${suggestions.join(', ')}?`
+            : ' Call list_docs to see available paths.';
           return {
-            content: [
-              {
-                type: 'text' as const,
-                text: `Unknown topic "${params.topic}". Available topics: ${available}`,
-              },
-            ],
+            content: [{ type: 'text' as const, text: `Doc not found: "${params.path}".${hint}` }],
             details: { found: false },
           };
         }
         return {
-          content: [{ type: 'text' as const, text: content }],
-          details: { found: true, topic: params.topic },
+          content: [{ type: 'text' as const, text: doc }],
+          details: { found: true, path: params.path },
         };
       },
     },
