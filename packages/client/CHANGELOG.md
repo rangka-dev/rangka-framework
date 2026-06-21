@@ -1,5 +1,14 @@
 # @rangka/client
 
+## 0.1.3
+
+### Patch Changes
+
+- [`18b7fc8`](https://github.com/rangka-dev/rangka-framework/commit/18b7fc8c619cf4b426d9aa0f11358364cde960ee) Thanks [@irfnmzk](https://github.com/irfnmzk)! - Revert lazy loading for built-in widgets. All built-in widgets are now eagerly registered at boot. Fixes widget loading failures when served by Fastify static.
+
+- Updated dependencies []:
+  - @rangka/shared@0.1.3
+
 ## 0.1.2
 
 ### Patch Changes

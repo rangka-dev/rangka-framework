@@ -1,5 +1,14 @@
 # @rangka/cli
 
+## 0.1.3
+
+### Patch Changes
+
+- Updated dependencies [[`18b7fc8`](https://github.com/rangka-dev/rangka-framework/commit/18b7fc8c619cf4b426d9aa0f11358364cde960ee)]:
+  - @rangka/client@0.1.3
+  - @rangka/shared@0.1.3
+  - @rangka/core@0.1.3
+
 ## 0.1.2
 
 ### Patch Changes
