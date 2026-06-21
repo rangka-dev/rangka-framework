@@ -1,5 +1,12 @@
 # @rangka/core
 
+## 0.1.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @rangka/shared@0.1.3
+
 ## 0.1.2
 
 ### Patch Changes
