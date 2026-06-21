@@ -84,7 +84,6 @@ export default defineConfig({
             { text: 'defineFixture', link: '/reference/define-fixture' },
             { text: 'defineRoles', link: '/reference/define-roles' },
             { text: 'Built-in Widgets', link: '/reference/built-in-widgets' },
-            { text: 'Builder API', link: '/reference/builder-api' },
             { text: 'Data API', link: '/reference/data-api' },
             { text: 'Meta API', link: '/reference/meta-api' },
           ],
