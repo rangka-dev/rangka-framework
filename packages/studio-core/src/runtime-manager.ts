@@ -41,6 +41,7 @@ export class RuntimeManager {
   private hooks: Array<{ model: string }> = [];
   private pendingOperations: Map<string, DdlOperation> = new Map();
   private serverPort: number = 3000;
+  private rangkaStaticRegistered: boolean = false;
 
   constructor(config: RuntimeManagerConfig) {
     this.config = config;
@@ -150,6 +151,7 @@ window.location.replace('${redirect}');
         prefix: '/_rangka/',
         decorateReply: false,
       });
+      this.rangkaStaticRegistered = true;
     }
 
     server.setNotFoundHandler((_req, reply) => {
@@ -173,6 +175,21 @@ window.location.replace('${redirect}');
     }
 
     throw new Error('Missing shell build. Run `pnpm build` in @rangka/client first.');
+  }
+
+  async registerRangkaStatic(): Promise<void> {
+    if (this.rangkaStaticRegistered) return;
+    if (!this.bootResult?.server) return;
+
+    const rangkaDir = path.join(this.config.projectRoot, '.rangka');
+    if (!fs.existsSync(rangkaDir)) return;
+
+    await this.bootResult.server.register(fastifyStatic, {
+      root: rangkaDir,
+      prefix: '/_rangka/',
+      decorateReply: false,
+    });
+    this.rangkaStaticRegistered = true;
   }
 
   getSessionToken(): string | null {

@@ -120,6 +120,7 @@ pnpm tsc --build                   # Type check / compile
 
 ## Rules
 
+- Never commit without explicit user approval. Stage changes and describe what's ready, but wait for the user to say "commit" before running `git commit`.
 - Always use `pnpm` for all package operations
 - After finishing any task: run build, tests, and lint before claiming done
   - `pnpm build` must pass with 0 TS errors

@@ -131,10 +131,10 @@ describe('SlotRenderer', () => {
     expect(container.querySelector('div')).toBeInTheDocument();
   });
 
-  test('renders error placeholder for unknown widget', () => {
+  test('renders loading placeholder for unknown widget', () => {
     const nodes: WidgetNode[] = [{ type: 'nonexistent_widget' }];
     const { container } = render(<SlotRenderer nodes={nodes} />);
-    expect(container.querySelector('[data-widget-error]')).toBeInTheDocument();
+    expect(container.querySelector('[data-widget-loading]')).toBeInTheDocument();
   });
 
   test('button click fires action', async () => {

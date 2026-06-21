@@ -12,6 +12,8 @@ import { flattenContext } from '../context/types.js';
 import { parse, evaluate } from '../expression/index.js';
 import { extractLayoutProps, hasLayoutProps, resolveLayoutClasses } from '../lib/layout-props.js';
 import { useParams } from '../../router/hooks.js';
+import { LazyWidget } from './LazyWidget.js';
+import { WidgetErrorBoundary } from './WidgetErrorBoundary.js';
 import type { FieldMeta } from '../binding/resolver.js';
 import type { WidgetProps } from '../types.js';
 
@@ -64,12 +66,6 @@ export function WidgetRenderer({ node, handlers = {}, fieldMeta, setValue }: Wid
 
   const widgetEntry = getWidget(node.type);
 
-  if (!widgetEntry) {
-    return <div data-widget-error={`Unknown widget: ${node.type}`} />;
-  }
-
-  const Component = widgetEntry.component;
-
   const widgetProps: WidgetProps = {
     props: extractedWidgetProps,
     bind: {
@@ -102,6 +98,12 @@ export function WidgetRenderer({ node, handlers = {}, fieldMeta, setValue }: Wid
     ) : undefined,
   };
 
+  if (!widgetEntry) {
+    return <LazyWidget name={node.type} {...widgetProps} />;
+  }
+
+  const Component = widgetEntry.component;
+
   const dataAttrs: Record<string, string | undefined> = {
     'data-rangka-widget': node.type,
     'data-rangka-id': node.id ?? undefined,
@@ -115,11 +117,17 @@ export function WidgetRenderer({ node, handlers = {}, fieldMeta, setValue }: Wid
   if (node.bind?.model || node.source) {
     rendered = (
       <WidgetContextProvider value={childContext}>
-        <Component {...widgetProps} />
+        <WidgetErrorBoundary name={node.type}>
+          <Component {...widgetProps} />
+        </WidgetErrorBoundary>
       </WidgetContextProvider>
     );
   } else {
-    rendered = <Component {...widgetProps} />;
+    rendered = (
+      <WidgetErrorBoundary name={node.type}>
+        <Component {...widgetProps} />
+      </WidgetErrorBoundary>
+    );
   }
 
   if (layoutClassName) {

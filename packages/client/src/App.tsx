@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { BootProvider, useBootContext } from './boot/BootProvider.js';
 import { BootGate } from './boot/BootGate.js';
 import { ShellProviders } from './context/ShellProviders.js';
@@ -6,9 +6,16 @@ import { QueryProvider } from './data/QueryProvider.js';
 import { createQueryClient } from './data/queryClient.js';
 import { RouterProvider } from './router/RouterProvider.js';
 import { createShellRouter } from './router/createShellRouter.js';
+import { loadCustomWidgets } from './widgets/loader.js';
 
 function AppInner() {
   const { state, handleSessionExpired } = useBootContext();
+
+  useEffect(() => {
+    if (state.status === 'ready') {
+      loadCustomWidgets();
+    }
+  }, [state.status]);
 
   const queryClient = useMemo(
     () => createQueryClient(handleSessionExpired),

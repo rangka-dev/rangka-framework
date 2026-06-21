@@ -2,6 +2,7 @@ import { Type } from '@sinclair/typebox';
 import { unlink } from 'node:fs/promises';
 import { resolve, relative } from 'node:path';
 import type { RuntimeManager } from './runtime-manager.js';
+import { buildWidgets } from '@rangka/cli/build';
 import { REFERENCE_DOCS } from './generated/reference-docs.js';
 
 export interface ToolDefinition {
@@ -511,6 +512,45 @@ export function createStudioTools(runtime: RuntimeManager, projectRoot?: string)
             { type: 'text' as const, text: 'Schema is already up to date. No changes needed.' },
           ],
           details: { status: 'up_to_date', operations: 0 },
+        };
+      },
+    },
+    {
+      name: 'build_widgets',
+      label: 'Build Widgets',
+      description:
+        'Compile custom widgets in modules/*/widgets/ into browser-ready bundles. ' +
+        'Call this after writing or modifying widget files. ' +
+        'Outputs bundles and manifest to .rangka/, then signals preview reload.',
+      parameters: Type.Object({}),
+      execute: async () => {
+        const root = runtime.getProjectRoot();
+        const result = await buildWidgets(root);
+
+        if (!result.success) {
+          return {
+            content: [{ type: 'text' as const, text: `Build failed: ${result.error}` }],
+            details: { success: false, error: result.error },
+          };
+        }
+
+        if (result.count === 0) {
+          return {
+            content: [{ type: 'text' as const, text: 'No custom widgets found.' }],
+            details: { success: true, count: 0 },
+          };
+        }
+
+        await runtime.registerRangkaStatic();
+
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: `Built ${result.count} widget(s). Manifest written to .rangka/manifest.json.`,
+            },
+          ],
+          details: { success: true, count: result.count, reload: true },
         };
       },
     },

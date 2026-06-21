@@ -1,6 +1,8 @@
 # Custom Widget Build and Runtime Loading
 
-> **Status: To be implemented**
+> **Status: Partially implemented**
+>
+> Scanning and JS bundling work. CSS generation and runtime loading in the client are not yet implemented.
 
 ## Overview
 
@@ -18,32 +20,27 @@ This spec covers the full lifecycle: scanning, bundling, serving, loading, and r
 
 ## 1. Project structure
 
-Custom widgets live in a module's `widgets/` directory, organized by type:
+Custom widgets live in a module's `widgets/` directory:
 
 ```
 modules/
   sales/
     widgets/
-      views/
-        pipeline-board.tsx
-        analytics-dashboard.tsx
-      fields/
-        color-picker.tsx
-        rich-editor.tsx
-      cards/
-        deal-summary.tsx
+      pipeline-board.tsx
+      analytics-dashboard.tsx
+      deal-summary.tsx
 ```
 
 Each `.tsx` file exports a single widget definition as the default export.
 
 ## 2. Widget authoring API
 
-Widget authors use `defineWidget()` from the `@rangka/client` package:
+Widget authors use `defineWidget()` and `registerWidget()` from `rangka`:
 
 ```tsx
-import { defineWidget } from '@rangka/client';
+import { defineWidget, registerWidget } from 'rangka';
 
-export default defineWidget({
+const meta = defineWidget({
   name: 'sales.pipeline-board',
   label: 'Pipeline Board',
   category: 'display',
@@ -54,27 +51,17 @@ export default defineWidget({
   binding: 'none',
   triggers: ['dealSelect'],
   container: false,
-  component: ({ props, on }) => {
-    return (
-      <div className="flex flex-col gap-4 bg-card rounded-lg p-4">
-        <h2 className="text-sm font-medium text-muted-foreground">Pipeline</h2>
-        {/* widget implementation */}
-      </div>
-    );
-  },
+});
+
+registerWidget(meta, ({ props, on }) => {
+  return (
+    <div className="flex flex-col gap-4 bg-card rounded-lg p-4">
+      <h2 className="text-sm font-medium text-muted-foreground">Pipeline</h2>
+      {/* widget implementation */}
+    </div>
+  );
 });
 ```
-
-### `defineWidget()` return type
-
-```typescript
-interface WidgetDefinition {
-  meta: WidgetDefinitionMeta;
-  component: ComponentType<WidgetProps>;
-}
-```
-
-The function separates the metadata from the component, producing a shape that the registry can consume directly.
 
 ### Available imports from `@rangka/client`
 
@@ -82,7 +69,6 @@ Widget authors can import framework hooks and utilities:
 
 | Export             | Purpose                                      |
 | ------------------ | -------------------------------------------- |
-| `defineWidget`     | Widget definition factory                    |
 | `usePageState`     | Read/write `$state`                          |
 | `useAction`        | Fire actions programmatically                |
 | `useShell`         | Shell API (toast, confirm, setTitle)         |
@@ -92,25 +78,24 @@ These are externalized at build time. The widget chunk imports them from the hos
 
 ## 3. Build pipeline
 
-### 3.1 Scanning
+### 3.1 Scanning (implemented)
 
-The CLI scans for custom widgets using the existing `scanCustomUI()` function in `packages/cli/src/ui-scanner.ts`.
+The CLI scans for custom widgets using `scanCustomUI()` in `packages/cli/src/ui-scanner.ts`.
 
 Discovery rules:
 
-- Scan `modules/*/widgets/views/`, `modules/*/widgets/fields/`, `modules/*/widgets/cards/`
+- Scan `modules/*/widgets/`
 - Include `.tsx` and `.ts` files
-- Registry key derived from module name + file basename: `sales.pipeline-board`
-- Type derived from parent directory: `views/` → view, `fields/` → field, `cards/` → card
+- Registry key derived from module name + file basename in kebab-case: `sales.pipeline-board`
 
-### 3.2 JS bundling (esbuild)
+### 3.2 JS bundling (implemented)
 
 Each widget is bundled independently with esbuild:
 
 ```typescript
 await esbuild.build({
   entryPoints: [component.filePath],
-  outfile: path.join(outDir, typeDir, `${filename}.js`),
+  outfile: path.join(outDir, 'widgets', `${filename}.js`),
   bundle: true,
   format: 'esm',
   target: 'es2022',
@@ -119,8 +104,6 @@ await esbuild.build({
   minify: true,
 });
 ```
-
-Configuration details:
 
 | Option     | Value                            | Reason                                                     |
 | ---------- | -------------------------------- | ---------------------------------------------------------- |
@@ -131,7 +114,7 @@ Configuration details:
 | `bundle`   | true                             | Third-party deps (chart libs, etc.) bundled into the chunk |
 | `minify`   | true                             | Reduce chunk size                                          |
 
-### 3.3 CSS generation (PostCSS + Tailwind)
+### 3.3 CSS generation (not implemented)
 
 After JS bundling, a Tailwind pass generates the widget's CSS:
 
@@ -156,11 +139,11 @@ Key mechanics:
 
 - `source(none)` disables auto-detection. Only the widget file is scanned for class names.
 - `@source` points to the single widget source file.
-- `hostThemeBlock` is the `@theme inline { ... }` content extracted from the client's `index.css`. This registers the semantic token names so Tailwind recognizes `bg-primary`, `text-muted-foreground`, etc.
+- `hostThemeBlock` is the `@theme inline { ... }` content extracted from the client shell's `index.css`. This registers the semantic token names so Tailwind recognizes `bg-primary`, `text-muted-foreground`, etc.
 - Output contains only the utilities used by that widget.
 - All color references use `var()`. No hardcoded values. Theme overrides propagate automatically.
 
-### 3.4 Host theme extraction
+### 3.4 Host theme extraction (not implemented)
 
 At the start of `rangka build`, the CLI reads the client shell's `index.css` and extracts the `@theme inline` block:
 
@@ -178,17 +161,11 @@ This block is reused for every widget in the build. It defines the mapping from 
 
 ```
 .rangka/
-  views/
+  widgets/
     sales--pipeline-board.a1b2c3.js
     sales--pipeline-board.a1b2c3.css
     sales--analytics-dashboard.d4e5f6.js
     sales--analytics-dashboard.d4e5f6.css
-  fields/
-    sales--color-picker.g7h8i9.js
-    sales--color-picker.g7h8i9.css
-  cards/
-    sales--deal-summary.j0k1l2.js
-    sales--deal-summary.j0k1l2.css
   manifest.json
 ```
 
@@ -196,40 +173,32 @@ This block is reused for every widget in the build. It defines the mapping from 
 
 ```json
 {
-  "views": {
-    "sales.pipeline-board": {
-      "js": "/_rangka/views/sales--pipeline-board.a1b2c3.js",
-      "css": "/_rangka/views/sales--pipeline-board.a1b2c3.css"
-    }
+  "sales.pipeline-board": {
+    "js": "/_rangka/widgets/sales--pipeline-board.a1b2c3.js",
+    "css": "/_rangka/widgets/sales--pipeline-board.a1b2c3.css"
   },
-  "fields": {
-    "sales.color-picker": {
-      "js": "/_rangka/fields/sales--color-picker.g7h8i9.js",
-      "css": "/_rangka/fields/sales--color-picker.g7h8i9.css"
-    }
-  },
-  "cards": {
-    "sales.deal-summary": {
-      "js": "/_rangka/cards/sales--deal-summary.j0k1l2.js",
-      "css": "/_rangka/cards/sales--deal-summary.j0k1l2.css"
-    }
+  "sales.analytics-dashboard": {
+    "js": "/_rangka/widgets/sales--analytics-dashboard.d4e5f6.js",
+    "css": "/_rangka/widgets/sales--analytics-dashboard.d4e5f6.css"
   }
 }
 ```
 
+The current implementation uses a flat `{ key: path }` format. When CSS generation is added, the format changes to `{ key: { js, css } }`.
+
 ### 3.7 Backwards compatibility
 
-The manifest format changes from string values to objects. The client loader handles both:
+The client loader handles both manifest formats:
 
 ```typescript
 type ManifestEntry = string | { js: string; css: string };
 ```
 
-If the entry is a string, it's treated as JS-only (legacy format, no CSS injection).
+If the entry is a string, it's treated as JS-only (current format, no CSS injection).
 
-## 4. Serving
+## 4. Serving (implemented)
 
-The `rangka start` command serves the `.rangka/` directory at the `/_rangka/` URL prefix. This is already implemented in `packages/cli/src/commands/start.ts`.
+The `rangka start` command serves the `.rangka/` directory at the `/_rangka/` URL prefix.
 
 Static file serving with appropriate headers:
 
@@ -241,11 +210,11 @@ Static file serving with appropriate headers:
 
 JS and CSS files use content hashes in filenames, so they can be cached indefinitely. The manifest is never cached because it changes on rebuild.
 
-## 5. Runtime loading in the client shell
+## 5. Runtime loading in the client shell (not implemented)
 
 ### 5.1 Boot phase
 
-The `/api/meta/boot` response includes widget metadata for all registered widgets (both built-in and custom). The response includes a `customWidgets` field pointing to the manifest:
+The `/api/meta/boot` response includes a `customWidgets` field pointing to the manifest:
 
 ```typescript
 interface BootResponse {
@@ -262,37 +231,28 @@ interface BootResponse {
 A new module in the client handles loading custom widgets:
 
 ```
-src/widgets/loader.ts
+packages/client/src/widgets/loader.ts
 ```
 
 ```typescript
-interface ManifestEntry {
-  js: string;
-  css: string;
-}
-
-type Manifest = Record<string, Record<string, ManifestEntry | string>>;
+type ManifestEntry = string | { js: string; css: string };
+type Manifest = Record<string, ManifestEntry>;
 
 const loaded = new Set<string>();
-const loading = new Map<string, Promise<WidgetDefinition | null>>();
 
 export async function loadCustomWidgets(manifestUrl: string): Promise<void> {
   const res = await fetch(manifestUrl);
   const manifest: Manifest = await res.json();
 
-  const entries: Array<{ key: string; entry: ManifestEntry }> = [];
-
-  for (const typeGroup of Object.values(manifest)) {
-    for (const [key, raw] of Object.entries(typeGroup)) {
+  await Promise.all(
+    Object.entries(manifest).map(([key, raw]) => {
       const entry = typeof raw === 'string' ? { js: raw, css: '' } : raw;
-      entries.push({ key, entry });
-    }
-  }
-
-  await Promise.all(entries.map(({ key, entry }) => loadWidget(key, entry)));
+      return loadWidget(key, entry);
+    }),
+  );
 }
 
-async function loadWidget(key: string, entry: ManifestEntry): Promise<void> {
+async function loadWidget(key: string, entry: { js: string; css: string }): Promise<void> {
   if (loaded.has(key)) return;
 
   if (entry.css) {
@@ -300,9 +260,6 @@ async function loadWidget(key: string, entry: ManifestEntry): Promise<void> {
   }
 
   const mod = await import(/* @vite-ignore */ entry.js);
-  const definition: WidgetDefinition = mod.default;
-
-  registerWidget(definition.meta, definition.component);
   loaded.add(key);
 }
 
@@ -312,7 +269,7 @@ function injectCSS(href: string): Promise<void> {
     link.rel = 'stylesheet';
     link.href = href;
     link.onload = () => resolve();
-    link.onerror = () => resolve(); // Don't block on CSS failure
+    link.onerror = () => resolve();
     document.head.appendChild(link);
   });
 }
@@ -320,48 +277,23 @@ function injectCSS(href: string): Promise<void> {
 
 ### 5.3 Lazy loading (on-demand)
 
-Not all custom widgets need to load at boot. Only widgets referenced by the current page tree need to be loaded. The shell can load widgets lazily:
+Not all custom widgets need to load at boot. The shell can load widgets lazily when first rendered:
 
 ```typescript
 export async function ensureWidget(name: string): Promise<boolean> {
   if (getWidget(name)) return true;
 
-  const pending = loading.get(name);
-  if (pending) {
-    await pending;
-    return getWidget(name) !== undefined;
-  }
-
-  // Widget not in registry and not loading — it may be a custom widget
-  // that hasn't been loaded yet. Check manifest.
-  const entry = manifestCache?.findEntry(name);
+  const entry = manifestCache?.get(name);
   if (!entry) return false;
 
-  await loadWidget(name, entry);
-  return true;
+  await loadWidget(name, typeof entry === 'string' ? { js: entry, css: '' } : entry);
+  return getWidget(name) !== undefined;
 }
 ```
 
 ### 5.4 Integration with WidgetRenderer
 
-The `WidgetRenderer` currently returns an error div for unknown widgets. With lazy loading, it should attempt to load the widget first:
-
-```typescript
-// In WidgetRenderer
-const widgetEntry = getWidget(node.type);
-
-if (!widgetEntry) {
-  // Attempt lazy load
-  return <LazyWidget name={node.type} fallback={<WidgetSkeleton />} {...rendererProps} />;
-}
-```
-
-`LazyWidget` is a wrapper that:
-
-1. Calls `ensureWidget(name)` on mount
-2. Shows a skeleton/loading state while loading
-3. Renders the widget once loaded
-4. Shows an error state if loading fails
+The `WidgetRenderer` currently returns an error div for unknown widgets. With lazy loading, it attempts to load the widget first:
 
 ```typescript
 function LazyWidget({ name, fallback, ...props }: LazyWidgetProps) {
@@ -390,22 +322,9 @@ Two loading strategies, configurable per app:
 | `eager`          | All custom widgets loaded at boot, before first render | Slower boot, no loading states on pages        |
 | `lazy` (default) | Widgets loaded on demand when first rendered           | Faster boot, brief skeleton on first encounter |
 
-Boot-time eager loading:
+## 6. External module resolution (not implemented)
 
-```typescript
-// In App.tsx, after boot response received
-if (bootData.customWidgets?.manifest) {
-  await loadCustomWidgets(bootData.customWidgets.manifest);
-}
-```
-
-Lazy loading happens automatically via `LazyWidget` in the renderer.
-
-## 6. External module resolution
-
-Custom widgets declare `react`, `react-dom`, and `@rangka/client` as external. At runtime, the browser needs to resolve these imports. Two approaches:
-
-### Option A: Import map (recommended)
+Custom widgets declare `react`, `react-dom`, and `@rangka/client` as external. At runtime, the browser needs to resolve these imports.
 
 The shell injects an import map in `index.html` at build time:
 
@@ -423,24 +342,7 @@ The shell injects an import map in `index.html` at build time:
 
 These vendor chunks are pre-built from the shell's own dependencies. Custom widget `import 'react'` statements resolve to the shared instance.
 
-### Option B: Global assignment fallback
-
-For environments that don't support import maps, the shell assigns externals to globals and esbuild uses `globalName`:
-
-```typescript
-// In shell's entry point
-window.__rangka_externals = { React, ReactDOM, RangkaClient };
-
-// esbuild config for widgets
-external: ['react', 'react-dom', '@rangka/client'],
-banner: {
-  js: 'const {React, ReactDOM, RangkaClient} = window.__rangka_externals;'
-}
-```
-
-Import maps are preferred (better DX, standard mechanism). The global fallback exists for older browsers.
-
-## 7. Error handling
+## 7. Error handling (not implemented)
 
 Custom widgets are untrusted code. The shell protects itself:
 
@@ -468,116 +370,197 @@ If a custom widget throws during render, the error boundary catches it and shows
 
 ### Timeout
 
-Widget loading has a timeout (default: 10 seconds). If a widget takes longer than this to load, it's marked as failed:
+Widget loading has a timeout (default: 10 seconds). If a widget takes longer, it's marked as failed.
+
+## 8. Studio integration (not implemented)
+
+### `build_widgets` tool
+
+The Studio agent gets a `build_widgets` tool that compiles custom widgets in-process. This lets the agent write a widget file, build it, and reload the preview in a single workflow.
+
+The build logic lives directly in `studio-core` (not imported from `@rangka/cli`) to avoid a circular dependency. Both the CLI command and the studio tool use the same algorithm, but each has its own copy since the logic is ~40 lines.
 
 ```typescript
-const LOAD_TIMEOUT = 10_000;
+// packages/studio-core/src/tools.ts — new tool
+{
+  name: 'build_widgets',
+  label: 'Build Widgets',
+  description:
+    'Compile custom widgets in modules/*/widgets/ into browser-ready bundles. ' +
+    'Call this after writing or modifying widget files. ' +
+    'Outputs bundles and manifest to .rangka/, then signals preview reload.',
+  parameters: Type.Object({}),
+  execute: async () => {
+    const root = runtime.getProjectRoot();
+    const result = await buildWidgets(root);
 
-async function loadWithTimeout(name: string, entry: ManifestEntry): Promise<void> {
-  const timeout = new Promise((_, reject) =>
-    setTimeout(() => reject(new Error(`Widget ${name} load timeout`)), LOAD_TIMEOUT),
-  );
-  await Promise.race([loadWidget(name, entry), timeout]);
+    if (!result.success) {
+      return {
+        content: [{ type: 'text' as const, text: `Build failed: ${result.error}` }],
+        details: { success: false, error: result.error },
+      };
+    }
+
+    if (result.count === 0) {
+      return {
+        content: [{ type: 'text' as const, text: 'No custom widgets found.' }],
+        details: { success: true, count: 0 },
+      };
+    }
+
+    return {
+      content: [{
+        type: 'text' as const,
+        text: `Built ${result.count} widget(s). Manifest written to .rangka/manifest.json.`,
+      }],
+      details: { success: true, count: result.count, reload: true },
+    };
+  },
 }
 ```
 
-## 8. Development workflow
+### `buildWidgets()` function
 
-### With `rangka dev`
+A standalone async function in `studio-core` that mirrors the CLI build logic:
 
-In development mode, the build watches for file changes:
+```typescript
+// packages/studio-core/src/build-widgets.ts
+import * as esbuild from 'esbuild';
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 
-1. File watcher detects change in `modules/*/widgets/`
-2. Incremental rebuild: only the changed widget is re-bundled (JS + CSS)
-3. Manifest is regenerated
-4. Dev server sends HMR signal or full page reload to the client
-5. Widget re-loads with updated code
+interface BuildResult {
+  success: boolean;
+  count: number;
+  error?: string;
+}
 
-### With Studio
+export async function buildWidgets(root: string): Promise<BuildResult> {
+  try {
+    const components = await scanWidgets(root);
+    if (components.length === 0) return { success: true, count: 0 };
 
-Studio's Runtime Manager orchestrates the same flow:
+    const outDir = path.join(root, '.rangka');
+    await fs.rm(outDir, { recursive: true, force: true });
+    await fs.mkdir(path.join(outDir, 'widgets'), { recursive: true });
 
-1. Agent writes widget file
-2. Runtime Manager triggers `rangka build`
-3. On success, sends `preview.reload` via WebSocket
-4. Preview iframe reloads, widget loads from updated manifest
+    const manifest: Record<string, string> = {};
 
-### Without build step (development convenience)
+    for (const comp of components) {
+      const hash = createHash(comp.filePath);
+      const filename = `${comp.module}--${comp.basename}.${hash}.js`;
+      const outputPath = path.join(outDir, 'widgets', filename);
 
-For rapid iteration, a future enhancement could skip the full build and serve widgets through Vite's transform pipeline. This is out of scope for the initial implementation.
+      await esbuild.build({
+        entryPoints: [comp.filePath],
+        outfile: outputPath,
+        bundle: true,
+        format: 'esm',
+        platform: 'browser',
+        target: 'es2022',
+        external: ['react', 'react-dom', '@rangka/client'],
+      });
 
-## 9. Security considerations
+      manifest[comp.key] = `/_rangka/widgets/${filename}`;
+    }
 
-Custom widgets run in the same origin as the shell. They have access to:
+    await fs.writeFile(path.join(outDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
 
-- The DOM
-- The shell's React tree (via hooks)
-- `localStorage` / `sessionStorage`
-- Network (fetch, WebSocket)
-- The auth token (if accessible via cookie or memory)
+    return { success: true, count: components.length };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return { success: false, count: 0, error: message };
+  }
+}
+```
 
-This is acceptable for the local/self-hosted use case (app developers trust their own code). For the Platform (hosted multi-tenant), custom widgets need sandboxing. This is out of scope for this spec.
+### Agent workflow
 
-Mitigations for the local case:
+The agent's typical flow for creating a custom widget:
 
-- Widgets cannot modify the registry (registerWidget is not exported to widget code)
-- Error boundaries prevent one widget from crashing the shell
-- CSP headers can restrict widget network access if configured
+1. Call `lookup_reference` with topic `define-widget`
+2. Write the widget `.tsx` file to `modules/<mod>/widgets/`
+3. Call `build_widgets` to compile it
+4. Call `apply_changes` to rescan definitions (registers the widget metadata)
+5. Call `reload_preview` to refresh the UI
 
-## 10. Dependencies
+Steps 3-5 happen in sequence. The tool returns `reload: true` in details, which the `AgentEngine` intercepts (same pattern as `apply_changes`) to broadcast a `preview.reload` message to connected clients.
 
-New packages for `@rangka/cli`:
+### Static serving
 
-| Package                | Version | Purpose                        |
-| ---------------------- | ------- | ------------------------------ |
-| `postcss`              | ^8.x    | PostCSS processor API          |
-| `@tailwindcss/postcss` | ^4.x    | Tailwind v4 plugin for PostCSS |
+The `RuntimeManager` already registers `/_rangka/` as a static route at boot (line 146-153 in `runtime-manager.ts`). After `build_widgets` writes new files to `.rangka/`, they are immediately servable without restarting the server. Fastify's `@fastify/static` serves from disk on each request.
 
-No new dependencies for `@rangka/client`. The loader uses native `import()` and DOM APIs.
+If `.rangka/` did not exist at boot, the static route is not registered. The `build_widgets` tool must handle this by registering the route after the first build:
 
-## 11. Files to create or modify
+```typescript
+// In RuntimeManager
+async registerRangkaStatic(): Promise<void> {
+  const rangkaDir = path.join(this.config.projectRoot, '.rangka');
+  if (!this.rangkaStaticRegistered && this.bootResult?.server) {
+    await this.bootResult.server.register(fastifyStatic, {
+      root: rangkaDir,
+      prefix: '/_rangka/',
+      decorateReply: false,
+    });
+    this.rangkaStaticRegistered = true;
+  }
+}
+```
 
-### New files
+## 9. Implementation checklist
 
-| Path                                            | Purpose                                                 |
-| ----------------------------------------------- | ------------------------------------------------------- |
-| `packages/client/src/widgets/loader.ts`         | Widget manifest fetcher, CSS injector, dynamic importer |
-| `packages/client/src/widgets/LazyWidget.tsx`    | Suspense-like wrapper for on-demand loading             |
-| `packages/client/src/widgets/ErrorBoundary.tsx` | Error boundary for custom widget isolation              |
-| `packages/client/src/defineWidget.ts`           | `defineWidget()` factory (exported from package)        |
+### Done
 
-### Modified files
+- [x] `defineWidget()` in `@rangka/shared`
+- [x] `registerWidget()` in `@rangka/client` (internal registry)
+- [x] CLI scanner (`ui-scanner.ts`) discovers `modules/*/widgets/`
+- [x] CLI `rangka build` bundles widgets with esbuild
+- [x] CLI `rangka start` serves `.rangka/` at `/_rangka/`
+- [x] Flat manifest generation (`key: path`)
 
-| Path                                                      | Change                                                    |
-| --------------------------------------------------------- | --------------------------------------------------------- |
-| `packages/client/src/index.ts`                            | Export `defineWidget` and hooks for widget authors        |
-| `packages/client/src/widgets/renderer/WidgetRenderer.tsx` | Add lazy loading fallback for unknown widgets             |
-| `packages/client/src/App.tsx`                             | Load custom widgets after boot                            |
-| `packages/client/src/boot/useBoot.ts`                     | Pass manifest URL from boot response                      |
-| `packages/cli/src/commands/build.ts`                      | Add PostCSS + Tailwind CSS generation step                |
-| `packages/cli/src/commands/start.ts`                      | Serve `.css` files from `.rangka/` (already serves `.js`) |
-| `packages/cli/package.json`                               | Add postcss and @tailwindcss/postcss deps                 |
-| `packages/shared/src/types/widget.ts`                     | Add `customWidgets` to BootResponse type                  |
+### To implement
 
-## 12. Testing strategy
+- [ ] CSS generation (PostCSS + Tailwind pass per widget)
+- [ ] Host theme extraction from client shell
+- [ ] Manifest format upgrade to `{ key: { js, css } }`
+- [ ] `customWidgets` field in `BootPayload`
+- [ ] Widget loader in client (`loader.ts`)
+- [ ] `LazyWidget` component with loading/error states
+- [ ] Error boundary wrapper for custom widgets
+- [ ] Import map in shell `index.html`
+- [ ] Vendor chunk builds (react, react-dom, @rangka/client)
+- [ ] `minify: true` in esbuild config (currently missing)
+- [ ] Load timeout handling
+- [ ] Studio `build_widgets` tool
+- [ ] `buildWidgets()` function in studio-core
+- [ ] `RuntimeManager.registerRangkaStatic()` for late registration
 
-### Unit tests
+### New dependencies
 
-- `loader.ts`: mock fetch + import, verify registry population
-- `LazyWidget.tsx`: render with mock registry, verify loading/ready/error states
-- `ErrorBoundary.tsx`: verify fallback renders on child throw
-- `extractThemeInlineBlock`: verify regex extraction from sample CSS
+| Package                | Version | Target                                         |
+| ---------------------- | ------- | ---------------------------------------------- |
+| `postcss`              | ^8.x    | `@rangka/cli`                                  |
+| `@tailwindcss/postcss` | ^4.x    | `@rangka/cli`                                  |
+| `esbuild`              | ^0.25.x | `@rangka/studio-core` (if not already present) |
 
-### Integration tests
+### Files to create
 
-- Full build pipeline: write a test widget `.tsx`, run build, verify `.js` and `.css` output
-- CSS content: verify output contains expected utilities and `var()` references
-- Manifest format: verify structure matches schema
-- Runtime loading: boot app with custom widget in page definition, verify it renders
+| Path                                         | Purpose                                          |
+| -------------------------------------------- | ------------------------------------------------ |
+| `packages/client/src/widgets/loader.ts`      | Manifest fetcher, CSS injector, dynamic importer |
+| `packages/client/src/widgets/LazyWidget.tsx` | On-demand loading wrapper                        |
+| `packages/client/src/widgets/SafeWidget.tsx` | Error boundary isolation                         |
+| `packages/studio-core/src/build-widgets.ts`  | Standalone build function for studio tool        |
 
-### Manual testing
+### Files to modify
 
-- Custom widget with Tailwind classes renders correctly
-- Theme override propagates to custom widget
-- Widget load failure shows error state without crashing page
-- Hot reload works in dev mode
+| Path                                                      | Change                                      |
+| --------------------------------------------------------- | ------------------------------------------- |
+| `packages/client/src/widgets/renderer/WidgetRenderer.tsx` | Add lazy loading fallback for unknown types |
+| `packages/client/src/boot/useBoot.ts`                     | Pass manifest URL from boot response        |
+| `packages/cli/src/commands/build.ts`                      | Add PostCSS + Tailwind CSS generation step  |
+| `packages/cli/package.json`                               | Add postcss and @tailwindcss/postcss deps   |
+| `packages/shared/src/types/boot.ts`                       | Add `customWidgets` to BootPayload          |
+| `packages/studio-core/src/tools.ts`                       | Add `build_widgets` tool                    |
+| `packages/studio-core/src/runtime-manager.ts`             | Add `registerRangkaStatic()` method         |
+| `packages/studio-core/package.json`                       | Add esbuild dependency                      |

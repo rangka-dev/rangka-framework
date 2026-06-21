@@ -14,3 +14,5 @@ export {
   type UseActionHandlersOptions,
   type WidgetSlotRendererProps,
 } from './widgets/shell/index.js';
+export { loadCustomWidgets, ensureWidget } from './widgets/loader.js';
+export { registerWidget, getWidget, clearWidgetRegistry } from './widgets/registry.js';

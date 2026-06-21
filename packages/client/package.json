@@ -14,7 +14,7 @@
     }
   },
   "scripts": {
-    "build": "tsc --build && vite build --outDir dist/shell",
+    "build": "tsc --build && vite build --outDir dist/shell && node scripts/extract-theme.js",
     "dev": "vite",
     "test": "vitest run",
     "lint": "eslint src/"

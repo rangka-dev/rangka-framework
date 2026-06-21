@@ -24,10 +24,15 @@ export const studioCommand = defineCommand({
     },
   },
   async run({ args }) {
-    let createStudioServer: typeof import('@rangka/studio-core').createStudioServer;
+    let createStudioServer: (config: {
+      wsPort: number;
+      projectRoot: string;
+      frameworkPort: number;
+    }) => Promise<unknown>;
 
     try {
-      const studio = await import('@rangka/studio-core');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const studio = await (Function('return import("@rangka/studio-core")')() as Promise<any>);
       createStudioServer = studio.createStudioServer;
     } catch {
       console.error(

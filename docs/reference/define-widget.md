@@ -1,7 +1,7 @@
 ---
 status: stable
 since: 0.2.0
-last-updated: 2026-06-19
+last-updated: 2026-06-21
 description: defineWidget() API — props, triggers, binding, and rendering
 ---
 
@@ -14,7 +14,7 @@ See [Widgets concept](/concepts/widgets) for how widgets compose into pages. See
 ## Signature
 
 ```typescript
-import { defineWidget } from 'rangka';
+import { defineWidget } from '@rangka/shared';
 
 const meta = defineWidget({
   name: 'sales.pipeline-board',
@@ -28,19 +28,20 @@ const meta = defineWidget({
   triggers: ['dealSelect'],
   container: false,
 });
+
+function PipelineBoard({ props, on }: WidgetProps) {
+  return (
+    <div className="flex flex-col gap-4 bg-card rounded-lg p-4">
+      <h2 className="text-sm font-medium text-muted-foreground">Pipeline</h2>
+      {/* widget implementation */}
+    </div>
+  );
+}
+
+export default { meta, component: PipelineBoard };
 ```
 
-To register a widget with its component, use `registerWidget`:
-
-```typescript
-import { registerWidget } from 'rangka';
-
-registerWidget(meta, ({ props, on }) => {
-  const state = usePageState();
-  const { fire } = useAction(handlers);
-  return <PipelineBoard onSelect={(id) => on.dealSelect?.(id)} />;
-});
-```
+The widget file exports a default object with `meta` and `component`. The framework handles registration at runtime.
 
 ## WidgetDefinitionMeta
 
@@ -138,20 +139,11 @@ interface WidgetProps {
 | `context`       | Current data context (record, model name, mode, iteration index).    |
 | `children`      | Rendered child widgets. Only present if `container: true`.           |
 
-## Hooks
-
-Custom widgets can use these hooks for framework integration.
-
-```typescript
-usePageState(); // Read/write $state
-useAction(handlers); // Fire actions programmatically. Takes ActionHandlers, returns { fire }
-useShell(); // toast, confirm, navigate
-useWidgetContext(); // Access current record/model/mode
-```
-
 ## Resolution
 
-Widgets are resolved from the registry by type name. If no widget is registered for a given type, the renderer throws an error.
+Widgets are resolved from the registry by type name. Built-in widgets are registered at boot. Custom widgets are loaded on demand from the manifest when first encountered.
+
+If no widget is registered and no manifest entry exists for a given type, the renderer shows an error placeholder.
 
 ## File location
 
@@ -165,11 +157,56 @@ modules/sales/
 
 They are compiled by `rangka build` into `.rangka/` and loaded at runtime via dynamic `import()`.
 
+## Build and runtime
+
+Running `rangka build` does the following for each widget file:
+
+1. Bundles the widget with esbuild (React is provided by the shell, npm deps are bundled in)
+2. Generates scoped Tailwind CSS for utility classes used in the widget
+3. Writes the bundle and CSS to `.rangka/widgets/`
+4. Produces a `manifest.json` mapping widget keys to bundle paths
+
+At runtime, the shell fetches the manifest and lazily imports widgets when a page references them. CSS is injected via `<link>` elements before the component renders.
+
+## Using Tailwind
+
+Custom widgets can use any Tailwind utility class. The build generates CSS containing only the classes the widget references. Semantic tokens from the shell theme (`bg-primary`, `text-muted-foreground`, `border`, etc.) work automatically.
+
+```tsx
+function MyWidget({ props }: WidgetProps) {
+  return (
+    <div className="rounded-lg border bg-card p-4 hover:shadow-md">
+      <span className="text-emerald-600 font-semibold">{props.value}</span>
+    </div>
+  );
+}
+```
+
+## Using npm packages
+
+Install any browser-compatible npm package in your project and import it in a widget. The build bundles it into the widget chunk.
+
+```tsx
+import { BarChart, Bar, XAxis, YAxis } from 'recharts';
+
+function SalesChart({ props }: WidgetProps) {
+  return (
+    <BarChart data={props.data} width={400} height={300}>
+      <XAxis dataKey="month" />
+      <YAxis />
+      <Bar dataKey="sales" fill="hsl(var(--primary))" />
+    </BarChart>
+  );
+}
+```
+
+Packages that import their own CSS (like `@xyflow/react/dist/style.css`) are supported. The CSS is extracted and merged with the Tailwind output.
+
 ## Example
 
 ```typescript
 // modules/sales/widgets/pipeline-board.tsx
-import { defineWidget, registerWidget } from 'rangka';
+import { defineWidget } from '@rangka/shared';
 
 const meta = defineWidget({
   name: 'sales.pipeline-board',
@@ -183,23 +220,17 @@ const meta = defineWidget({
   container: false,
 });
 
-registerWidget(meta, ({ props, on }) => {
-  const state = usePageState();
-  const { fire } = useAction({
-    selectDeal: (id) => { /* ... */ },
-  });
-  const shell = useShell();
-
+function PipelineBoard({ props, on }: any) {
   return (
-    <PipelineBoard
-      showLabels={props.showLabels}
-      onSelect={(id) => {
-        on.dealSelect?.(id);
-        state.set('selectedDeal', id);
-      }}
-    />
+    <div className="flex flex-col gap-4 bg-card rounded-lg p-4">
+      <h3 className="text-sm font-medium">Pipeline</h3>
+      {/* implementation */}
+      <button onClick={() => on.dealSelect?.('deal-1')}>Select Deal</button>
+    </div>
   );
-});
+}
+
+export default { meta, component: PipelineBoard };
 ```
 
 Use it in a page:

@@ -14,6 +14,10 @@
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
+    },
+    "./build": {
+      "import": "./dist/build-widgets.js",
+      "types": "./dist/build-widgets.d.ts"
     }
   },
   "scripts": {
@@ -27,13 +31,14 @@
     "@rangka/client": "workspace:*",
     "@rangka/core": "workspace:*",
     "@rangka/shared": "workspace:*",
+    "@tailwindcss/postcss": "^4.3.1",
     "citty": "^0.1.6",
     "esbuild": "^0.25.12",
+    "postcss": "^8.5.15",
     "tinyglobby": "^0.2.17",
     "tsx": "^4.19.0"
   },
   "devDependencies": {
-    "@rangka/studio-core": "workspace:*",
     "typescript": "^5.8.0"
   }
 }
