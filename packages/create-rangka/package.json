@@ -3,6 +3,10 @@
   "version": "0.1.1",
   "description": "Scaffold a new Rangka Framework project",
   "type": "module",
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "bin": {
     "create-rangka": "./dist/index.js"
   },
