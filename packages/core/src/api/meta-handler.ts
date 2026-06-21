@@ -104,9 +104,6 @@ function collectModelRefsFromNode(node: WidgetNode, models: Set<string>): void {
   if (node.source?.model) {
     models.add(node.source.model);
   }
-  if (node.bind?.model?.name) {
-    models.add(node.bind.model.name);
-  }
   if (node.children) {
     for (const child of node.children) {
       collectModelRefsFromNode(child, models);

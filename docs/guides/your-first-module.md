@@ -74,7 +74,7 @@ import type { WidgetNode } from 'rangka';
 const body: WidgetNode[] = [
   {
     type: 'table',
-    bind: { model: { name: 'tasks.task' } },
+    source: { model: 'tasks.task' },
     props: { pageSize: 20 },
     children: [
       {

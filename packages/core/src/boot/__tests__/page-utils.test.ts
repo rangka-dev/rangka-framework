@@ -48,7 +48,7 @@ describe('extractSourceModels', () => {
     expect(models).toHaveLength(2);
   });
 
-  it('extracts models from table with model binding', () => {
+  it('extracts models from table with source', () => {
     const page: PageDefinition = {
       key: 'sales.orders',
       label: 'Orders',
@@ -56,7 +56,7 @@ describe('extractSourceModels', () => {
       body: [
         {
           type: 'table',
-          bind: { model: { name: 'sales.invoice' } },
+          source: { model: 'sales.invoice' },
           children: [{ type: 'column', bind: { field: 'name' } }],
         },
       ],
@@ -106,7 +106,7 @@ describe('extractSourceModels', () => {
       type: 'collection',
       body: [
         { type: 'data', source: { model: 'sales.order' }, children: [] },
-        { type: 'table', bind: { model: { name: 'sales.order' } }, children: [] },
+        { type: 'table', source: { model: 'sales.order' }, children: [] },
       ],
     };
 
@@ -175,7 +175,7 @@ describe('validatePageSources', () => {
     expect(warnings[0].message).toContain('sales.ghost');
   });
 
-  it('catches unresolved models in table bind.model', () => {
+  it('catches unresolved models in table source', () => {
     const pages: Array<{ module: string; page: PageDefinition }> = [
       {
         module: 'sales',
@@ -186,7 +186,7 @@ describe('validatePageSources', () => {
           body: [
             {
               type: 'table',
-              bind: { model: { name: 'sales.missing' } },
+              source: { model: 'sales.missing' },
               children: [],
             },
           ],

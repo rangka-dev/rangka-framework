@@ -1,13 +1,41 @@
 ---
 status: stable
 since: 0.2.0
-last-updated: 2026-06-19
+last-updated: 2026-06-21
 description: All built-in widgets with props, triggers, and binding modes
 ---
 
 # Built-in widgets
 
 All widgets that ship with Rangka. Each widget follows the same contract as custom widgets defined via `defineWidget()`.
+
+## Data source pattern
+
+Data container widgets (`data`, `form`, `table`) use the `source` field to declare what model they operate on. This is separate from `bind` which handles field/expression value binding.
+
+```typescript
+source: { model: string; id?: string; filters?: Record<string, unknown>; limit?: number }
+```
+
+| Field     | Type   | Description                                                |
+| --------- | ------ | ---------------------------------------------------------- |
+| `model`   | string | Qualified model name (e.g. `sales.order`)                  |
+| `id`      | string | Record ID or expression (`$route.id`, `$state.selectedId`) |
+| `filters` | object | Static filters applied to the query                        |
+| `limit`   | number | Maximum number of records                                  |
+
+When `id` is set, the widget operates in record mode (single record). Otherwise it operates in collection mode (list).
+
+The `id` field supports bare `$`-prefixed expressions without template syntax:
+
+```typescript
+// All equivalent for resolving the route parameter
+source: { model: 'sales.order', id: '$route.id' }
+source: { model: 'sales.order', id: '{{$route.id}}' }
+
+// State variable
+source: { model: 'sales.customer', id: '$state.selectedId' }
+```
 
 ## Input widgets
 
@@ -591,16 +619,49 @@ Clickable action trigger.
 
 ### data
 
-Data boundary that fetches a record or collection. Children render within the data context.
+Data container that fetches a record or collection. Children render within the data context.
 
 | Property      | Type   | Default | Description              |
 | ------------- | ------ | ------- | ------------------------ |
 | `placeholder` | string |         | Text shown while loading |
-| `loading`     | string |         | Custom loading indicator |
+| `pageSize`    | number |         | Page size for collection |
 
+- Source: `{ model, id?, filters?, limit? }`
 - Binding: `none`
 - Triggers: `load`, `error`
 - Container: yes
+
+```typescript
+// Single record
+{ type: 'data', source: { model: 'sales.order', id: '$route.id' }, children: [...] }
+
+// Collection
+{ type: 'data', source: { model: 'sales.product' }, children: [...] }
+```
+
+---
+
+### form
+
+Data container with form state management. Fetches a record for editing or provides a blank form for creation.
+
+| Property | Type | Default | Description |
+| -------- | ---- | ------- | ----------- |
+
+- Source: `{ model, id? }`
+- Binding: `none`
+- Triggers: `success`, `error`
+- Container: yes
+
+When `source.id` is set, the form loads the record and enters edit mode. Without `id`, the form starts in create mode.
+
+```typescript
+// Edit existing record
+{ type: 'form', source: { model: 'sales.order', id: '$route.id' }, children: [...] }
+
+// Create new record
+{ type: 'form', source: { model: 'sales.order' }, children: [...] }
+```
 
 ---
 
@@ -633,6 +694,21 @@ Data table with pagination, sorting, and selection.
 | `pageSize`   | number  |          | Rows per page        |
 | `emptyText`  | string  |          | Text when no records |
 
-- Binding: `model`
+- Source: `{ model, filters?, limit? }`
+- Binding: `none`
 - Triggers: `rowClick`, `select`, `pageChange`
 - Container: yes (accepts `column` only)
+
+When `pageSize` is set, the table fetches its own data (smart mode). Without `pageSize`, it reads records from a parent data container (passive mode).
+
+```typescript
+{
+  type: 'table',
+  source: { model: 'sales.order' },
+  props: { pageSize: 10, selectable: true },
+  children: [
+    { type: 'column', props: { label: 'Customer', sortable: true }, bind: { field: 'customer' } },
+    { type: 'column', props: { label: 'Status', filterable: true }, bind: { field: 'status' } },
+  ],
+}
+```

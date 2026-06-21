@@ -17,7 +17,6 @@ export interface BindingResult {
   setValue?: (val: unknown) => void;
   meta?: FieldMeta;
   error?: string;
-  query?: { name: string; filters?: Record<string, unknown>; limit?: number };
 }
 
 export function resolveBinding(
@@ -48,13 +47,6 @@ export function resolveBinding(
     const ast = parse(bind.expression);
     const value = evaluate(ast, merged);
     return { value };
-  }
-
-  if (bind.model) {
-    return {
-      value: null,
-      query: bind.model,
-    };
   }
 
   return null;

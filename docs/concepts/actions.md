@@ -47,7 +47,7 @@ Inside the widget tree, actions are wired via triggers. A widget declares which 
   on: { click: { type: 'service', name: 'sales.submitOrder' } } }
 
 // Table row click sets state
-{ type: 'table', bind: { model: { name: 'sales.order' } },
+{ type: 'table', source: { model: 'sales.order' },
   on: { rowClick: { type: 'setValue', field: '$state.selectedId', value: '{{id}}' } } }
 
 // Input change clears a filter
@@ -99,7 +99,24 @@ Direct CRUD operations without a service wrapper.
 
 ```typescript
 { type: 'focus', field: string }
+{ type: 'refreshSource' }
+{ type: 'fetchOptions', field: string, depends: string[] }
 ```
+
+`focus` moves keyboard focus to a field. `refreshSource` re-fetches the current data query. `fetchOptions` loads dependent options for a select field (planned, not fully implemented).
+
+### Form actions
+
+```typescript
+{
+  type: 'form.submit';
+}
+{
+  type: 'form.reset';
+}
+```
+
+Only work inside a `form` widget. `form.submit` validates and saves. `form.reset` reverts to initial values.
 
 ### Child table actions
 
@@ -173,7 +190,7 @@ definePage({
   body: [
     {
       type: 'table',
-      bind: { model: { name: 'sales.order' } },
+      source: { model: 'sales.order' },
       on: { rowClick: { type: 'setValue', field: '$state.selectedId', value: '{{id}}' } },
       children: [
         { type: 'column', props: { label: 'Name' }, bind: { field: 'name' } },

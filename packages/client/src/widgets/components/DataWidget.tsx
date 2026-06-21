@@ -183,7 +183,7 @@ DataWidget.widgetMeta = {
     placeholder: { type: 'string' as const },
     pageSize: { type: 'number' as const },
   },
-  binding: 'model' as const,
+  binding: 'none' as const,
   triggers: ['load', 'error'],
   container: true,
 };

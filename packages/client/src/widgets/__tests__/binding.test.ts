@@ -60,15 +60,6 @@ describe('Binding Resolver', () => {
     expect(result!.setValue).toBeUndefined();
   });
 
-  test('model binding returns query config', () => {
-    const result = resolveBinding(
-      { model: { name: 'sales.order', filters: { status: 'draft' }, limit: 10 } },
-      ctx,
-    );
-    expect(result!.query).toEqual({ name: 'sales.order', filters: { status: 'draft' }, limit: 10 });
-    expect(result!.value).toBeNull();
-  });
-
   test('field binding returns undefined for missing field', () => {
     const result = resolveBinding({ field: 'missing' }, ctx, fieldMeta);
     expect(result!.value).toBeUndefined();

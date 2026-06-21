@@ -123,7 +123,7 @@ describe('Builder Helpers — Widget Factories', () => {
     const cols = [column('Name', [text('name')])];
     const node = table('sales.order', cols);
     expect(node.type).toBe('table');
-    expect(node.bind!.model).toEqual({ name: 'sales.order' });
+    expect(node.source).toEqual({ model: 'sales.order' });
     expect(node.children).toHaveLength(1);
   });
 
@@ -383,7 +383,7 @@ describe('Chainable Widget Builder', () => {
       .toJSON();
 
     expect(node.type).toBe('table');
-    expect(node.bind!.model).toEqual({ name: 'sales.order' });
+    expect(node.source).toEqual({ model: 'sales.order' });
     expect(node.props!.selectable).toBe(true);
     expect(node.children).toHaveLength(2);
     expect(node.children![0].props!.label).toBe('Customer');
@@ -410,18 +410,16 @@ describe('Chainable Widget Builder', () => {
   });
 
   it('bind method sets arbitrary binding', () => {
-    const node = new WidgetBuilder('custom')
-      .bind({ model: { name: 'test.model', filters: { active: true }, limit: 10 } })
-      .toJSON();
-    expect(node.bind!.model).toEqual({ name: 'test.model', filters: { active: true }, limit: 10 });
+    const node = new WidgetBuilder('custom').bind({ field: 'name' }).toJSON();
+    expect(node.bind!.field).toBe('name');
   });
 
-  it('bindModel method', () => {
+  it('bindModel method sets source', () => {
     const node = new WidgetBuilder('table')
       .bindModel('sales.order', { status: 'draft' }, 50)
       .toJSON();
-    expect(node.bind!.model).toEqual({
-      name: 'sales.order',
+    expect(node.source).toEqual({
+      model: 'sales.order',
       filters: { status: 'draft' },
       limit: 50,
     });

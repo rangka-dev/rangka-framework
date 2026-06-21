@@ -38,7 +38,7 @@ const tableMeta: WidgetDefinitionMeta = {
   label: 'Table',
   category: 'layout',
   schema: {},
-  binding: 'model',
+  binding: 'none',
   triggers: ['rowClick'],
   container: true,
   accepts: ['column'],
@@ -148,7 +148,7 @@ describe('validatePageBody', () => {
     const body: WidgetNode[] = [
       {
         type: 'table',
-        bind: { model: { name: 'test' } },
+        source: { model: 'test' },
         children: [{ type: 'button', props: { label: 'bad' } }],
       },
     ];

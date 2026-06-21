@@ -36,7 +36,7 @@ FormWidget.widgetMeta = {
   label: 'Form',
   category: 'data' as const,
   schema: {},
-  binding: 'model' as const,
+  binding: 'none' as const,
   triggers: ['success', 'error'],
   container: true,
 };

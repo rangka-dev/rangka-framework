@@ -240,7 +240,7 @@ interface FieldMeta {
           "children": [
             {
               "type": "table",
-              "bind": { "model": { "name": "sales.invoice" } },
+              "source": { "model": "sales.invoice" },
               "children": [
                 { "type": "column", "props": { "label": "Number" }, "bind": { "field": "number" } },
                 {

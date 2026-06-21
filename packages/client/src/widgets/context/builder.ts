@@ -4,17 +4,6 @@ import type { WidgetContext } from './types.js';
 const LAYOUT_WIDGETS = new Set(['group', 'section', 'divider', 'spacer']);
 
 export function buildContext(node: WidgetNode, parentContext: WidgetContext): WidgetContext {
-  if (node.bind?.model) {
-    return {
-      record: {},
-      records: parentContext.records ?? [],
-      model: node.bind.model.name,
-      mode: parentContext.mode,
-      parent: parentContext,
-      __columns: node.children,
-    };
-  }
-
   if (node.source) {
     const isRecordMode = Boolean(node.source.id);
     if (isRecordMode) {
@@ -23,14 +12,20 @@ export function buildContext(node: WidgetNode, parentContext: WidgetContext): Wi
         model: node.source.model,
         mode: parentContext.mode,
         parent: parentContext,
+        __columns: node.children,
+        sourceFilters: node.source.filters,
+        sourceLimit: node.source.limit,
       };
     } else {
       return {
         record: {},
-        records: [],
+        records: parentContext.records ?? [],
         model: node.source.model,
         mode: parentContext.mode,
         parent: parentContext,
+        __columns: node.children,
+        sourceFilters: node.source.filters,
+        sourceLimit: node.source.limit,
       };
     }
   }

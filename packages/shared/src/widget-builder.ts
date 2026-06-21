@@ -40,7 +40,7 @@ export class WidgetBuilder {
   }
 
   bindModel(name: string, filters?: Record<string, unknown>, limit?: number): this {
-    this.node.bind = { model: { name, filters, limit } };
+    this.node.source = { model: name, filters, limit };
     return this;
   }
 

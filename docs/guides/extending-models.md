@@ -149,7 +149,7 @@ export default definePage({
   body: [
     {
       type: 'table',
-      bind: { model: { name: 'sales.customer', filters: { loyalty_points: { gt: 0 } } } },
+      source: { model: 'sales.customer', filters: { loyalty_points: { gt: 0 } } },
       children: [
         { type: 'column', props: { label: 'Name' }, bind: { field: 'name' } },
         {

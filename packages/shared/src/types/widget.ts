@@ -1,6 +1,8 @@
 export interface WidgetSource {
   model: string;
   id?: string;
+  filters?: Record<string, unknown>;
+  limit?: number;
 }
 
 export interface WidgetNode {
@@ -17,7 +19,6 @@ export interface WidgetNode {
 export interface WidgetBinding {
   field?: string;
   expression?: string;
-  model?: { name: string; filters?: Record<string, unknown>; limit?: number };
   id?: string;
 }
 

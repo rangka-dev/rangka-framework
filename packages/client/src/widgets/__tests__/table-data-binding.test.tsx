@@ -98,7 +98,7 @@ beforeEach(() => {
       label: 'Table',
       category: 'data',
       schema: {},
-      binding: 'model',
+      binding: 'none',
       triggers: ['rowClick', 'select', 'pageChange'],
       container: true,
       accepts: ['column'],
@@ -159,7 +159,7 @@ function tableWithColumns(props: Record<string, unknown> = {}): WidgetNode[] {
   return [
     {
       type: 'table',
-      bind: { model: { name: 'sales.order' } },
+      source: { model: 'sales.order' },
       props: { pageSize: 20, ...props },
       children: [
         {
@@ -432,7 +432,7 @@ describe('Table data binding (smart mode)', () => {
       const nodes: WidgetNode[] = [
         {
           type: 'table',
-          bind: { model: { name: 'sales.order' } },
+          source: { model: 'sales.order' },
           children: [{ type: 'column', props: { label: 'Customer' }, bind: { field: 'customer' } }],
         },
       ];
@@ -448,7 +448,7 @@ describe('Table data binding (smart mode)', () => {
       const nodes: WidgetNode[] = [
         {
           type: 'table',
-          bind: { model: { name: 'sales.order' } },
+          source: { model: 'sales.order' },
           children: [{ type: 'column', props: { label: 'Customer' }, bind: { field: 'customer' } }],
         },
       ];
@@ -463,7 +463,7 @@ describe('Table data binding (smart mode)', () => {
       const nodes: WidgetNode[] = [
         {
           type: 'table',
-          bind: { model: { name: 'sales.order' } },
+          source: { model: 'sales.order' },
           children: [
             {
               type: 'column',

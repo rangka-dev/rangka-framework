@@ -65,9 +65,6 @@ function collectModelsFromWidgetNode(node: WidgetNode, models: Set<string>): voi
   if (node.source?.model) {
     models.add(node.source.model);
   }
-  if (node.bind?.model?.name) {
-    models.add(node.bind.model.name);
-  }
   if (node.children) {
     for (const child of node.children) {
       collectModelsFromWidgetNode(child, models);
@@ -87,13 +84,6 @@ function checkWidgetNodeSources(
       pageKey,
       location: path,
       message: `Unresolved source model "${node.source.model}"`,
-    });
-  }
-  if (node.bind?.model?.name && !knownModels.has(node.bind.model.name)) {
-    warnings.push({
-      pageKey,
-      location: path,
-      message: `Unresolved source model "${node.bind.model.name}"`,
     });
   }
   if (node.children) {

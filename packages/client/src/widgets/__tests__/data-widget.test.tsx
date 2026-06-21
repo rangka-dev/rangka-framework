@@ -58,7 +58,7 @@ beforeEach(() => {
       label: 'Data',
       category: 'data',
       schema: {},
-      binding: 'model',
+      binding: 'none',
       triggers: ['load', 'error'],
       container: true,
     },

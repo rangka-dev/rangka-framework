@@ -27,7 +27,7 @@ In Rangka, you never touch the DOM. You describe the screen as a tree of widgets
 { type: 'badge', bind: { field: 'status' } }
 { type: 'button', props: { label: 'Submit', disabled: '{{status != "Draft"}}' },
   on: { click: { type: 'service', name: 'sales.submitOrder' } } }
-{ type: 'table', bind: { model: { name: 'sales.order' } }, children: [...] }
+{ type: 'table', source: { model: 'sales.order' }, children: [...] }
 ```
 
 ## Concept mapping

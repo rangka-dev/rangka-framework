@@ -159,7 +159,7 @@ definePage({
   body: [
     {
       type: 'table',
-      bind: { model: { name: 'crm.customer' } },
+      source: { model: 'crm.customer' },
       children: [
         { type: 'column', props: { label: 'Name' }, bind: { field: 'name' } },
         { type: 'column', props: { label: 'Email' }, bind: { field: 'email' } },

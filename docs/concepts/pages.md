@@ -22,7 +22,7 @@ export default definePage({
   body: [
     {
       type: 'table',
-      bind: { model: { name: 'sales.order' } },
+      source: { model: 'sales.order' },
       on: { rowClick: { type: 'setValue', field: '$state.selectedId', value: '{{id}}' } },
       children: [
         { type: 'column', props: { label: 'Name' }, bind: { field: 'name' } },
@@ -68,13 +68,15 @@ export default definePage({
 
 ## Page types
 
-Page type controls routing and whether `$route.id` is available. It does not control data fetching or layout. Those are handled by widgets in the tree.
+Page type is a semantic hint for the client renderer. It does not affect URL generation or routing.
 
-| Type         | URL pattern          | Meaning                        |
-| ------------ | -------------------- | ------------------------------ |
-| `collection` | `/:module/:page`     | List of records                |
-| `record`     | `/:module/:page/:id` | Single record (`:id` in route) |
-| `dashboard`  | `/:module/:page`     | No implicit data context       |
+| Type         | Meaning                     |
+| ------------ | --------------------------- |
+| `collection` | List of records             |
+| `record`     | Single record (detail view) |
+| `dashboard`  | No implicit data context    |
+
+A `record` page does not automatically get `/$id` in its route. You must specify that via `path` if needed.
 
 ## Routing
 
@@ -91,7 +93,7 @@ Override with `path` when you need something custom:
 definePage({
   key: 'sales.order-detail',
   type: 'record',
-  path: '/sales/orders/:id',
+  path: '/sales/orders/$id',
   body: [...],
 });
 ```
@@ -131,7 +133,7 @@ body: [
     type: 'split',
     props: { sizes: [60, 40] },
     children: [
-      { type: 'table', bind: { model: { name: 'sales.order' } }, children: [...] },
+      { type: 'table', source: { model: 'sales.order' }, children: [...] },
       { type: 'data', source: { model: 'sales.order', id: '$state.selectedId' }, children: [...] },
     ],
   },
@@ -194,7 +196,7 @@ Drawers and modals are widgets in the body with `visible` conditions. No special
 ```typescript
 body: [
   // Main content
-  { type: 'table', bind: { model: { name: 'sales.order' } },
+  { type: 'table', source: { model: 'sales.order' },
     on: { rowClick: { type: 'setValue', field: '$state.drawerOpen', value: true } },
     children: [...] },
 
@@ -223,7 +225,7 @@ definePage({
       children: [
         {
           type: 'table',
-          bind: { model: { name: 'sales.order' } },
+          source: { model: 'sales.order' },
           on: { rowClick: { type: 'setValue', field: '$state.selectedId', value: '{{id}}' } },
           children: [
             { type: 'column', props: { label: 'Name' }, bind: { field: 'name' } },
@@ -256,7 +258,7 @@ definePage({
   key: 'sales.order-detail',
   label: 'Order Detail',
   type: 'record',
-  path: '/sales/orders/:id',
+  path: '/sales/orders/$id',
   body: [
     {
       type: 'data',

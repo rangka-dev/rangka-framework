@@ -21,7 +21,7 @@ definePage({
   body: [
     {
       type: 'table',
-      bind: { model: { name: 'sales.order' } },
+      source: { model: 'sales.order' },
       children: [
         { type: 'column', props: { label: 'Name' }, bind: { field: 'name' } },
         {
@@ -104,7 +104,7 @@ Computed read-only value.
 Widget fetches its own list data. Used by the `table` widget.
 
 ```json
-{ "bind": { "model": { "name": "sales.order", "filters": { "status": "draft" }, "limit": 10 } } }
+{ "source": { "model": "sales.order", "filters": { "status": "draft" }, "limit": 10 } }
 ```
 
 ### No binding

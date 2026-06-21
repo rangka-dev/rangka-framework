@@ -35,8 +35,8 @@ describe('Context Builder', () => {
     expect(ctx).toBe(rootCtx);
   });
 
-  test('table with model binding creates child scope', () => {
-    const node = { type: 'table', bind: { model: { name: 'sales.orderItem' } }, children: [] };
+  test('table with source creates child scope', () => {
+    const node = { type: 'table', source: { model: 'sales.orderItem' }, children: [] };
     const ctx = buildContext(node, rootCtx);
     expect(ctx.model).toBe('sales.orderItem');
     expect(ctx.parent).toBe(rootCtx);
@@ -46,7 +46,7 @@ describe('Context Builder', () => {
 
   test('buildRowContext creates row-level context with index', () => {
     const tableCtx = buildContext(
-      { type: 'table', bind: { model: { name: 'sales.orderItem' } }, children: [] },
+      { type: 'table', source: { model: 'sales.orderItem' }, children: [] },
       rootCtx,
     );
     const row = { id: '10', product: 'Widget', qty: 5 };
@@ -66,7 +66,7 @@ describe('Context Builder', () => {
 describe('resolveContextValue', () => {
   const parentCtx = createRootContext({ id: '1', company: 'Acme' }, 'core.company');
   const _childCtx = buildContext(
-    { type: 'table', bind: { model: { name: 'sales.order' } }, children: [] },
+    { type: 'table', source: { model: 'sales.order' }, children: [] },
     parentCtx,
   );
   const rowCtx = {

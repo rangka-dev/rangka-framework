@@ -11,7 +11,9 @@ import { buildContext } from '../context/builder.js';
 import { flattenContext } from '../context/types.js';
 import { parse, evaluate } from '../expression/index.js';
 import { extractLayoutProps, hasLayoutProps, resolveLayoutClasses } from '../lib/layout-props.js';
+import { resolveBindId } from '../lib/resolve-bind-id.js';
 import { useParams } from '../../router/hooks.js';
+import { usePageState, useStateVersion } from '../hooks/usePageState.js';
 import { LazyWidget } from './LazyWidget.js';
 import { WidgetErrorBoundary } from './WidgetErrorBoundary.js';
 import type { FieldMeta } from '../binding/resolver.js';
@@ -36,10 +38,17 @@ export function WidgetRenderer({ node, handlers = {}, fieldMeta, setValue }: Wid
   const visible = useCondition(node.visible);
   const parentCtx = useWidgetContext();
   const routeParams = useRouteParams();
+  const pageState = usePageState();
+  const stateVersion = useStateVersion();
   const binding = useBind(node.bind, fieldMeta, setValue);
   const triggerHandlers = useTriggerHandlers(node.on, handlers, node.bind?.field);
 
   const resolvedProps = useResolvedProps(node.props);
+
+  const stateSnapshot = useMemo(
+    () => Object.fromEntries(pageState.keys().map((k) => [k, pageState.get(k)])),
+    [pageState, stateVersion],
+  );
 
   const propsWithVisibleField = useMemo(() => {
     if (node.visible && !Array.isArray(node.visible) && node.visible.field) {
@@ -73,7 +82,7 @@ export function WidgetRenderer({ node, handlers = {}, fieldMeta, setValue }: Wid
       setValue: binding?.setValue,
       meta: binding?.meta,
       error: binding?.error,
-      id: resolveBindId(node.bind?.id, parentCtx, routeParams),
+      id: resolveBindId(node.bind?.id ?? node.source?.id, parentCtx, routeParams, stateSnapshot),
     },
     on: triggerHandlers,
     context: {
@@ -114,7 +123,7 @@ export function WidgetRenderer({ node, handlers = {}, fieldMeta, setValue }: Wid
 
   let rendered: React.ReactNode;
 
-  if (node.bind?.model || node.source) {
+  if (node.source) {
     rendered = (
       <WidgetContextProvider value={childContext}>
         <WidgetErrorBoundary name={node.type}>
@@ -175,25 +184,4 @@ function useResolvedProps(props: Record<string, unknown> | undefined): Record<st
     }
     return resolved;
   }, [props, ctx, routeParams]);
-}
-
-function resolveBindId(
-  id: string | undefined,
-  ctx: import('../context/types.js').WidgetContext,
-  routeParams: Record<string, string>,
-): string | undefined {
-  if (!id) return undefined;
-  if (!id.includes('{{')) return id;
-  const flat = flattenContext(ctx);
-  const merged: Record<string, unknown> = { ...flat, $route: routeParams };
-  const trimmed = id.trim();
-  if (trimmed.startsWith('{{') && trimmed.endsWith('}}') && !trimmed.slice(2, -2).includes('{{')) {
-    const ast = parse(trimmed);
-    const result = evaluate(ast, merged);
-    return result != null ? String(result) : undefined;
-  }
-  return id.replace(/\{\{(.+?)\}\}/g, (_m, expr: string) => {
-    const ast = parse(expr.trim());
-    return String(evaluate(ast, merged) ?? '');
-  });
 }

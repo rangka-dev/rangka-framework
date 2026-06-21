@@ -8,6 +8,8 @@ export interface WidgetContext {
   index?: number;
   parent?: WidgetContext;
   __columns?: WidgetNode[];
+  sourceFilters?: Record<string, unknown>;
+  sourceLimit?: number;
 }
 
 export function getRootContext(ctx: WidgetContext): WidgetContext {

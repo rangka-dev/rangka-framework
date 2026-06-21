@@ -89,7 +89,7 @@ Set a filter, the table re-fetches. Change the sort, the table re-fetches. Go to
   bind: { field: '$filter.sales.order.name__like' } }
 
 // The table responds automatically
-{ type: 'table', bind: { model: { name: 'sales.order' } }, children: [...] }
+{ type: 'table', source: { model: 'sales.order' }, children: [...] }
 ```
 
 The input writes to `$filter.sales.order.name__like`. The table watches all `$filter.sales.order.*` keys. When any changes, it re-queries.
@@ -156,7 +156,7 @@ A complete reactive flow for a master-detail pattern:
 ```typescript
 body: [
   // 1. Table fetches orders, renders rows
-  { type: 'table', bind: { model: { name: 'sales.order' } },
+  { type: 'table', source: { model: 'sales.order' },
     // 2. Row click sets $state.selectedId (action mutates state)
     on: { rowClick: { type: 'setValue', field: '$state.selectedId', value: '{{id}}' } },
     children: [...] },

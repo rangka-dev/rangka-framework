@@ -61,7 +61,7 @@ const [drawerOpen, setDrawerOpen] = useState(false);
 Rangka:
 
 ```typescript
-{ type: 'table', bind: { model: { name: 'sales.order' } },
+{ type: 'table', source: { model: 'sales.order' },
   on: { rowClick: { type: 'setValues', values: {
     '$state.selectedId': '{{id}}',
     '$state.drawerOpen': true,

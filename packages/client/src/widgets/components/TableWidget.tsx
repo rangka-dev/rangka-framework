@@ -38,6 +38,7 @@ export function TableWidget({ props, on }: WidgetProps) {
     model: model || '',
     pageSize: pageSize ?? 20,
     enabled: smartMode,
+    staticFilters: ctx.sourceFilters,
   });
 
   const records = smartMode ? source.data : (ctx.records ?? []);
@@ -359,7 +360,7 @@ TableWidget.widgetMeta = {
     pageSize: { type: 'number' as const },
     emptyText: { type: 'string' as const },
   },
-  binding: 'model' as const,
+  binding: 'none' as const,
   triggers: ['rowClick', 'select', 'pageChange'],
   container: true,
   accepts: ['column'],

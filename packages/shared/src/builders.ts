@@ -33,7 +33,7 @@ export function section(label: string, children: WidgetNode[]): WidgetNode {
 }
 
 export function table(model: string, columns: WidgetNode[]): WidgetNode {
-  return { type: 'table', bind: { model: { name: model } }, children: columns };
+  return { type: 'table', source: { model }, children: columns };
 }
 
 export function column(label: string, children: WidgetNode[]): WidgetNode {

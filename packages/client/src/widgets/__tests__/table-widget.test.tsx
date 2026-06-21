@@ -30,7 +30,7 @@ beforeEach(() => {
       label: 'Table',
       category: 'layout',
       schema: {},
-      binding: 'model',
+      binding: 'none',
       triggers: ['rowClick', 'select', 'pageChange'],
       container: true,
       accepts: ['column'],
@@ -130,7 +130,7 @@ describe('TableWidget', () => {
       const nodes: WidgetNode[] = [
         {
           type: 'table',
-          bind: { model: { name: 'sales.order' } },
+          source: { model: 'sales.order' },
           children: [
             { type: 'column', props: { label: 'Customer' } },
             { type: 'column', props: { label: 'Total' } },
@@ -150,7 +150,7 @@ describe('TableWidget', () => {
       const nodes: WidgetNode[] = [
         {
           type: 'table',
-          bind: { model: { name: 'sales.order' } },
+          source: { model: 'sales.order' },
           children: [
             {
               type: 'column',
@@ -172,7 +172,7 @@ describe('TableWidget', () => {
       const nodes: WidgetNode[] = [
         {
           type: 'table',
-          bind: { model: { name: 'sales.order' } },
+          source: { model: 'sales.order' },
           children: [{ type: 'column', props: { label: 'Customer' } }],
         },
       ];
@@ -186,7 +186,7 @@ describe('TableWidget', () => {
       const nodes: WidgetNode[] = [
         {
           type: 'table',
-          bind: { model: { name: 'sales.order' } },
+          source: { model: 'sales.order' },
           props: { bordered: true },
           children: [{ type: 'column', props: { label: 'Name' } }],
         },
@@ -201,7 +201,7 @@ describe('TableWidget', () => {
       const nodes: WidgetNode[] = [
         {
           type: 'table',
-          bind: { model: { name: 'sales.order' } },
+          source: { model: 'sales.order' },
           props: { selectable: true },
           children: [{ type: 'column', props: { label: 'Name' } }],
         },
@@ -219,7 +219,7 @@ describe('TableWidget', () => {
       const nodes: WidgetNode[] = [
         {
           type: 'table',
-          bind: { model: { name: 'sales.order' } },
+          source: { model: 'sales.order' },
           children: [
             {
               type: 'column',
@@ -243,7 +243,7 @@ describe('TableWidget', () => {
       const nodes: WidgetNode[] = [
         {
           type: 'table',
-          bind: { model: { name: 'sales.order' } },
+          source: { model: 'sales.order' },
           children: [
             {
               type: 'column',
@@ -266,7 +266,7 @@ describe('TableWidget', () => {
       const nodes: WidgetNode[] = [
         {
           type: 'table',
-          bind: { model: { name: 'sales.order' } },
+          source: { model: 'sales.order' },
           children: [
             {
               type: 'column',
@@ -290,7 +290,7 @@ describe('TableWidget', () => {
       const nodes: WidgetNode[] = [
         {
           type: 'table',
-          bind: { model: { name: 'sales.order' } },
+          source: { model: 'sales.order' },
           on: { rowClick: { type: 'setValue', field: '$state.selected', value: '{{id}}' } },
           children: [
             {
@@ -316,7 +316,7 @@ describe('TableWidget', () => {
       const nodes: WidgetNode[] = [
         {
           type: 'table',
-          bind: { model: { name: 'sales.order' } },
+          source: { model: 'sales.order' },
           props: { selectable: true },
           on: { select: { type: 'setValue', field: '$state.selected', value: '{{id}}' } },
           children: [{ type: 'column', props: { label: 'Customer' }, bind: { field: 'customer' } }],
@@ -339,7 +339,7 @@ describe('TableWidget', () => {
       const nodes: WidgetNode[] = [
         {
           type: 'table',
-          bind: { model: { name: 'sales.order' } },
+          source: { model: 'sales.order' },
           children: [
             { type: 'column', props: { label: 'ID', width: '80px' } },
             { type: 'column', props: { label: 'Name' } },
@@ -357,7 +357,7 @@ describe('TableWidget', () => {
       const nodes: WidgetNode[] = [
         {
           type: 'table',
-          bind: { model: { name: 'sales.order' } },
+          source: { model: 'sales.order' },
           children: [
             { type: 'column', props: { label: 'Amount', align: 'right' } },
             { type: 'column', props: { label: 'Name', align: 'center' } },
@@ -378,7 +378,7 @@ describe('TableWidget', () => {
       const nodes: WidgetNode[] = [
         {
           type: 'table',
-          bind: { model: { name: 'sales.order' } },
+          source: { model: 'sales.order' },
           children: [
             { type: 'column', props: { label: 'Name' }, bind: { field: 'name' } },
             { type: 'column', props: { label: 'Missing' }, bind: { field: 'nonexistent' } },
@@ -400,7 +400,7 @@ describe('TableWidget', () => {
       const nodes: WidgetNode[] = [
         {
           type: 'table',
-          bind: { model: { name: 'test.model' } },
+          source: { model: 'test.model' },
           children: [{ type: 'column', props: { label: 'Name' }, bind: { field: 'name' } }],
         },
       ];
@@ -415,7 +415,7 @@ describe('TableWidget', () => {
       const nodes: WidgetNode[] = [
         {
           type: 'table',
-          bind: { model: { name: 'sales.order' } },
+          source: { model: 'sales.order' },
         },
       ];
 
@@ -432,7 +432,7 @@ describe('TableWidget', () => {
       const nodes: WidgetNode[] = [
         {
           type: 'table',
-          bind: { model: { name: 'test.model' } },
+          source: { model: 'test.model' },
           children: [
             { type: 'column', props: { label: 'Name' }, bind: { field: 'name' } },
             { type: 'column', props: { label: 'Amount' }, bind: { field: 'amount' } },
@@ -451,7 +451,7 @@ describe('TableWidget', () => {
       const nodes: WidgetNode[] = [
         {
           type: 'table',
-          bind: { model: { name: 'sales.order' } },
+          source: { model: 'sales.order' },
           children: [
             {
               type: 'column',

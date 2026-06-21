@@ -26,7 +26,7 @@ export default definePage({
   body: [
     {
       type: 'table',
-      bind: { model: { name: 'sales.order' } },
+      source: { model: 'sales.order' },
       on: { rowClick: { type: 'setValue', field: '$state.selectedId', value: '{{id}}' } },
       children: [
         { type: 'column', props: { label: 'Name' }, bind: { field: 'name' } },
@@ -73,7 +73,7 @@ interface PageDefinition {
 | `record`     | Single record. Client renders detail-oriented layout. |
 | `dashboard`  | No implicit data context. Free-form widget layout.    |
 
-The `type` field is a semantic hint for the client renderer. It does not affect URL generation or routing. A `record` page does not automatically get `/:id` in its route. You must specify that via `path` if needed.
+The `type` field is a semantic hint for the client renderer. It does not affect URL generation or routing. A `record` page does not automatically get `/$id` in its route. You must specify that via `path` if needed.
 
 ## Routing
 
@@ -91,7 +91,7 @@ Override with `path` for custom routes:
 definePage({
   key: 'sales.order-detail',
   type: 'record',
-  path: '/sales/orders/:id',
+  path: '/sales/orders/$id',
   body: [...],
 });
 ```

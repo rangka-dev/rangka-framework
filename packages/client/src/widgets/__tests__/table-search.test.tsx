@@ -40,7 +40,7 @@ function tableNode(): WidgetNode[] {
   return [
     {
       type: 'table',
-      bind: { model: { name: 'test.model' } },
+      source: { model: 'test.model' },
       props: { pageSize: 20 },
       children: [
         { type: 'column', bind: { field: 'name' }, props: { label: 'Name', filterable: true } },
@@ -103,7 +103,7 @@ beforeEach(() => {
       label: 'Table',
       category: 'data',
       schema: {},
-      binding: 'model',
+      binding: 'none',
       triggers: [],
       container: true,
       accepts: ['column'],

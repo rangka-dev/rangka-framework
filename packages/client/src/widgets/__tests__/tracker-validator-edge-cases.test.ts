@@ -139,7 +139,7 @@ describe('Validator Edge Cases', () => {
         label: 'Table',
         category: 'layout',
         schema: {},
-        binding: 'model',
+        binding: 'none',
         triggers: ['rowClick'],
         container: true,
         accepts: ['column'],
@@ -167,7 +167,7 @@ describe('Validator Edge Cases', () => {
     const nodes: WidgetNode[] = [
       {
         type: 'input',
-        bind: { model: { name: 'test' } },
+        bind: { expression: '{{name}}' },
         on: { invalid: { type: 'refreshSource' } },
         children: [{ type: 'input' }],
       },
@@ -211,7 +211,7 @@ describe('Validator Edge Cases', () => {
     const nodes: WidgetNode[] = [
       {
         type: 'table',
-        bind: { model: { name: 'test' } },
+        source: { model: 'test' },
         children: [
           { type: 'column', props: { label: 'Name' } },
           { type: 'column', props: { label: 'Email' } },
@@ -225,7 +225,7 @@ describe('Validator Edge Cases', () => {
     const nodes: WidgetNode[] = [
       {
         type: 'table',
-        bind: { model: { name: 'test' } },
+        source: { model: 'test' },
         children: [{ type: 'input', bind: { field: 'x' } }, { type: 'group' }],
       },
     ];

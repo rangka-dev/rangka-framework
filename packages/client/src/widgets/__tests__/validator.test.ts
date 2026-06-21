@@ -59,7 +59,7 @@ const tableDef: WidgetDefinitionMeta = {
     selectable: { type: 'boolean' },
     pageSize: { type: 'number' },
   },
-  binding: 'model',
+  binding: 'none',
   triggers: ['rowClick', 'select', 'pageChange'],
   container: true,
   accepts: ['column'],
@@ -108,7 +108,7 @@ describe('Widget Tree Validator', () => {
     const nodes: WidgetNode[] = [
       {
         type: 'table',
-        bind: { model: { name: 'test' } },
+        source: { model: 'test' },
         children: [{ type: 'button', props: { label: 'bad' } }],
       },
     ];
@@ -120,7 +120,7 @@ describe('Widget Tree Validator', () => {
     const nodes: WidgetNode[] = [
       {
         type: 'table',
-        bind: { model: { name: 'test' } },
+        source: { model: 'test' },
         children: [{ type: 'column', props: { label: 'Name' } }],
       },
     ];
@@ -188,10 +188,10 @@ describe('Widget Tree Validator', () => {
   });
 
   test('rejects wrong binding mode', () => {
-    const nodes: WidgetNode[] = [{ type: 'input', bind: { model: { name: 'sales.order' } } }];
+    const nodes: WidgetNode[] = [{ type: 'input', bind: { expression: '{{name}}' } }];
     const errors = validateWidgetTree(nodes, registry);
     expect(
-      errors.some((e) => e.message.includes("expects binding mode 'field' but got 'model'")),
+      errors.some((e) => e.message.includes("expects binding mode 'field' but got 'expression'")),
     ).toBe(true);
   });
 

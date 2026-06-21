@@ -113,10 +113,9 @@ export function validateWidgetTree(
   return errors;
 }
 
-function getBindMode(bind: { field?: string; expression?: string; model?: unknown }): string {
+function getBindMode(bind: { field?: string; expression?: string }): string {
   if (bind.field) return 'field';
   if (bind.expression) return 'expression';
-  if (bind.model) return 'model';
   return 'none';
 }
 
