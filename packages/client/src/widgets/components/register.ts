@@ -37,6 +37,7 @@ import { ComputedWidget } from './ComputedWidget.js';
 import { CodeWidget } from './CodeWidget.js';
 import { JsonWidget } from './JsonWidget.js';
 import { TreeWidget } from './TreeWidget.js';
+import { DatagridWidget } from './datagrid/index.js';
 import type { WidgetDefinitionMeta } from '@rangka/shared';
 import type { WidgetProps } from '../types.js';
 import type { ComponentType } from 'react';
@@ -84,6 +85,7 @@ const builtInWidgets: WidgetWithMeta[] = [
   CodeWidget as unknown as WidgetWithMeta,
   JsonWidget as unknown as WidgetWithMeta,
   TreeWidget as unknown as WidgetWithMeta,
+  DatagridWidget as unknown as WidgetWithMeta,
 ];
 
 export function registerBuiltInWidgets(): void {

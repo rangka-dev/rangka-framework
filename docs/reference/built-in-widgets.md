@@ -712,3 +712,85 @@ When `pageSize` is set, the table fetches its own data (smart mode). Without `pa
   ],
 }
 ```
+
+---
+
+### datagrid
+
+Spreadsheet-like grid with inline editing, virtual scrolling, and infinite loading. Use the datagrid when users need to edit data inline, manage rows, or work with large datasets. Use the table widget for simple read-only lists.
+
+| Property      | Type    | Default        | Description                                                |
+| ------------- | ------- | -------------- | ---------------------------------------------------------- |
+| `pageSize`    | number  | `50`           | Records per fetch batch (infinite scroll)                  |
+| `maxHeight`   | number  | auto           | Max height in px. Defaults to `pageSize * rowHeight + 40`. |
+| `rowHeight`   | enum    | `'default'`    | `compact` (32px), `default` (40px), `comfortable` (52px)   |
+| `editable`    | boolean | `true`         | Enable inline cell editing                                 |
+| `resizable`   | boolean | `true`         | Allow column width resizing                                |
+| `reorderable` | boolean | `true`         | Allow column drag reordering                               |
+| `selectable`  | boolean | `true`         | Show row numbers with checkbox on hover                    |
+| `addRow`      | boolean | `false`        | Show add-row button in footer                              |
+| `emptyText`   | string  | `'No records'` | Message when no data                                       |
+
+- Source: `{ model, filters? }`
+- Binding: `none`
+- Triggers: `cellChange`, `rowSelect`, `rowCreate`, `rowDelete`
+- Container: yes (accepts `column` only)
+
+The datagrid uses infinite scroll. It fetches `pageSize` records per batch and loads more as the user scrolls near the bottom. There is no pagination UI.
+
+Sorting is server-side. Click a column header to sort. Shift+click for multi-column sort. Sort stays stable during inline editing. Rows do not reorder after a cell edit.
+
+New rows appear at the top of the grid. Required fields must be filled before the row persists to the server. The row shows placeholder labels for required fields until they are populated.
+
+When `children` is empty the datagrid derives columns automatically from model metadata.
+
+```typescript
+{
+  type: 'datagrid',
+  source: { model: 'sales.order' },
+  props: { pageSize: 50, editable: true, selectable: true, addRow: true },
+  children: [
+    { type: 'column', bind: { field: 'customer' }, props: { label: 'Customer', sortable: true, filterable: true } },
+    { type: 'column', bind: { field: 'status' }, props: { label: 'Status', editable: true, filterable: true } },
+    { type: 'column', bind: { field: 'total' }, props: { label: 'Total', sortable: true, editable: true } },
+  ],
+  on: {
+    rowCreate: { type: 'refreshSource' },
+    rowDelete: { type: 'refreshSource' },
+  },
+}
+```
+
+#### Column props (datagrid)
+
+The datagrid reads these additional props on `column` children.
+
+| Property     | Type    | Default            | Description                                      |
+| ------------ | ------- | ------------------ | ------------------------------------------------ |
+| `label`      | string  | field name         | Column header text                               |
+| `width`      | string  | `'150'`            | Initial width in pixels                          |
+| `minWidth`   | string  | `'80'`             | Minimum width during resize                      |
+| `maxWidth`   | string  |                    | Maximum width during resize                      |
+| `sortable`   | boolean | `false`            | Allow sorting by this column                     |
+| `filterable` | boolean | `false`            | Include in filter options                        |
+| `editable`   | boolean | inherits from grid | Override grid-level editable for this column     |
+| `resizable`  | boolean | inherits from grid | Override grid-level resizable for this column    |
+| `frozen`     | boolean | `false`            | Pin column to left edge during horizontal scroll |
+
+#### Keyboard navigation
+
+| Key              | Action                                     |
+| ---------------- | ------------------------------------------ |
+| Arrow keys       | Move active cell                           |
+| Tab / Shift+Tab  | Move right/left, wrap to next/previous row |
+| Enter / F2       | Enter edit mode                            |
+| Escape           | Cancel edit or clear selection             |
+| Delete/Backspace | Clear active cell value                    |
+| Ctrl+C / Cmd+C   | Copy cell value to clipboard               |
+| Ctrl+A / Cmd+A   | Select all rows                            |
+| Home / End       | Move to first/last cell in row             |
+| Ctrl+Home/End    | Move to first/last cell in grid            |
+
+#### Inline editing
+
+Double-click or press Enter/F2 to edit a cell. The editor type is selected based on the field's data type from model metadata. Edits save immediately on commit (blur or Enter). The cell value is optimistically updated without a full refetch.
