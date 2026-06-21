@@ -1,5 +1,4 @@
 import { getWidget, registerWidget } from './registry.js';
-import { lazyWidgets } from './components/lazy-manifest.js';
 import type { WidgetDefinitionMeta } from '@rangka/shared';
 import type { ComponentType } from 'react';
 import type { WidgetProps } from './types.js';
@@ -30,15 +29,6 @@ export async function ensureWidget(name: string): Promise<boolean> {
   const pending = loading.get(name);
   if (pending) return pending;
 
-  const loader = lazyWidgets[name];
-  if (loader) {
-    const promise = loadBuiltInWidget(name, loader);
-    loading.set(name, promise);
-    const result = await promise;
-    loading.delete(name);
-    return result;
-  }
-
   if (!manifestCache) {
     await loadCustomWidgets();
   }
@@ -53,26 +43,6 @@ export async function ensureWidget(name: string): Promise<boolean> {
   const result = await promise;
   loading.delete(name);
   return result;
-}
-
-async function loadBuiltInWidget(
-  name: string,
-  loader: () => Promise<{
-    default: ComponentType<WidgetProps> & { widgetMeta: WidgetDefinitionMeta };
-  }>,
-): Promise<boolean> {
-  try {
-    const mod = await loader();
-    const component = mod.default;
-    if (component && component.widgetMeta) {
-      registerWidget(component.widgetMeta, component);
-    }
-    loaded.add(name);
-    return getWidget(name) !== undefined;
-  } catch {
-    loaded.add(name);
-    return false;
-  }
 }
 
 async function loadCustomWidget(
@@ -93,14 +63,13 @@ async function loadCustomWidget(
           def.meta as WidgetDefinitionMeta,
           def.component as ComponentType<WidgetProps>,
         );
-      } else if (def.name) {
-        registerWidget(def as WidgetDefinitionMeta, mod.default as ComponentType<WidgetProps>);
       }
     }
 
     loaded.add(name);
     return getWidget(name) !== undefined;
-  } catch {
+  } catch (err) {
+    console.error(`[rangka] Failed to load custom widget "${name}":`, err);
     loaded.add(name);
     return false;
   }
