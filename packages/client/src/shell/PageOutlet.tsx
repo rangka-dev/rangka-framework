@@ -10,10 +10,12 @@ export function PageOutlet({ pageKey }: { pageKey: string }) {
     return <div data-page-key={pageKey}>Page not found: {pageKey}</div>;
   }
 
+  const isFull = page.layout === 'full';
+
   return (
     <div
       data-page-key={pageKey}
-      className="w-full h-full px-6 py-4 flex flex-col gap-6 animate-page-enter"
+      className={`w-full h-full flex flex-col animate-page-enter ${isFull ? '' : 'px-6 py-4 gap-6'}`}
     >
       <WidgetSlotRenderer nodes={page.body} />
     </div>

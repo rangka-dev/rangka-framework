@@ -1,8 +1,8 @@
 # Datagrid widget spec
 
-> **Draft** — not yet implemented.
+> **Implemented** — shipped in the `feature/ran-16` branch.
 
-The datagrid widget provides a spreadsheet-like editing experience for model data. It renders a virtualized grid with inline cell editing, column resizing, keyboard navigation, and row management. It uses the same data source API as the table widget.
+The datagrid widget provides a spreadsheet-like editing experience for model data. It renders a virtualized grid with inline cell editing, column resizing, keyboard navigation, and row management. It uses infinite scroll instead of pagination.
 
 ---
 

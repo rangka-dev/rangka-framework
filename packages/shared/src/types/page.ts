@@ -20,6 +20,7 @@ export interface PageDefinition {
   label: string;
   type: 'collection' | 'record' | 'dashboard';
   path?: string;
+  layout?: 'default' | 'full';
   actions?: Action[];
   body: WidgetNode[];
 }

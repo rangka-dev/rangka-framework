@@ -54,6 +54,7 @@ interface PageDefinition {
   label: string;
   type: 'collection' | 'record' | 'dashboard';
   path?: string;
+  layout?: 'default' | 'full';
   actions?: Action[];
   body: WidgetNode[];
 }
@@ -61,14 +62,15 @@ interface PageDefinition {
 
 ### Fields
 
-| Field     | Type         | Default | Description                                                     |
-| --------- | ------------ | ------- | --------------------------------------------------------------- |
-| `key`     | string       | —       | Unique identifier. Format: `module.name`.                       |
-| `label`   | string       | —       | Page title. Displayed in breadcrumbs and tab title.             |
-| `type`    | enum         | —       | Semantic hint for the client renderer. Does not affect routing. |
-| `path`    | string       | auto    | Custom URL path. Auto-generated from key if omitted.            |
-| `actions` | Action[]     | —       | Topbar buttons rendered by the shell.                           |
-| `body`    | WidgetNode[] | —       | The entire page content as a widget tree.                       |
+| Field     | Type         | Default     | Description                                                                                    |
+| --------- | ------------ | ----------- | ---------------------------------------------------------------------------------------------- |
+| `key`     | string       | —           | Unique identifier. Format: `module.name`.                                                      |
+| `label`   | string       | —           | Page title. Displayed in breadcrumbs and tab title.                                            |
+| `type`    | enum         | —           | Semantic hint for the client renderer. Does not affect routing.                                |
+| `path`    | string       | auto        | Custom URL path. Auto-generated from key if omitted.                                           |
+| `layout`  | enum         | `'default'` | Page layout mode. `default` adds padding. `full` removes all padding for edge-to-edge content. |
+| `actions` | Action[]     | —           | Topbar buttons rendered by the shell.                                                          |
+| `body`    | WidgetNode[] | —           | The entire page content as a widget tree.                                                      |
 
 ## Page types
 
@@ -79,6 +81,31 @@ interface PageDefinition {
 | `dashboard`  | No implicit data context. Free-form widget layout.    |
 
 The `type` field is a semantic hint for the client renderer. It does not affect URL generation or routing. A `record` page does not automatically get `/$id` in its route. You must specify that via `path` if needed.
+
+## Layout
+
+| Value     | Description                                                                        |
+| --------- | ---------------------------------------------------------------------------------- |
+| `default` | Standard page padding (`px-6 py-4`). Used for most pages.                          |
+| `full`    | No padding. Content fills edge-to-edge. Used for datagrids and full-bleed widgets. |
+
+Use `layout: 'full'` when the page body is a single widget that should fill the entire viewport. The datagrid widget is the primary use case.
+
+```typescript
+definePage({
+  key: 'sales.orders',
+  label: 'Sales Orders',
+  type: 'collection',
+  layout: 'full',
+  body: [
+    {
+      type: 'datagrid',
+      source: { model: 'sales.order' },
+      props: { pageSize: 50, editable: true, addRow: true },
+    },
+  ],
+});
+```
 
 ## Routing
 

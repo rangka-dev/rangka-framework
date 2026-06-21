@@ -1,18 +1,21 @@
-import React, { useState, useCallback, useMemo } from 'react';
-import { FilterIcon, XIcon, SearchIcon } from 'lucide-react';
+import React, { useState, useCallback, useRef } from 'react';
+import { SearchIcon, XIcon, FilterIcon } from 'lucide-react';
 import type { WidgetNode } from '@rangka/shared';
-import { Badge } from '../../../components/ui/badge.js';
-import { Button } from '../../../components/ui/button.js';
-import { Input } from '../../../components/ui/input.js';
-import { Popover, PopoverTrigger, PopoverContent } from '../../../components/ui/popover.js';
-import { useModelMeta } from '../../../data/useModelMeta.js';
+import type { Table } from '@tanstack/react-table';
+import { TrashIcon } from 'lucide-react';
+import { Button } from '../../../../components/ui/button.js';
+import { Popover, PopoverTrigger, PopoverContent } from '../../../../components/ui/popover.js';
+import { Input } from '../../../../components/ui/input.js';
+import { Badge } from '../../../../components/ui/badge.js';
+import { useModelMeta } from '../../../../data/useModelMeta.js';
+import { ColumnVisibilityToggle } from '../columns/ColumnVisibilityToggle.js';
 import {
   getOperatorsForType,
   getDefaultOperator,
   getOperatorSymbol,
   getActiveFilters,
   getLabelForField,
-} from './filter-operators.js';
+} from '../../table/filter-operators.js';
 
 interface PageStore {
   get(key: string): unknown;
@@ -20,28 +23,32 @@ interface PageStore {
   keys(): Iterable<string>;
 }
 
-interface TableToolbarProps {
+interface DatagridToolbarProps {
   model: string;
   store: PageStore;
-  columns: WidgetNode[];
   hasSearch: boolean;
-  hasFilters: boolean;
-  noBorder?: boolean;
+  filterableColumns: WidgetNode[];
+  table: Table<Record<string, unknown>>;
+  selectable: boolean;
+  selectedRowIds: string[];
+  onDeleteRows: () => void;
 }
 
-export function TableToolbar({
+export function DatagridToolbar({
   model,
   store,
-  columns,
   hasSearch,
-  hasFilters,
-  noBorder,
-}: TableToolbarProps) {
+  filterableColumns,
+  table,
+  selectable,
+  selectedRowIds,
+  onDeleteRows,
+}: DatagridToolbarProps) {
   const [searchInput, setSearchInput] = useState(() => {
     const val = store.get(`$search.${model}`);
     return val ? String(val) : '';
   });
-  const debounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleSearchChange = useCallback(
     (value: string) => {
@@ -49,19 +56,18 @@ export function TableToolbar({
       if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = setTimeout(() => {
         store.set(`$search.${model}`, value || null);
-        store.set(`$page.${model}`, 1);
       }, 300);
     },
     [model, store],
   );
 
-  const activeFilters = getActiveFilters(store, model, columns);
+  const activeFilters = getActiveFilters(store, model, filterableColumns);
 
   return (
-    <div className={`flex flex-col ${noBorder ? '' : 'border-b border-border/50'}`}>
-      <div className="flex items-center gap-2 px-5 py-2">
-        {hasSearch && (
-          <div className="flex flex-1 items-center gap-2">
+    <div className="flex flex-col border-b border-border/50">
+      <div className="flex items-center justify-between px-3 py-1.5">
+        {hasSearch ? (
+          <div className="flex flex-1 items-center gap-2 mr-3">
             <SearchIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
             <input
               type="text"
@@ -80,11 +86,29 @@ export function TableToolbar({
               </button>
             )}
           </div>
+        ) : (
+          <div />
         )}
-        {hasFilters && <TableFilterPopover columns={columns} model={model} store={store} />}
+        <div className="flex items-center gap-1">
+          {filterableColumns.length > 0 && (
+            <DatagridFilterPopover columns={filterableColumns} model={model} store={store} />
+          )}
+          <ColumnVisibilityToggle table={table} />
+          {selectable && selectedRowIds.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 gap-1 text-xs text-destructive hover:text-destructive"
+              onClick={onDeleteRows}
+            >
+              <TrashIcon className="h-3.5 w-3.5" />
+              Delete ({selectedRowIds.length})
+            </Button>
+          )}
+        </div>
       </div>
       {activeFilters.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2 px-5 pb-2">
+        <div className="flex flex-wrap items-center gap-2 px-3 pb-1.5">
           {activeFilters.map((f) => (
             <Badge key={f.key} variant="secondary" className="gap-1 pr-1">
               <span className="text-xs">
@@ -94,7 +118,6 @@ export function TableToolbar({
                 className="ml-1 rounded-sm p-0.5 hover:bg-muted"
                 onClick={() => {
                   store.set(f.key, null);
-                  store.set(`$page.${model}`, 1);
                 }}
                 aria-label={`Remove ${f.label} filter`}
               >
@@ -108,15 +131,13 @@ export function TableToolbar({
   );
 }
 
-// --- Filter Popover ---
-
 interface FilterPopoverProps {
   columns: WidgetNode[];
   model: string;
   store: PageStore;
 }
 
-function TableFilterPopover({ columns, model, store }: FilterPopoverProps) {
+function DatagridFilterPopover({ columns, model, store }: FilterPopoverProps) {
   const [adding, setAdding] = useState(false);
   const [selectedField, setSelectedField] = useState<string | null>(null);
   const [selectedOperator, setSelectedOperator] = useState<string>('');
@@ -133,7 +154,7 @@ function TableFilterPopover({ columns, model, store }: FilterPopoverProps) {
     [modelMeta],
   );
 
-  const filteredColumns = useMemo(() => {
+  const filteredColumns = React.useMemo(() => {
     if (!search) return columns.filter((col) => col.bind?.field);
     const q = search.toLowerCase();
     return columns.filter((col) => {
@@ -168,7 +189,6 @@ function TableFilterPopover({ columns, model, store }: FilterPopoverProps) {
       value = 'false';
 
     store.set(key, value);
-    store.set(`$page.${model}`, 1);
     setAdding(false);
     setSelectedField(null);
     setSelectedOperator('');
