@@ -10,6 +10,17 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-query': ['@tanstack/react-query'],
+          'vendor-router': ['@tanstack/react-router'],
+          'vendor-radix': ['radix-ui'],
+        },
+      },
+    },
+  },
   server: {
     proxy: {
       '/api': {

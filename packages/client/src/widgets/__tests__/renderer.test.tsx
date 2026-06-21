@@ -4,14 +4,32 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { SlotRenderer } from '../renderer/SlotRenderer.js';
 import { registerWidget, clearWidgetRegistry } from '../registry.js';
 import { registerBuiltInWidgets } from '../components/register.js';
+import { DividerWidget } from '../components/DividerWidget.js';
+import { SpacerWidget } from '../components/SpacerWidget.js';
+import { SequenceWidget } from '../components/SequenceWidget.js';
 import { createRootContext } from '../context/builder.js';
 import { StateStore } from '../state/store.js';
-import type { WidgetNode } from '@rangka/shared';
+import type { WidgetDefinitionMeta, WidgetNode } from '@rangka/shared';
 import type { WidgetProps } from '../types.js';
+import type { ComponentType } from 'react';
+
+type WidgetWithMeta = ComponentType<WidgetProps> & { widgetMeta: WidgetDefinitionMeta };
 
 beforeEach(() => {
   clearWidgetRegistry();
   registerBuiltInWidgets();
+  registerWidget(
+    (DividerWidget as unknown as WidgetWithMeta).widgetMeta,
+    DividerWidget as unknown as ComponentType<WidgetProps>,
+  );
+  registerWidget(
+    (SpacerWidget as unknown as WidgetWithMeta).widgetMeta,
+    SpacerWidget as unknown as ComponentType<WidgetProps>,
+  );
+  registerWidget(
+    (SequenceWidget as unknown as WidgetWithMeta).widgetMeta,
+    SequenceWidget as unknown as ComponentType<WidgetProps>,
+  );
 });
 
 describe('SlotRenderer', () => {

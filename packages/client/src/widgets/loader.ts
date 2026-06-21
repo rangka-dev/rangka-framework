@@ -1,4 +1,5 @@
 import { getWidget, registerWidget } from './registry.js';
+import { lazyWidgets } from './components/lazy-manifest.js';
 import type { WidgetDefinitionMeta } from '@rangka/shared';
 import type { ComponentType } from 'react';
 import type { WidgetProps } from './types.js';
@@ -29,6 +30,15 @@ export async function ensureWidget(name: string): Promise<boolean> {
   const pending = loading.get(name);
   if (pending) return pending;
 
+  const loader = lazyWidgets[name];
+  if (loader) {
+    const promise = loadBuiltInWidget(name, loader);
+    loading.set(name, promise);
+    const result = await promise;
+    loading.delete(name);
+    return result;
+  }
+
   if (!manifestCache) {
     await loadCustomWidgets();
   }
@@ -37,7 +47,7 @@ export async function ensureWidget(name: string): Promise<boolean> {
   if (!raw) return false;
 
   const entry = typeof raw === 'string' ? { js: raw, css: '' } : raw;
-  const promise = loadWidget(name, entry);
+  const promise = loadCustomWidget(name, entry);
   loading.set(name, promise);
 
   const result = await promise;
@@ -45,7 +55,30 @@ export async function ensureWidget(name: string): Promise<boolean> {
   return result;
 }
 
-async function loadWidget(name: string, entry: { js: string; css: string }): Promise<boolean> {
+async function loadBuiltInWidget(
+  name: string,
+  loader: () => Promise<{
+    default: ComponentType<WidgetProps> & { widgetMeta: WidgetDefinitionMeta };
+  }>,
+): Promise<boolean> {
+  try {
+    const mod = await loader();
+    const component = mod.default;
+    if (component && component.widgetMeta) {
+      registerWidget(component.widgetMeta, component);
+    }
+    loaded.add(name);
+    return getWidget(name) !== undefined;
+  } catch {
+    loaded.add(name);
+    return false;
+  }
+}
+
+async function loadCustomWidget(
+  name: string,
+  entry: { js: string; css: string },
+): Promise<boolean> {
   try {
     if (entry.css) {
       await injectCSS(entry.css);
