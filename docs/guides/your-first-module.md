@@ -1,265 +1,178 @@
 ---
 status: stable
 since: 0.1.0
-last-updated: 2026-06-12
+last-updated: 2026-06-21
 description: Tutorial to build a working module in 15 minutes
 ---
 
-# Your First Module
+# Your first module
 
-Build a working Contacts module from scratch. By the end, you'll have a list and form view, status transitions via actions, email validation, and auto-generated API endpoints.
+Build a working Tasks module from scratch. By the end you will have a list page, a form, field validation, and auto-generated API endpoints.
 
 ## Prerequisites
 
-- A Rangka project (`rangka init`)
-- Node.js 18+
+- A Rangka project (run `pnpm create rangka my-app` if you don't have one)
+- Node.js 20+
 - A running PostgreSQL database
 
-## 1. Create the folder
+## 1. Create the module
+
+Create the folder structure and module definition:
 
 ```bash
-mkdir -p modules/contacts/{models,pages,services,hooks}
+mkdir -p modules/tasks/{models,pages,hooks}
 ```
 
-## 2. Define the module
-
 ```typescript
-// modules/contacts/module.ts
+// modules/tasks/module.ts
 import { defineModule } from 'rangka';
 
 export default defineModule({
-  name: 'contacts',
-  label: 'Contacts',
-  icon: 'contact',
-  order: 20,
+  name: 'tasks',
+  label: 'Tasks',
+  icon: 'check-square',
+  order: 10,
   navigation: [
     {
       section: 'Records',
-      items: [{ page: 'contacts.contacts', label: 'All Contacts', icon: 'users' }],
+      items: [{ page: 'tasks.tasks', label: 'Tasks', icon: 'list' }],
     },
   ],
 });
 ```
 
-## 3. Define the model
+## 2. Define the model
 
 ```typescript
-// modules/contacts/models/contact.ts
+// modules/tasks/models/task.ts
 import { defineModel, field } from 'rangka';
 
 export default defineModel({
-  name: 'contact',
-  label: 'Contact',
-  naming: 'name',
+  name: 'task',
+  label: 'Task',
+  naming: 'title',
   traits: ['timestamped'],
   fields: {
-    name: field.string({ required: true }),
-    email: field.string(),
-    phone: field.string(),
-    company: field.link('contacts.company'),
-    type: field.enum(['Customer', 'Supplier', 'Partner', 'Other'], { default: 'Customer' }),
-    status: field.enum(['Active', 'Inactive'], { default: 'Active' }),
-    notes: field.text(),
+    title: field.string({ required: true }),
+    description: field.text(),
+    status: field.enum(['open', 'in_progress', 'done'], { default: 'open' }),
+    priority: field.enum(['low', 'medium', 'high'], { default: 'medium' }),
+    due_date: field.date(),
   },
 });
 ```
 
 The `timestamped` trait adds `created_at` and `updated_at` automatically. You don't need to define `id` either.
 
-## 4. Define the page
+## 3. Define the page
 
 ```typescript
-// modules/contacts/pages/contacts.ts
+// modules/tasks/pages/tasks.ts
 import { definePage } from 'rangka';
+import type { WidgetNode } from 'rangka';
+
+const body: WidgetNode[] = [
+  {
+    type: 'table',
+    bind: { model: { name: 'tasks.task' } },
+    props: { pageSize: 20 },
+    children: [
+      {
+        type: 'column',
+        bind: { field: 'title' },
+        props: { label: 'Title', sortable: true, filterable: true },
+      },
+      {
+        type: 'column',
+        bind: { field: 'status' },
+        props: { label: 'Status', sortable: true, filterable: true },
+        children: [{ type: 'badge', bind: { field: 'status' } }],
+      },
+      {
+        type: 'column',
+        bind: { field: 'priority' },
+        props: { label: 'Priority', sortable: true, filterable: true },
+        children: [{ type: 'badge', bind: { field: 'priority' } }],
+      },
+      { type: 'column', bind: { field: 'due_date' }, props: { label: 'Due Date', sortable: true } },
+    ],
+  },
+];
 
 export default definePage({
-  key: 'contacts.contacts',
-  label: 'Contacts',
-  type: 'collection',
-  body: [
-    {
-      type: 'split',
-      props: { sizes: [60, 40] },
-      children: [
-        {
-          type: 'table',
-          bind: { model: { name: 'contacts.contact' } },
-          on: { rowClick: { type: 'setValue', field: '$state.selectedId', value: '{{id}}' } },
-          children: [
-            { type: 'column', props: { label: 'Name', sortable: true }, bind: { field: 'name' } },
-            { type: 'column', props: { label: 'Email' }, bind: { field: 'email' } },
-            { type: 'column', props: { label: 'Company' }, bind: { field: 'company' } },
-            {
-              type: 'column',
-              props: { label: 'Type' },
-              children: [{ type: 'badge', bind: { field: 'type' } }],
-            },
-            {
-              type: 'column',
-              props: { label: 'Status' },
-              children: [{ type: 'badge', bind: { field: 'status' } }],
-            },
-          ],
-        },
-        {
-          type: 'data',
-          source: { model: 'contacts.contact', id: '$state.selectedId' },
-          children: [
-            {
-              type: 'section',
-              props: { label: 'Basic Info' },
-              children: [
-                { type: 'input', bind: { field: 'name' } },
-                { type: 'input', bind: { field: 'email' } },
-                { type: 'input', bind: { field: 'phone' } },
-                { type: 'input', bind: { field: 'type' } },
-                { type: 'input', bind: { field: 'status' } },
-              ],
-            },
-            {
-              type: 'section',
-              props: { label: 'Organization' },
-              children: [{ type: 'input', bind: { field: 'company' } }],
-            },
-            {
-              type: 'section',
-              props: { label: 'Additional' },
-              children: [{ type: 'input', bind: { field: 'notes' } }],
-            },
-            {
-              type: 'group',
-              props: { direction: 'row', gap: 'sm' },
-              children: [
-                {
-                  type: 'button',
-                  props: { label: 'Deactivate', variant: 'danger' },
-                  on: { click: { type: 'service', name: 'contacts.deactivateContact' } },
-                },
-                {
-                  type: 'button',
-                  props: { label: 'Reactivate', variant: 'secondary' },
-                  on: { click: { type: 'service', name: 'contacts.reactivateContact' } },
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-  ],
+  key: 'tasks.tasks',
+  label: 'Tasks',
+  path: '/tasks',
+  body,
 });
 ```
 
-Split layout: table on the left, detail form on the right. Click a row to load that record. Action buttons let you transition the status via services.
+This gives you a table with sortable columns, filtering, and pagination. Clicking a row opens the record form automatically.
 
-## 5. Define the service for status transitions
-
-```typescript
-// modules/contacts/services/deactivateContact.ts
-import { defineService } from 'rangka';
-
-export default defineService({
-  name: 'contacts.deactivateContact',
-  factory(ctx) {
-    return {
-      async execute(doc) {
-        if (doc.status !== 'Active') throw new Error('Contact is already inactive');
-        await ctx.db.update('contacts.contact', doc.id, { status: 'Inactive' });
-      },
-    };
-  },
-});
-```
+## 4. Add a hook
 
 ```typescript
-// modules/contacts/services/reactivateContact.ts
-import { defineService } from 'rangka';
-
-export default defineService({
-  name: 'contacts.reactivateContact',
-  factory(ctx) {
-    return {
-      async execute(doc) {
-        if (doc.status !== 'Inactive') throw new Error('Contact is already active');
-        await ctx.db.update('contacts.contact', doc.id, { status: 'Active' });
-      },
-    };
-  },
-});
-```
-
-Services own the logic: validation, state change, side effects. The framework just calls them when the user clicks a button.
-
-## 6. Define the hook
-
-```typescript
-// modules/contacts/hooks/contact.ts
+// modules/tasks/hooks/task.ts
 import { defineHooks } from 'rangka';
 
-export default defineHooks('contacts.contact', {
+export default defineHooks('tasks.task', {
   validate(doc) {
-    if (doc.email && typeof doc.email === 'string') {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(doc.email)) {
-        throw new Error('Invalid email address format');
-      }
+    if (!doc.title || !doc.title.trim()) {
+      throw new Error('Title cannot be empty');
     }
   },
 
-  async beforeSave(doc, ctx) {
-    if (doc.email && typeof doc.email === 'string') {
-      doc.email = doc.email.toLowerCase().trim();
+  async beforeSave(doc) {
+    if (doc.title && typeof doc.title === 'string') {
+      doc.title = doc.title.trim();
     }
   },
 });
 ```
 
-`validate` runs before any save. Throw an error to abort. `beforeSave` is for transformations (normalizing the email here).
+`validate` runs before any save. Throw an error to abort and show the message to the user. `beforeSave` runs after validation passes and is where you apply transformations.
 
-Note: `validate` is synchronous only. Use `beforeSave` or `beforeCreate` for async validation like uniqueness checks.
-
-## 7. Run it
+## 5. Run it
 
 ```bash
-rangka start
+pnpm start
 ```
 
 ```
 [rangka] Starting...
-[rangka] Discovered app "my-erp" with 1 models
-[rangka] Connecting to postgres://...
+[rangka] Discovered app with 1 models
+[rangka] Connecting to database...
 [rangka] Schema synced: 1 models
 [rangka] Listening on http://localhost:3000
 ```
 
 Open the browser. You should see:
 
-- The Contacts module in the sidebar
-- A split view with an empty list and a ready form
-- Action buttons (Deactivate/Reactivate) in the form toolbar and row actions
+- The Tasks module in the sidebar
+- A table view with columns for title, status, priority, and due date
+- A form that opens when you click a row or create a new record
 
-Try creating a contact with an invalid email to see the validation in action.
+Try creating a task with an empty title to see the validation in action.
 
 ## What the framework generated
 
-From those files:
+From those four files:
 
 **API:**
 
-- `GET /api/contacts/contact` (list with filtering, sorting, pagination)
-- `GET /api/contacts/contact/:id` (single record)
-- `POST /api/contacts/contact` (create)
-- `PUT /api/contacts/contact/:id` (update)
-- `DELETE /api/contacts/contact/:id` (delete)
+- `GET /api/tasks/task` (list with filtering, sorting, pagination)
+- `GET /api/tasks/task/:id` (single record)
+- `POST /api/tasks/task` (create)
+- `PUT /api/tasks/task/:id` (update)
+- `DELETE /api/tasks/task/:id` (delete)
 
-**UI:** list view with search/sort/filter, form view with sections, action buttons backed by services, sidebar navigation entry.
+**UI:** table with search, sort, and filter. Form with inputs for every field. Sidebar navigation entry.
 
-**Database:** `contacts_contact` table with all fields plus `id`, `status`, `created_at`, `updated_at`.
+**Database:** `tasks__task` table with all fields plus `id`, `created_at`, `updated_at`.
 
 ## Next steps
 
-- [Extending Models](/guides/extending-models): add a Company model and link it
-- [Custom Widgets](/guides/custom-widgets): build a custom dashboard widget
-- [Actions](/concepts/actions): add more service-backed actions to your models
-- [Permissions](/concepts/permissions): restrict who can deactivate contacts
-- [Jobs](/concepts/jobs): sync contacts from an external CRM
+- [Models](/concepts/models): field types, traits, and relationships
+- [Pages](/concepts/pages): composing widgets into screens
+- [Hooks](/concepts/hooks): validation, side effects, and lifecycle
+- [Widgets](/concepts/widgets): the universal UI building block

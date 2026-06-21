@@ -1,7 +1,7 @@
 ---
 status: stable
 since: 0.1.0
-last-updated: 2026-06-12
+last-updated: 2026-06-21
 description: What Rangka is, who it's for, and how to get started
 ---
 
@@ -43,30 +43,15 @@ Rangka is for building internal business applications. ERPs, admin panels, opera
 ## Quick start
 
 ```bash
-mkdir my-erp && cd my-erp
-npm init -y
-npm install rangka
+pnpm create rangka my-erp
+cd my-erp
+pnpm install
+pnpm start
 ```
 
-Create `modules/sales/module.ts`:
+This scaffolds a project with a `rangka.config.ts`, a starter module, a model, and a page. Open the browser and you have a working application shell with navigation and a module ready to build on.
 
-```typescript
-import { defineModule } from 'rangka';
-
-export default defineModule({
-  name: 'sales',
-  label: 'Sales',
-  icon: 'shopping-cart',
-  navigation: [
-    {
-      section: 'Transactions',
-      items: [{ page: 'sales.orders', label: 'Sales Orders', icon: 'file-text' }],
-    },
-  ],
-});
-```
-
-Run `rangka start`. Open the browser. You have a working application shell with navigation, authentication, and a module ready for models and pages.
+You can also use `npm create rangka` or `yarn create rangka`. The scaffolder detects your package manager automatically.
 
 ## What a typical project looks like
 
@@ -81,7 +66,7 @@ my-erp/
     └── accounting/        # Journal entries, ledgers
 ```
 
-Each module is one business domain. They declare dependencies on each other, and third-party modules install via npm and merge in automatically.
+Each module is one business domain. They declare dependencies on each other.
 
 ## Next steps
 

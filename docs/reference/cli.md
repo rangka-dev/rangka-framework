@@ -1,13 +1,21 @@
 ---
 status: stable
 since: 0.1.0
-last-updated: 2026-06-12
+last-updated: 2026-06-21
 description: 'CLI commands reference: start, build, studio'
 ---
 
 # CLI
 
 Command-line interface for building and running Rangka applications.
+
+## Install
+
+```bash
+pnpm add @rangka/cli
+```
+
+This registers the `rangka` binary. All commands accept a `--root <path>` flag to set the project root directory (defaults to `.`).
 
 ## Commands
 
@@ -16,56 +24,97 @@ Command-line interface for building and running Rangka applications.
 Start the Rangka application server.
 
 ```bash
-rangka start [--root <path>]
+rangka start [--root <path>] [--no-sync]
 ```
+
+**Flags:**
+
+| Flag        | Default | Description                         |
+| ----------- | ------- | ----------------------------------- |
+| `--root`    | `.`     | Project root directory              |
+| `--no-sync` | `false` | Skip automatic database schema sync |
 
 **Behavior:**
 
 - Scans the project root for modules, models, and configuration
 - Connects to the configured PostgreSQL database
-- Syncs the database schema
-- Serves the pre-built shell (from `@rangka/client`)
-- Serves custom UI chunks from `.rangka/` if present (run `rangka build` first)
+- Syncs the database schema (unless `--no-sync` is passed)
+- Serves the pre-built shell from `@rangka/client`
+- Serves custom widget bundles from `.rangka/` if present (run `rangka build` first)
 - SPA fallback. All non-API routes serve `index.html`
 - Listens on the port configured in `rangka.config.ts` (default `3000`)
-- Graceful shutdown on `SIGINT` / `SIGTERM`
+- Graceful shutdown on `SIGINT` / `SIGTERM`. Closes the server and database connection.
+
+**Database defaults:**
+
+If not specified in `rangka.config.ts`, the following defaults apply:
+
+| Setting    | Default     |
+| ---------- | ----------- |
+| `host`     | `localhost` |
+| `port`     | `5432`      |
+| `database` | `rangka`    |
+| `user`     | `postgres`  |
+| `password` | `''`        |
 
 **Requirements:**
 
 - A `rangka.config.ts` with database settings in the project root
+- PostgreSQL running and accessible
+- `@rangka/client` installed (provides the shell build)
 
 ---
 
 ### rangka build
 
-Compile custom UI components (views, fields, cards) for the shell to load at runtime.
+Compile custom widgets for the shell to load at runtime.
 
 ```bash
 rangka build [--root <path>]
 ```
 
+**Flags:**
+
+| Flag     | Default | Description            |
+| -------- | ------- | ---------------------- |
+| `--root` | `.`     | Project root directory |
+
+**Widget discovery:**
+
+The scanner looks for `.ts` and `.tsx` files in each module's `widgets/` directory:
+
+```
+modules/<module>/widgets/
+```
+
+Each file becomes a widget registered under the key `<module>.<kebab-name>`. For example, `modules/sales/widgets/PipelineBoard.tsx` registers as `sales.pipeline-board`.
+
 **Behavior:**
 
-- Scans modules for custom UI components (views, fields, cards)
-- Bundles each component with esbuild (ESM, browser target)
+- Scans all module directories for custom widgets
+- Bundles each widget with esbuild (ESM, browser target `es2022`)
 - Externalizes `react`, `react-dom`, and `@rangka/client`
 - Outputs bundles and a `manifest.json` to `.rangka/`
-- Skips gracefully if no custom components are found
+- Skips gracefully if no custom widgets are found
 
 **Output structure:**
 
 ```
 .rangka/
-├── views/
-│   └── <module>--<name>.<hash>.js
-├── fields/
-│   └── <module>--<name>.<hash>.js
-├── cards/
+├── widgets/
 │   └── <module>--<name>.<hash>.js
 └── manifest.json
 ```
 
-The manifest maps component keys to their served paths (e.g. `/_rangka/views/...`), which the shell uses to lazy-load custom components.
+**Manifest format:**
+
+```json
+{
+  "sales.pipeline-board": "/_rangka/widgets/sales--pipeline-board.a1b2c3.js"
+}
+```
+
+The manifest maps widget registry keys to their served paths. The shell uses this to lazy-load custom widgets at runtime.
 
 ---
 
@@ -74,20 +123,37 @@ The manifest maps component keys to their served paths (e.g. `/_rangka/views/...
 Start the Studio development environment for agent-driven page building and model design.
 
 ```bash
-rangka studio [--root <path>] [--port <number>] [--wsPort <number>] [--frameworkPort <number>]
+rangka studio [--root <path>] [--port <number>] [--frameworkPort <number>]
 ```
 
 **Flags:**
 
-| Flag              | Default | Description                                |
-| ----------------- | ------- | ------------------------------------------ |
-| `--root`          | `.`     | Project root directory                     |
-| `--port`          | `4000`  | Studio UI port                             |
-| `--wsPort`        | `4001`  | WebSocket port for real-time communication |
-| `--frameworkPort` | `3000`  | Framework server port                      |
+| Flag              | Default | Description            |
+| ----------------- | ------- | ---------------------- |
+| `--root`          | `.`     | Project root directory |
+| `--port`          | `4000`  | Studio WebSocket port  |
+| `--frameworkPort` | `3000`  | Framework server port  |
 
 **Behavior:**
 
-- Starts a WebSocket server for real-time communication with the framework
-- Serves the Studio UI for interactive page building and model design
+- Starts a WebSocket server for real-time communication with the Studio UI
 - Connects to the running framework server on the configured port
+- Graceful shutdown on `SIGINT` / `SIGTERM`
+
+**Requirements:**
+
+- `@rangka/studio-core` installed as a dev dependency. If missing, the command exits with install instructions:
+
+```bash
+pnpm add -D @rangka/studio-core
+```
+
+---
+
+### rangka --help
+
+Print available commands. Provided automatically by the CLI framework.
+
+### rangka --version
+
+Print the CLI version.

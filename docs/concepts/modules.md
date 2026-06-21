@@ -1,7 +1,7 @@
 ---
 status: stable
 since: 0.1.0
-last-updated: 2026-06-12
+last-updated: 2026-06-21
 description: Module definition, namespacing, and dependency declaration
 ---
 
@@ -46,15 +46,18 @@ This is enough to get a module showing up in the sidebar with its own navigation
 
 ## Configuration
 
-| Field        | Type                          | Description                                     |
-| ------------ | ----------------------------- | ----------------------------------------------- |
-| `name`       | `string`                      | Unique identifier, used as namespace for models |
-| `label`      | `string`                      | Display name in the UI                          |
-| `icon`       | `string`                      | Lucide icon name for the sidebar                |
-| `order`      | `number`                      | Sidebar position (lower = higher)               |
-| `depends`    | `string[]`                    | Modules that must load before this one          |
-| `scopes`     | `Record<string, ScopeConfig>` | Filtering dimensions (see [Scopes](#scopes))    |
-| `navigation` | `NavigationSection[]`         | Sidebar sections and items                      |
+| Field         | Type                              | Default     | Description                                     |
+| ------------- | --------------------------------- | ----------- | ----------------------------------------------- |
+| `name`        | `string`                          | —           | Unique identifier, used as namespace for models |
+| `label`       | `string`                          | —           | Display name in the UI                          |
+| `description` | `string`                          | `undefined` | Module description shown in navigation          |
+| `icon`        | `string`                          | `undefined` | Lucide icon name for the sidebar                |
+| `color`       | `string`                          | `undefined` | Module color for navigation UI                  |
+| `type`        | `'internal' \| 'external'`        | `undefined` | Module type                                     |
+| `order`       | `number`                          | `0`         | Sidebar position (lower = higher)               |
+| `depends`     | `string[]`                        | `undefined` | Modules that must load before this one          |
+| `scopes`      | `Record<string, ScopeDefinition>` | `undefined` | Filtering dimensions (see [Scopes](#scopes))    |
+| `navigation`  | `NavigationSection[]`             | `undefined` | Sidebar sections and items                      |
 
 ## File layout
 
@@ -110,6 +113,36 @@ defineModule({
 
 This ensures dependent modules load first. Their models, hooks, and services are registered before yours, so references always resolve.
 
+## Navigation
+
+Navigation defines the sidebar structure for your module. Each section groups related items:
+
+```typescript
+navigation: [
+  {
+    section: 'Transactions',
+    items: [
+      { page: 'accounting.journal-entries', label: 'Journal Entries', icon: 'book' },
+      { page: 'accounting.ledger', label: 'General Ledger', icon: 'list' },
+    ],
+  },
+  {
+    section: '_settings',
+    items: [
+      { page: 'accounting.chart-of-accounts', label: 'Chart of Accounts', icon: 'sitemap' },
+    ],
+  },
+],
+```
+
+Sections with the `_settings` prefix place their items under a dedicated Settings area in the sidebar.
+
+Items can reference pages from other modules using the `module.page` format.
+
+> **Planned** — not yet implemented.
+
+Navigation items are filtered by the user's page permissions at boot time. Sections with no permitted items are hidden entirely.
+
 ## Scopes
 
 Scopes are filtering dimensions that automatically restrict queries. The most common example: a multi-company setup where users only see data from their active company.
@@ -128,11 +161,11 @@ defineModule({
 });
 ```
 
-| Field        | Type      | Description                          |
-| ------------ | --------- | ------------------------------------ |
-| `model`      | `string`  | Model that provides scope values     |
-| `default`    | `string`  | Dot-path to the user's default value |
-| `switchable` | `boolean` | Show a switcher in the sidebar       |
+| Field        | Type      | Default | Description                                                     |
+| ------------ | --------- | ------- | --------------------------------------------------------------- |
+| `model`      | `string`  | —       | Model that provides scope values                                |
+| `default`    | `string`  | —       | Dot-path to the user's default value                            |
+| `switchable` | `boolean` | `false` | Show a switcher in the sidebar so users can change active scope |
 
 Models opt in with `scope: 'core.company'` in their definition. Once opted in, all queries are filtered automatically. The user never sees data from a company they have not selected.
 
@@ -151,5 +184,7 @@ modules/
 Each has its own navigation, models, and pages. They reference each other's models freely through the dependency system.
 
 ## Third-party modules
+
+> **Planned** — not yet implemented.
 
 Modules can be distributed as npm packages. Install one, and its models, pages, and logic merge into your app automatically on the next restart. No extra configuration beyond `npm install`.

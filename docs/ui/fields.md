@@ -1,13 +1,13 @@
 ---
 status: stable
 since: 0.1.0
-last-updated: 2026-06-12
+last-updated: 2026-06-21
 description: Field type rendering, display modes, and customization
 ---
 
 # Field Renderers
 
-Every model field type maps to a built-in renderer that handles both form (editable) and list (read-only) contexts. You can override any renderer with a custom one.
+Every model field type maps to a built-in renderer that handles both form (editable) and list (read-only) contexts. You can override any renderer with a custom widget.
 
 ## Built-in renderers
 
@@ -43,27 +43,26 @@ Every model field type maps to a built-in renderer that handles both form (edita
 
 ## Writing a custom renderer
 
-Custom renderers live in `modules/{module}/ui/fields/`:
+Custom field renderers are widgets that live in `modules/{module}/widgets/`:
 
 ```tsx
-// modules/inventory/ui/fields/color-picker.tsx
-import { FieldRendererProps } from '@rangka/client';
+// modules/inventory/widgets/color-picker.tsx
+import { defineWidget, registerWidget } from 'rangka';
 
-export const meta = {
-  name: 'color-picker',
+const meta = defineWidget({
+  name: 'inventory.color-picker',
   label: 'Color Picker',
-  forTypes: ['Data'],
-};
+  category: 'input',
+  schema: {},
+  binding: 'field',
+  triggers: [],
+  container: false,
+});
 
-export default function ColorPicker({
-  value,
-  onChange,
-  field,
-  readOnly,
-  error,
-  context,
-}: FieldRendererProps) {
-  if (context === 'list') {
+registerWidget(meta, ({ bind }) => {
+  const { value, setValue, meta: fieldMeta } = bind;
+
+  if (!setValue) {
     return (
       <span className="inline-flex items-center gap-1.5">
         <span
@@ -80,49 +79,21 @@ export default function ColorPicker({
       <input
         type="color"
         value={value || '#000000'}
-        onChange={(e) => onChange(e.target.value)}
-        disabled={readOnly}
-        aria-label={field.label}
-        aria-invalid={!!error}
+        onChange={(e) => setValue(e.target.value)}
+        aria-label={fieldMeta?.label}
       />
       <input
         type="text"
         value={value || ''}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => setValue(e.target.value)}
         placeholder="#000000"
-        readOnly={readOnly}
+        readOnly={!setValue}
         className="input-base w-28"
       />
-      {error && <p className="text-error text-sm mt-1">{error}</p>}
     </div>
   );
-}
+});
 ```
-
-## Props interface
-
-Every renderer receives:
-
-```typescript
-interface FieldRendererProps {
-  value: any;
-  onChange(value: any): void;
-  field: {
-    name: string;
-    label: string;
-    type: string;
-    required: boolean;
-    options?: string[];
-    linkedModel?: string;
-    readOnly?: boolean;
-  };
-  readOnly: boolean;
-  error?: string;
-  context: 'form' | 'list';
-}
-```
-
-In list context, `onChange` is a no-op and `readOnly` is always true.
 
 ## Assigning a renderer
 
@@ -132,17 +103,17 @@ Set `renderer` on the field in your model:
 
 ```typescript
 fields: {
-  color: field.string({ renderer: 'color-picker' }),
+  color: field.string({ renderer: 'inventory.color-picker' }),
 }
 ```
 
 ### Per type (global)
 
-Register a renderer that replaces the built-in for all fields of a given type:
+Register a widget that replaces the built-in for all fields of a given type:
 
 ```typescript
 import { registerFieldRenderer } from '@rangka/client';
-import RichTextEditor from './fields/rich-text-editor';
+import RichTextEditor from './widgets/rich-text-editor';
 
 registerFieldRenderer('rich-text', RichTextEditor, { forTypes: ['LongText'] });
 ```
@@ -150,9 +121,8 @@ registerFieldRenderer('rich-text', RichTextEditor, { forTypes: ['LongText'] });
 ## Resolution order
 
 1. Field-specific `renderer` property
-2. Module field directory (`modules/{module}/ui/fields/{name}.tsx`)
-3. Global registry (`registerFieldRenderer()`)
-4. Built-in renderer for the field type
+2. Global registry (`registerFieldRenderer()`)
+3. Built-in renderer for the field type
 
 ## Accessibility
 

@@ -7,7 +7,7 @@ import { scanCustomUI } from '../ui-scanner.js';
 export const buildCommand = defineCommand({
   meta: {
     name: 'build',
-    description: 'Compile custom UI components (views, fields, cards)',
+    description: 'Compile custom widgets for the shell to load at runtime',
   },
   args: {
     root: {
@@ -20,33 +20,28 @@ export const buildCommand = defineCommand({
     const root = path.resolve(args.root);
     const outDir = path.join(root, '.rangka');
 
-    console.log(`[rangka] Scanning for custom components...`);
+    console.log(`[rangka] Scanning for custom widgets...`);
 
     const { components, hasCustomUI } = await scanCustomUI(root);
 
     if (!hasCustomUI) {
-      console.log(`[rangka] No custom components found.`);
+      console.log(`[rangka] No custom widgets found.`);
       return;
     }
 
-    console.log(`[rangka] Found ${components.length} custom components`);
+    console.log(`[rangka] Found ${components.length} custom widgets`);
 
     await fs.rm(outDir, { recursive: true, force: true });
     await fs.mkdir(outDir, { recursive: true });
 
-    const manifest: Record<string, Record<string, string>> = {
-      views: {},
-      fields: {},
-      cards: {},
-    };
+    const manifest: Record<string, string> = {};
 
     for (const component of components) {
       const hash = createHash(component.filePath);
       const filename = `${component.module}--${path.basename(component.filePath, path.extname(component.filePath))}.${hash}.js`;
-      const typeDir = `${component.type}s`;
-      const outputPath = path.join(outDir, typeDir, filename);
+      const outputPath = path.join(outDir, 'widgets', filename);
 
-      await fs.mkdir(path.join(outDir, typeDir), { recursive: true });
+      await fs.mkdir(path.join(outDir, 'widgets'), { recursive: true });
 
       await esbuild.build({
         entryPoints: [component.filePath],
@@ -58,7 +53,7 @@ export const buildCommand = defineCommand({
         external: ['react', 'react-dom', '@rangka/client'],
       });
 
-      manifest[typeDir]![component.key] = `/_rangka/${typeDir}/${filename}`;
+      manifest[component.key] = `/_rangka/widgets/${filename}`;
     }
 
     await fs.writeFile(

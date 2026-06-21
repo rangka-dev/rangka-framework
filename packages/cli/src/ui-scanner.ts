@@ -2,7 +2,7 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 
 export interface DiscoveredComponent {
-  type: 'view' | 'card' | 'field';
+  type: 'widget';
   module: string;
   key: string;
   filePath: string;
@@ -27,11 +27,9 @@ export async function scanCustomUI(root: string): Promise<ScanResult> {
     if (!mod.isDirectory()) continue;
 
     const moduleDir = path.join(modulesDir, mod.name);
-    const views = await scanComponentDir(moduleDir, 'views', 'view', mod.name);
-    const fields = await scanComponentDir(moduleDir, 'fields', 'field', mod.name);
-    const cards = await scanComponentDir(moduleDir, 'cards', 'card', mod.name);
+    const widgets = await scanComponentDir(moduleDir, 'widgets', mod.name);
 
-    components.push(...views, ...cards, ...fields);
+    components.push(...widgets);
   }
 
   return { components, hasCustomUI: components.length > 0 };
@@ -40,7 +38,6 @@ export async function scanCustomUI(root: string): Promise<ScanResult> {
 async function scanComponentDir(
   moduleDir: string,
   subdir: string,
-  type: DiscoveredComponent['type'],
   moduleName: string,
 ): Promise<DiscoveredComponent[]> {
   const components: DiscoveredComponent[] = [];
@@ -58,7 +55,7 @@ async function scanComponentDir(
     const key = toRegistryKey(moduleName, basename);
 
     components.push({
-      type,
+      type: 'widget',
       module: moduleName,
       key,
       filePath: path.join(dir, entry.name),

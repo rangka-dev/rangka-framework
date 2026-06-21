@@ -74,7 +74,7 @@ export const startCommand = defineCommand({
         prefix: '/',
       });
 
-      // Serve custom UI chunks from .rangka/ if they exist
+      // Serve custom widget bundles from .rangka/ if they exist
       const rangkaDir = path.join(root, '.rangka');
       if (await dirExists(rangkaDir)) {
         await result.server!.register(fastifyStatic, {
@@ -82,7 +82,7 @@ export const startCommand = defineCommand({
           prefix: '/_rangka/',
           decorateReply: false,
         });
-        console.log(`[rangka] Serving custom components from .rangka/`);
+        console.log(`[rangka] Serving custom widgets from .rangka/`);
       }
 
       // SPA fallback — all non-API routes serve index.html
