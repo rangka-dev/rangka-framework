@@ -145,8 +145,8 @@ export class ProjectScanner {
 
     // Models — flat .ts files in models/
     const models = await this.scanModels(moduleName);
-    for (const schema of models) {
-      accumulators.schemas.push({ module: moduleName, schema });
+    for (const { schema, file } of models) {
+      accumulators.schemas.push({ module: moduleName, schema, file });
     }
 
     // Hooks — separate hooks/ directory
@@ -171,9 +171,24 @@ export class ProjectScanner {
   // ---------- Model scanning (flat files) ----------
 
   /** Scans .ts files in modules/<name>/models/ for model definitions. */
-  private async scanModels(moduleName: string): Promise<ModelConfig[]> {
+  private async scanModels(
+    moduleName: string,
+  ): Promise<Array<{ schema: ModelConfig; file: string }>> {
     const modelsDir = path.join(this.root, 'modules', moduleName, 'models');
-    return this.scanTsFilesWithDefault<ModelConfig>(modelsDir);
+    if (!(await this.dirExists(modelsDir))) return [];
+
+    const entries = await fs.readdir(modelsDir, { withFileTypes: true });
+    const results: Array<{ schema: ModelConfig; file: string }> = [];
+
+    for (const entry of entries) {
+      if (!entry.isFile() || !entry.name.endsWith('.ts')) continue;
+      const mod = await this.importFile(path.join(modelsDir, entry.name));
+      if (mod.default) {
+        results.push({ schema: mod.default, file: entry.name });
+      }
+    }
+
+    return results;
   }
 
   // ---------- Hooks scanning (separate directory) ----------
@@ -184,12 +199,12 @@ export class ProjectScanner {
    */
   private async scanHooksDirectory(
     moduleName: string,
-  ): Promise<Array<{ model: string; hooks: HooksConfig }>> {
+  ): Promise<Array<{ model: string; hooks: HooksConfig; file?: string }>> {
     const hooksDir = path.join(this.root, 'modules', moduleName, 'hooks');
     if (!(await this.dirExists(hooksDir))) return [];
 
     const entries = await fs.readdir(hooksDir, { withFileTypes: true });
-    const result: Array<{ model: string; hooks: HooksConfig }> = [];
+    const result: Array<{ model: string; hooks: HooksConfig; file?: string }> = [];
 
     for (const entry of entries) {
       if (!entry.isFile() || !entry.name.endsWith('.ts')) continue;
@@ -198,7 +213,7 @@ export class ProjectScanner {
         if (mod.default) {
           const { model, ...hooksConfig } = mod.default;
           const qualifiedModel = model.includes('.') ? model : `${moduleName}.${model}`;
-          result.push({ model: qualifiedModel, hooks: hooksConfig });
+          result.push({ model: qualifiedModel, hooks: hooksConfig, file: entry.name });
         }
       } catch (err) {
         console.warn(
@@ -224,33 +239,44 @@ export class ProjectScanner {
   // ---------- Other artifact scanners ----------
 
   /** Scans .ts files in modules/<name>/services/ for service definitions. */
-  private async scanServices(moduleName: string): Promise<ServiceDefinition[]> {
+  private async scanServices(
+    moduleName: string,
+  ): Promise<Array<ServiceDefinition & { file?: string }>> {
     const servicesDir = path.join(this.root, 'modules', moduleName, 'services');
-    return this.scanTsFilesWithDefault<ServiceDefinition>(servicesDir);
+    const items = await this.scanTsFilesWithFile<ServiceDefinition>(servicesDir);
+    return items.map(({ value, file }) => ({ ...value, file }));
   }
 
   /** Scans .ts files in modules/<name>/jobs/ for job definitions. */
-  private async scanJobs(moduleName: string): Promise<Array<{ name: string; config: JobConfig }>> {
+  private async scanJobs(
+    moduleName: string,
+  ): Promise<Array<{ name: string; config: JobConfig; file?: string }>> {
     const jobsDir = path.join(this.root, 'modules', moduleName, 'jobs');
-    const rawJobs = await this.scanTsFilesWithDefault<{ name: string } & JobConfig>(jobsDir);
-    return rawJobs.map(({ name, ...config }) => ({ name, config }));
+    const items = await this.scanTsFilesWithFile<{ name: string } & JobConfig>(jobsDir);
+    return items.map(({ value: { name, ...config }, file }) => ({ name, config, file }));
   }
 
   /** Scans .ts files in modules/<name>/fixtures/ for fixture definitions. */
-  private async scanFixtures(moduleName: string): Promise<FixtureDefinition[]> {
+  private async scanFixtures(
+    moduleName: string,
+  ): Promise<Array<FixtureDefinition & { file?: string }>> {
     const fixturesDir = path.join(this.root, 'modules', moduleName, 'fixtures');
-    return this.scanTsFilesWithDefault<FixtureDefinition>(fixturesDir);
+    const items = await this.scanTsFilesWithFile<FixtureDefinition>(fixturesDir);
+    return items.map(({ value, file }) => ({ ...value, file }));
   }
 
   /** Scans .ts files in modules/<name>/pages/ for page definitions (with error handling). */
   private async scanPages(
     moduleName: string,
-  ): Promise<{ pages: Array<{ module: string; page: PageDefinition }>; warnings: ScanWarning[] }> {
+  ): Promise<{
+    pages: Array<{ module: string; page: PageDefinition; file?: string }>;
+    warnings: ScanWarning[];
+  }> {
     const pagesDir = path.join(this.root, 'modules', moduleName, 'pages');
     if (!(await this.dirExists(pagesDir))) return { pages: [], warnings: [] };
 
     const entries = await fs.readdir(pagesDir, { withFileTypes: true });
-    const pages: Array<{ module: string; page: PageDefinition }> = [];
+    const pages: Array<{ module: string; page: PageDefinition; file?: string }> = [];
     const warnings: ScanWarning[] = [];
 
     for (const entry of entries) {
@@ -281,7 +307,7 @@ export class ProjectScanner {
             }
           }
 
-          pages.push({ module: moduleName, page });
+          pages.push({ module: moduleName, page, file: entry.name });
         }
       } catch (err) {
         const msg = `Failed to import: ${(err as Error).message}`;
@@ -450,6 +476,23 @@ export class ProjectScanner {
       if (!entry.isFile() || !entry.name.endsWith('.ts')) continue;
       const mod = await this.importFile(path.join(dirPath, entry.name));
       if (mod.default) results.push(mod.default);
+    }
+
+    return results;
+  }
+
+  private async scanTsFilesWithFile<T>(
+    dirPath: string,
+  ): Promise<Array<{ value: T; file: string }>> {
+    if (!(await this.dirExists(dirPath))) return [];
+
+    const entries = await fs.readdir(dirPath, { withFileTypes: true });
+    const results: Array<{ value: T; file: string }> = [];
+
+    for (const entry of entries) {
+      if (!entry.isFile() || !entry.name.endsWith('.ts')) continue;
+      const mod = await this.importFile(path.join(dirPath, entry.name));
+      if (mod.default) results.push({ value: mod.default, file: entry.name });
     }
 
     return results;

@@ -83,12 +83,13 @@ export function validateApps(apps: DiscoveredApp[]): void {
     }
 
     // Validate model schemas
-    for (const { module, schema } of app.schemas) {
+    for (const { module, schema, file } of app.schemas) {
       const result = validateModel(schema);
       if (!result.success) {
+        const filename = file ?? `${schema.name ?? 'unknown'}.ts`;
         errors.push({
           app: app.config.name,
-          file: `${basePath}/modules/${module}/models/${schema.name ?? 'unknown'}.ts`,
+          file: `${basePath}/modules/${module}/models/${filename}`,
           defType: 'model',
           name: schema.name ? `${module}.${schema.name}` : '(unknown)',
           issues: result.error.issues.map((i) => ({
@@ -118,12 +119,13 @@ export function validateApps(apps: DiscoveredApp[]): void {
 
     // Validate pages
     if (app.pages) {
-      for (const { module, page } of app.pages) {
+      for (const { module, page, file } of app.pages) {
         const result = validatePage(page);
         if (!result.success) {
+          const filename = file ?? `${page.key?.split('.').pop() ?? 'unknown'}.ts`;
           errors.push({
             app: app.config.name,
-            file: `${basePath}/modules/${module}/pages/${page.key?.split('.').pop() ?? 'unknown'}.ts`,
+            file: `${basePath}/modules/${module}/pages/${filename}`,
             defType: 'page',
             name: page.key ?? '(unknown)',
             issues: result.error.issues.map((i) => ({
@@ -137,13 +139,14 @@ export function validateApps(apps: DiscoveredApp[]): void {
 
     // Validate hooks
     if (app.hooks) {
-      for (const { model, hooks } of app.hooks) {
+      for (const { model, hooks, file } of app.hooks) {
         const result = validateHooks(hooks);
         if (!result.success) {
           const hookModule = model.includes('.') ? model.split('.')[0] : app.config.name;
+          const filename = file ?? `${model}.ts`;
           errors.push({
             app: app.config.name,
-            file: `${basePath}/modules/${hookModule}/hooks/${model}.ts`,
+            file: `${basePath}/modules/${hookModule}/hooks/${filename}`,
             defType: 'hooks',
             name: model,
             issues: result.error.issues.map((i) => ({
@@ -176,12 +179,13 @@ export function validateApps(apps: DiscoveredApp[]): void {
 
     // Validate jobs
     if (app.jobs) {
-      for (const { name, config } of app.jobs) {
+      for (const { name, config, file } of app.jobs) {
         const result = validateJob({ name, ...config });
         if (!result.success) {
+          const filename = file ?? `${name}.ts`;
           errors.push({
             app: app.config.name,
-            file: `${basePath}/jobs/${name}.ts`,
+            file: `${basePath}/modules/${app.config.name}/jobs/${filename}`,
             defType: 'job',
             name,
             issues: result.error.issues.map((i) => ({
@@ -198,9 +202,11 @@ export function validateApps(apps: DiscoveredApp[]): void {
       for (const svc of app.services) {
         const result = validateService(svc);
         if (!result.success) {
+          const filename = svc.file ?? `${svc.name ?? 'unknown'}.ts`;
+          const svcModule = svc.name?.split('.')[0] ?? app.config.name;
           errors.push({
             app: app.config.name,
-            file: `${basePath}/services/${svc.name ?? 'unknown'}.ts`,
+            file: `${basePath}/modules/${svcModule}/services/${filename}`,
             defType: 'service',
             name: svc.name ?? '(unknown)',
             issues: result.error.issues.map((i) => ({
@@ -217,9 +223,11 @@ export function validateApps(apps: DiscoveredApp[]): void {
       for (const fixture of app.fixtures) {
         const result = validateFixture(fixture);
         if (!result.success) {
+          const filename = fixture.file ?? `${fixture.model ?? 'unknown'}.ts`;
+          const fixModule = fixture.model?.split('.')[0] ?? app.config.name;
           errors.push({
             app: app.config.name,
-            file: `${basePath}/fixtures/${fixture.model ?? 'unknown'}.ts`,
+            file: `${basePath}/modules/${fixModule}/fixtures/${filename}`,
             defType: 'fixture',
             name: fixture.model ?? '(unknown)',
             issues: result.error.issues.map((i) => ({
