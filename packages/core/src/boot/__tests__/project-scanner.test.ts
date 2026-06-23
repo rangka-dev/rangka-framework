@@ -50,10 +50,14 @@ describe('ProjectScanner', () => {
     const result = await scanner.scan();
 
     expect(result.rangkaConfig).toBeDefined();
-    expect(result.rangkaConfig.database.dialect).toBe('pg');
-    expect(result.rangkaConfig.database.host).toBe('localhost');
-    expect(result.rangkaConfig.database.port).toBe(5433);
-    expect(result.rangkaConfig.database.database).toBe('rangka_test');
+    const dbConfig = result.rangkaConfig.database;
+    expect(dbConfig).toBeDefined();
+    expect(dbConfig!.dialect).toBe('pg');
+    if (dbConfig!.dialect === 'pg') {
+      expect(dbConfig!.host).toBe('localhost');
+      expect(dbConfig!.port).toBe(5433);
+      expect(dbConfig!.database).toBe('rangka_test');
+    }
   });
 
   it('returns empty extensions when extensions/ dir does not exist', async () => {

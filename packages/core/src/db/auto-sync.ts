@@ -2,12 +2,17 @@ import type { Kysely } from 'kysely';
 import { sql } from 'kysely';
 import type { SchemaRegistry } from '../schema/registry.js';
 import type { DdlOperation } from './types.js';
+import type { Dialect } from './client.js';
 import { SchemaToDesired } from './desired-state.js';
 import { DiffEngine } from './diff-engine.js';
 import { introspect } from './introspect.js';
+import { introspectSqlite } from './sqlite/introspect.js';
+import { SqliteDiffEngine } from './sqlite/diff-engine.js';
+import { buildSqliteDesiredState } from './sqlite/desired-state.js';
 
 export interface AutoSyncOptions {
   allowDestructive?: boolean;
+  dialect?: Dialect;
 }
 
 export interface AutoSyncResult {
@@ -24,9 +29,19 @@ export async function autoSync(
   db: Kysely<unknown>,
   options: AutoSyncOptions = {},
 ): Promise<AutoSyncResult> {
-  const desired = new SchemaToDesired().convert(registry);
-  const actual = await introspect(db);
-  const operations = new DiffEngine().diff(desired, actual);
+  const dialect = options.dialect ?? 'postgres';
+
+  const desired =
+    dialect === 'sqlite'
+      ? buildSqliteDesiredState(registry)
+      : new SchemaToDesired().convert(registry, 'postgres');
+
+  const actual = dialect === 'sqlite' ? await introspectSqlite(db) : await introspect(db);
+
+  const operations =
+    dialect === 'sqlite'
+      ? new SqliteDiffEngine().diff(desired, actual)
+      : new DiffEngine().diff(desired, actual);
 
   if (operations.length === 0) {
     console.log(`[rangka:sync] Schema is up to date`);
@@ -40,7 +55,7 @@ export async function autoSync(
     if (op.destructive) {
       await handleDestructiveOp(op, options, applied, warnings, db);
     } else {
-      await applyOperation(op, db);
+      await applyOperation(op, db, dialect);
       applied.push(op);
     }
   }
@@ -62,9 +77,21 @@ export async function autoSync(
   return { applied, warnings };
 }
 
-/** Apply a non-destructive DDL operation. */
-async function applyOperation(op: DdlOperation, db: Kysely<unknown>): Promise<void> {
-  await sql.raw(op.sql).execute(db);
+/** Apply a DDL operation. SQLite table recreation requires multiple statements. */
+async function applyOperation(
+  op: DdlOperation,
+  db: Kysely<unknown>,
+  dialect: Dialect,
+): Promise<void> {
+  if (dialect === 'sqlite' && op.sql.includes(';\n')) {
+    // Table recreation produces multiple statements separated by ;\n
+    const statements = op.sql.split(';\n').filter((s) => s.trim());
+    for (const stmt of statements) {
+      await sql.raw(stmt).execute(db);
+    }
+  } else {
+    await sql.raw(op.sql).execute(db);
+  }
 }
 
 /**

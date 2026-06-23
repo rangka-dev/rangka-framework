@@ -1,6 +1,6 @@
 # Spec: SQLite adapter
 
-Status: Draft
+Status: Implemented
 Packages affected: core (db layer, boot sequence), cli (default config)
 
 ---

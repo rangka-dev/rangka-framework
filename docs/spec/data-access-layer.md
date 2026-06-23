@@ -14,14 +14,14 @@ Services currently query data via `ctx.db` (raw Kysely). This works for internal
 
 A unified data access API (`ctx.models`) provides a single interface for querying any model regardless of its data source. It handles dispatch, permissions, relationships, and field resolution automatically.
 
-## Postgres-only
+## Local database support
 
-The framework uses PostgreSQL as its only local data source. There is no database abstraction layer. No MySQL, SQLite, or other SQL databases will be supported as internal storage.
+The framework supports PostgreSQL and SQLite as local data sources. SQLite is the default for development and Studio usage (zero-config). PostgreSQL is recommended for production.
 
 Other databases (MySQL, MSSQL, MongoDB, DynamoDB, etc.) connect through `defineExternalModel` with a plugin adapter. This is a deliberate constraint:
 
-- No dialect translation layer to maintain
-- Every filter operator maps to one known Postgres behavior
+- No dialect translation layer beyond the two supported dialects
+- Filter operators map to known Postgres/SQLite behavior
 - Tests run against real Postgres (no fakes, no mocks for internal queries)
 - DiffEngine, auto-sync, and migrations target Postgres DDL only
 - `ctx.db` exposes full Postgres/Kysely power without compromise

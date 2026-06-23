@@ -39,7 +39,7 @@ async function main() {
   await scaffold({ name: options.name, dir: targetDir });
 
   p.outro(
-    `Done! Next steps:\n\n  cd ${targetDir}\n  ${pm} install\n  ${pm} start          # start the application\n  ${run} studio     # open the AI studio`,
+    `Done! Next steps:\n\n  cd ${targetDir}\n  ${pm} install\n  ${run} start        # start the app (SQLite, no setup needed)\n  ${run} studio       # open the AI studio`,
   );
 }
 

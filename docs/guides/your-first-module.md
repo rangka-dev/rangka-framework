@@ -13,7 +13,7 @@ Build a working Tasks module from scratch. By the end you will have a list page,
 
 - A Rangka project (run `pnpm create rangka my-app` if you don't have one)
 - Node.js 20+
-- A running PostgreSQL database
+- No database setup needed (SQLite is used by default). For production, configure PostgreSQL.
 
 ## 1. Create the module
 

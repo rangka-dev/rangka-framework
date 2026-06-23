@@ -34,7 +34,7 @@ export { NodeModulesDiscoverySource, MemoryDiscoverySource } from './boot/discov
 export { ProjectScanner } from './boot/project-scanner.js';
 export type { ProjectScanResult, ScanWarning } from './boot/project-scanner.js';
 export { DatabaseClient } from './db/client.js';
-export type { DatabaseClientConfig } from './db/client.js';
+export type { DatabaseClientConfig, PostgresConfig, SqliteConfig, Dialect } from './db/client.js';
 export type {
   ColumnDefinition,
   TableDefinition,
@@ -49,6 +49,7 @@ export { SchemaToDesired } from './db/desired-state.js';
 export { DiffEngine } from './db/diff-engine.js';
 export { introspect } from './db/introspect.js';
 export { autoSync } from './db/auto-sync.js';
+export { introspectSqlite, SqliteDiffEngine, buildSqliteDesiredState } from './db/sqlite/index.js';
 export type { DdlOperation as CoreDdlOperation } from './db/types.js';
 export { createServer } from './api/server.js';
 export { QueryParser, QueryValidationError } from './api/query-parser.js';

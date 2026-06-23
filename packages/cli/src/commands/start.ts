@@ -37,22 +37,22 @@ export const startCommand = defineCommand({
       console.log(`[rangka] Discovered app with ${app.schemas.length} models`);
 
       const dbConfig = rangkaConfig.database;
-      if (!dbConfig) {
-        console.error(
-          `[rangka] No database config found. Add database settings to rangka.config.ts`,
-        );
-        process.exit(1);
+      let databaseConfig: import('@rangka/core').DatabaseClientConfig;
+
+      if (!dbConfig || dbConfig.dialect === 'sqlite') {
+        const sqlitePath = (dbConfig as { path?: string } | undefined)?.path ?? '.rangka/dev.db';
+        databaseConfig = { dialect: 'sqlite', path: sqlitePath };
+        console.log(`[rangka] Using SQLite at ${sqlitePath}`);
+      } else {
+        databaseConfig = {
+          host: dbConfig.host ?? 'localhost',
+          port: dbConfig.port ?? 5432,
+          database: dbConfig.database ?? 'rangka',
+          user: dbConfig.user ?? 'postgres',
+          password: dbConfig.password ?? '',
+        };
+        console.log(`[rangka] Connecting to PostgreSQL...`);
       }
-
-      const databaseConfig = {
-        host: dbConfig.host ?? 'localhost',
-        port: dbConfig.port ?? 5432,
-        database: dbConfig.database ?? 'rangka',
-        user: dbConfig.user ?? 'postgres',
-        password: dbConfig.password ?? '',
-      };
-
-      console.log(`[rangka] Connecting to database...`);
 
       const serverPort = rangkaConfig.server?.port ?? 3000;
 

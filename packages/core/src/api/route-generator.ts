@@ -175,7 +175,11 @@ function registerModelRoutes(
   const basePath = `/api/${module}/${model.name}`;
   const authHooks = buildAuthHooks(model, ctx);
   const schemas = buildRouteSchemas(model, module);
-  const modelAccessOpts: Omit<ModelAccessOptions, 'auth'> = { db: ctx.db, registry: ctx.registry };
+  const modelAccessOpts: Omit<ModelAccessOptions, 'auth'> = {
+    db: ctx.db,
+    registry: ctx.registry,
+    dialect: ctx.db.dialect,
+  };
   const readCtx = { model, registry: ctx.registry, modelAccessOpts };
   const writeCtx = {
     model,
@@ -233,6 +237,7 @@ function registerExternalModelRoutes(
     registry: ctx.registry,
     adapterRegistry: ctx.adapterRegistry,
     adapterCapabilities: ctx.adapterCapabilities,
+    dialect: ctx.db.dialect,
   };
   const handlerCtx = { model, registry: ctx.registry, modelAccessOpts };
 

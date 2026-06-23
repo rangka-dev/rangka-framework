@@ -38,7 +38,7 @@ describe('mapFieldsToColumns', () => {
     expect(idCol).toBeDefined();
     expect(idCol!.type).toBe('UUID');
     expect(idCol!.primaryKey).toBe(true);
-    expect(idCol!.defaultValue).toBe('gen_random_uuid()');
+    expect(idCol!.defaultValue).toBeUndefined();
   });
 
   describe('primitive fields', () => {

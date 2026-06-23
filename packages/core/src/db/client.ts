@@ -1,9 +1,13 @@
-import { Kysely, PostgresDialect } from 'kysely';
+import { Kysely, PostgresDialect, SqliteDialect } from 'kysely';
+import { createRequire } from 'node:module';
+import { mkdirSync } from 'node:fs';
+import { dirname } from 'node:path';
 import pg from 'pg';
 import type { SchemaRegistry } from '../schema/registry.js';
 import { modelToTableName } from './field-mapper.js';
 
-export interface DatabaseClientConfig {
+export interface PostgresConfig {
+  dialect?: 'postgres';
   host: string;
   port?: number;
   database: string;
@@ -15,6 +19,20 @@ export interface DatabaseClientConfig {
   };
 }
 
+export interface SqliteConfig {
+  dialect: 'sqlite';
+  path?: string;
+}
+
+export type DatabaseClientConfig = PostgresConfig | SqliteConfig;
+
+export type Dialect = 'postgres' | 'sqlite';
+
+function detectDialect(config: DatabaseClientConfig): Dialect {
+  if ('host' in config && config.host) return 'postgres';
+  return 'sqlite';
+}
+
 /**
  * Thin wrapper around Kysely that resolves qualified model names
  * (e.g. "sales.Invoice") to their underlying table names automatically.
@@ -22,13 +40,32 @@ export interface DatabaseClientConfig {
 export class DatabaseClient {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private readonly db: Kysely<any>;
-  private readonly pool: pg.Pool;
+  private readonly pool: pg.Pool | null = null;
   private readonly qualifiedNameToTable: Map<string, string>;
+  private readonly _dialect: Dialect;
 
   constructor(config: DatabaseClientConfig, registry?: SchemaRegistry) {
-    this.pool = this.createPool(config);
-    this.db = new Kysely({ dialect: new PostgresDialect({ pool: this.pool }) });
+    this._dialect = detectDialect(config);
+
+    if (this._dialect === 'postgres') {
+      const pgConfig = config as PostgresConfig;
+      this.pool = this.createPool(pgConfig);
+      this.db = new Kysely({ dialect: new PostgresDialect({ pool: this.pool }) });
+    } else {
+      const sqliteConfig = config as SqliteConfig;
+      const Database = this.loadBetterSqlite3();
+      const path = sqliteConfig.path ?? '.rangka/dev.db';
+      mkdirSync(dirname(path), { recursive: true });
+      const sqliteDb = new Database(path);
+      this.configureSqlitePragmas(sqliteDb);
+      this.db = new Kysely({ dialect: new SqliteDialect({ database: sqliteDb }) });
+    }
+
     this.qualifiedNameToTable = this.buildTableNameMap(registry);
+  }
+
+  get dialect(): Dialect {
+    return this._dialect;
   }
 
   /**
@@ -36,13 +73,22 @@ export class DatabaseClient {
    * Throws with actionable diagnostics if it cannot connect.
    */
   async verifyConnection(): Promise<void> {
+    if (this._dialect === 'sqlite') {
+      await this.db
+        .selectFrom('sqlite_master' as never)
+        .selectAll()
+        .limit(0)
+        .execute();
+      return;
+    }
+
     let client: pg.PoolClient | undefined;
     try {
-      client = await this.pool.connect();
+      client = await this.pool!.connect();
       await client.query('SELECT 1');
     } catch (err: unknown) {
       const pgErr = err as { code?: string; message?: string };
-      const detail = formatConnectionError(pgErr, this.pool);
+      const detail = formatConnectionError(pgErr, this.pool!);
       throw new Error(`Database connection failed: ${detail}`, { cause: err });
     } finally {
       client?.release();
@@ -92,7 +138,7 @@ export class DatabaseClient {
   }
 
   /** Create the underlying pg connection pool. */
-  private createPool(config: DatabaseClientConfig): pg.Pool {
+  private createPool(config: PostgresConfig): pg.Pool {
     return new pg.Pool({
       host: config.host,
       port: config.port ?? 5432,
@@ -102,6 +148,26 @@ export class DatabaseClient {
       min: config.pool?.min ?? 2,
       max: config.pool?.max ?? 10,
     });
+  }
+
+  /** Load better-sqlite3 dynamically. Throws if not installed. */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private loadBetterSqlite3(): any {
+    try {
+      const require = createRequire(import.meta.url);
+      return require('better-sqlite3');
+    } catch {
+      throw new Error('SQLite support requires "better-sqlite3". Run: pnpm add better-sqlite3');
+    }
+  }
+
+  /** Configure SQLite PRAGMAs for optimal dev usage. */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private configureSqlitePragmas(db: any): void {
+    db.pragma('foreign_keys = ON');
+    db.pragma('journal_mode = WAL');
+    db.pragma('busy_timeout = 5000');
+    db.pragma('synchronous = NORMAL');
   }
 
   /** Pre-compute the mapping from qualified model names to SQL table names. */

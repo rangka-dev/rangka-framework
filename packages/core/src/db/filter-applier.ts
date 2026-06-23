@@ -1,13 +1,23 @@
 import { sql } from 'kysely';
 import type { TranslatedFilter, AppliedFilter, OrFilter } from '../model-api/types.js';
 import { toBool } from '../helpers/coerce.js';
+import type { Dialect } from './client.js';
 
 function escapeLike(value: string): string {
   return value.replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_');
 }
 
+function likeOp(dialect?: Dialect): 'ilike' | 'like' {
+  return dialect === 'sqlite' ? 'like' : 'ilike';
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function buildWhereClause(eb: any, { field, operator, value }: TranslatedFilter): any {
+function buildWhereClause(
+  eb: any,
+  { field, operator, value }: TranslatedFilter,
+  dialect?: Dialect,
+): any {
+  const like = likeOp(dialect);
   switch (operator) {
     case 'eq':
       return eb(field, '=', value);
@@ -30,11 +40,11 @@ function buildWhereClause(eb: any, { field, operator, value }: TranslatedFilter)
       return arr.length > 0 ? eb(field, 'not in', arr) : eb.lit(true);
     }
     case 'contains':
-      return eb(field, 'ilike', `%${escapeLike(value as string)}%`);
+      return eb(field, like, `%${escapeLike(value as string)}%`);
     case 'startsWith':
-      return eb(field, 'ilike', `${escapeLike(value as string)}%`);
+      return eb(field, like, `${escapeLike(value as string)}%`);
     case 'endsWith':
-      return eb(field, 'ilike', `%${escapeLike(value as string)}`);
+      return eb(field, like, `%${escapeLike(value as string)}`);
     case 'is':
       return value === null ? eb(field, 'is', null) : eb(field, 'is not', null);
     default:
@@ -43,8 +53,9 @@ function buildWhereClause(eb: any, { field, operator, value }: TranslatedFilter)
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function applyModelFilters(query: any, filters: AppliedFilter[]): any {
+export function applyModelFilters(query: any, filters: AppliedFilter[], dialect?: Dialect): any {
   let result = query;
+  const like = likeOp(dialect);
 
   for (const filter of filters) {
     if (filter.operator === '$or') {
@@ -53,7 +64,7 @@ export function applyModelFilters(query: any, filters: AppliedFilter[]): any {
       result = result.where((eb: any) =>
         eb.or(
           branches.map((branch: TranslatedFilter[]) =>
-            eb.and(branch.map((f: TranslatedFilter) => buildWhereClause(eb, f))),
+            eb.and(branch.map((f: TranslatedFilter) => buildWhereClause(eb, f, dialect))),
           ),
         ),
       );
@@ -97,13 +108,13 @@ export function applyModelFilters(query: any, filters: AppliedFilter[]): any {
         break;
       }
       case 'contains':
-        result = result.where(field, 'ilike', `%${escapeLike(value as string)}%`);
+        result = result.where(field, like, `%${escapeLike(value as string)}%`);
         break;
       case 'startsWith':
-        result = result.where(field, 'ilike', `${escapeLike(value as string)}%`);
+        result = result.where(field, like, `${escapeLike(value as string)}%`);
         break;
       case 'endsWith':
-        result = result.where(field, 'ilike', `%${escapeLike(value as string)}`);
+        result = result.where(field, like, `%${escapeLike(value as string)}`);
         break;
       case 'is':
         if (value === null) {
@@ -120,7 +131,7 @@ export function applyModelFilters(query: any, filters: AppliedFilter[]): any {
         }
         break;
       case 'like':
-        result = result.where(field, 'ilike', `%${value}%`);
+        result = result.where(field, like, `%${value}%`);
         break;
     }
   }
@@ -129,11 +140,15 @@ export function applyModelFilters(query: any, filters: AppliedFilter[]): any {
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export function applySearchFilter(query: any, term: string, fields: string[]): any {
+export function applySearchFilter(
+  query: any,
+  term: string,
+  fields: string[],
+  dialect?: Dialect,
+): any {
   if (!term || fields.length === 0) return query;
+  const like = likeOp(dialect);
   const escaped = `%${escapeLike(term)}%`;
-  return query.where((eb: any) =>
-    eb.or(fields.map((field: string) => eb(field, 'ilike', escaped))),
-  );
+  return query.where((eb: any) => eb.or(fields.map((field: string) => eb(field, like, escaped))));
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */

@@ -168,4 +168,5 @@ export interface ModelAccessOptions {
     Record<string, import('../external-model/types.js').ExternalFieldConfig>
   >;
   adapterCapabilities?: Record<string, import('../plugins/types.js').AdapterCapability[]>;
+  dialect?: import('../db/client.js').Dialect;
 }

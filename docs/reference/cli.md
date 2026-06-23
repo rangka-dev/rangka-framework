@@ -37,7 +37,7 @@ rangka start [--root <path>] [--no-sync]
 **Behavior:**
 
 - Scans the project root for modules, models, and configuration
-- Connects to the configured PostgreSQL database
+- Connects to the configured database (SQLite by default, PostgreSQL if configured)
 - Syncs the database schema (unless `--no-sync` is passed)
 - Serves the pre-built shell from `@rangka/client`
 - Serves custom widget bundles from `.rangka/` if present (run `rangka build` first)
@@ -47,7 +47,9 @@ rangka start [--root <path>] [--no-sync]
 
 **Database defaults:**
 
-If not specified in `rangka.config.ts`, the following defaults apply:
+When no database configuration is provided, SQLite is used at `.rangka/dev.db`. No setup required.
+
+For PostgreSQL, if not fully specified in `rangka.config.ts`, these defaults apply:
 
 | Setting    | Default     |
 | ---------- | ----------- |
@@ -59,9 +61,10 @@ If not specified in `rangka.config.ts`, the following defaults apply:
 
 **Requirements:**
 
-- A `rangka.config.ts` with database settings in the project root
-- PostgreSQL running and accessible
+- A `rangka.config.ts` in the project root
 - `@rangka/client` installed (provides the shell build)
+- For SQLite: no additional setup
+- For PostgreSQL: PostgreSQL running and accessible
 
 ---
 
