@@ -1,5 +1,6 @@
 import type { SchemaRegistryInterface } from './schema-registry.js';
 import type { ContextAuth } from './auth.js';
+import type { Kysely } from 'kysely';
 import type {
   FilterExpression,
   AggregateSpec,
@@ -59,8 +60,7 @@ export interface ModelAccessInterface {
 }
 
 export interface FrameworkContext {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  db: any;
+  db: Kysely<unknown>;
   schema: SchemaRegistryInterface;
   scope: unknown;
   models: ModelAccessInterface;

@@ -14,6 +14,10 @@ export class HookRegistry {
     return this.chains.get(model);
   }
 
+  getChainOrEmpty(model: string): HookChain {
+    return this.chains.get(model) ?? { entries: [] };
+  }
+
   hasHooks(model: string): boolean {
     return this.chains.has(model);
   }

@@ -6,8 +6,6 @@ import type { HookRegistry } from '../hooks/registry.js';
 import type { ServiceRegistry } from '../services/registry.js';
 import type { EventBus } from '../events/bus.js';
 import type { ResolvedModel } from '../schema/types.js';
-import { KyselyModelOps } from '../db/model-ops.js';
-import type { ModelOps } from '../model-api/types.js';
 import type { ModelAccessOptions } from '../model-api/types.js';
 import {
   listHandler,
@@ -15,13 +13,15 @@ import {
   createHandler,
   updateHandler,
   deleteHandler,
+  externalCreateHandler,
+  externalUpdateHandler,
+  externalDeleteHandler,
 } from './handlers.js';
 import { createAuthHook, createSessionHandler, deleteSessionHandler } from '../auth/session.js';
 import { createModelPermissionGuard } from '../auth/model-permissions.js';
 import { createScopeHook, createScopeWriteGuard } from '../auth/scopes.js';
 import type { ScopeRegistry } from '../auth/scope-registry.js';
 import { createFieldWriteGuard, createFieldStripHook } from '../auth/field-permissions.js';
-import { withHooksCreate, withHooksUpdate, withHooksDelete } from '../hooks/middleware.js';
 import {
   modelToSchemaComponent,
   modelToCreateSchema,
@@ -45,18 +45,6 @@ export interface RouteGeneratorOptions {
   widgets?: WidgetDefinitionMeta[];
   adapterRegistry?: import('../plugins/adapter-registry.js').AdapterRegistry;
   adapterCapabilities?: Record<string, import('../plugins/types.js').AdapterCapability[]>;
-}
-
-/** Context passed to lifecycle hook middleware (create/update/delete with hooks). */
-interface HookMiddlewareContext {
-  model: ResolvedModel;
-  registry: SchemaRegistry;
-  db: import('kysely').Kysely<any>; // eslint-disable-line @typescript-eslint/no-explicit-any
-  ops: ModelOps;
-  hookRegistry: HookRegistry;
-  serviceRegistry?: ServiceRegistry;
-  eventBus?: EventBus;
-  config: Record<string, unknown>;
 }
 
 /** Context for registering all routes belonging to a single model. */
@@ -188,45 +176,43 @@ function registerModelRoutes(
   const authHooks = buildAuthHooks(model, ctx);
   const schemas = buildRouteSchemas(model, module);
   const modelAccessOpts: Omit<ModelAccessOptions, 'auth'> = { db: ctx.db, registry: ctx.registry };
-  const handlerCtx = { model, registry: ctx.registry, modelAccessOpts };
-
-  const modelHasHooks = ctx.hookRegistry?.hasHooks(model.qualifiedName) ?? false;
-  const hookMiddlewareCtx: HookMiddlewareContext = {
+  const readCtx = { model, registry: ctx.registry, modelAccessOpts };
+  const writeCtx = {
     model,
     registry: ctx.registry,
+    modelAccessOpts,
     db: ctx.db.kysely,
-    ops: new KyselyModelOps({ db: ctx.db, model, registry: ctx.registry }),
-    hookRegistry: ctx.hookRegistry!,
+    hookRegistry: ctx.hookRegistry,
     serviceRegistry: ctx.serviceRegistry,
     eventBus: ctx.eventBus,
-    config: ctx.config,
+    config: ctx.config ?? {},
   };
 
   // Read endpoints
-  server.get(basePath, { ...authHooks, schema: schemas.list, handler: listHandler(handlerCtx) });
+  server.get(basePath, { ...authHooks, schema: schemas.list, handler: listHandler(readCtx) });
   server.get(`${basePath}/:id`, {
     ...authHooks,
     schema: schemas.get,
-    handler: getHandler(handlerCtx),
+    handler: getHandler(readCtx),
   });
 
-  // Write endpoints (use hook middleware when lifecycle hooks are registered)
+  // Write endpoints (unified flow: hooks run if registered, direct CRUD otherwise)
   server.post(basePath, {
     ...authHooks,
     schema: schemas.create,
-    handler: modelHasHooks ? withHooksCreate(hookMiddlewareCtx) : createHandler(handlerCtx),
+    handler: createHandler(writeCtx),
   });
 
   server.put(`${basePath}/:id`, {
     ...authHooks,
     schema: schemas.update,
-    handler: modelHasHooks ? withHooksUpdate(hookMiddlewareCtx) : updateHandler(handlerCtx),
+    handler: updateHandler(writeCtx),
   });
 
   server.delete(`${basePath}/:id`, {
     ...authHooks,
     schema: schemas.delete,
-    handler: modelHasHooks ? withHooksDelete(hookMiddlewareCtx) : deleteHandler(handlerCtx),
+    handler: deleteHandler(writeCtx),
   });
 }
 
@@ -269,7 +255,7 @@ function registerExternalModelRoutes(
     server.post(basePath, {
       ...authHooks,
       schema: schemas.create,
-      handler: createHandler(handlerCtx),
+      handler: externalCreateHandler(handlerCtx),
     });
   }
 
@@ -278,7 +264,7 @@ function registerExternalModelRoutes(
     server.put(`${basePath}/:id`, {
       ...authHooks,
       schema: schemas.update,
-      handler: updateHandler(handlerCtx),
+      handler: externalUpdateHandler(handlerCtx),
     });
   }
 
@@ -287,7 +273,7 @@ function registerExternalModelRoutes(
     server.delete(`${basePath}/:id`, {
       ...authHooks,
       schema: schemas.delete,
-      handler: deleteHandler(handlerCtx),
+      handler: externalDeleteHandler(handlerCtx),
     });
   }
 }

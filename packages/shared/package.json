@@ -20,6 +20,7 @@
     "lint": "eslint src/"
   },
   "devDependencies": {
+    "kysely": "0.29.2",
     "typescript": "^5.8.0"
   }
 }
