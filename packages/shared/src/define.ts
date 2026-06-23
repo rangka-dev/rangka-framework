@@ -3,21 +3,11 @@ import type { ModuleConfig } from './types/app.js';
 import type { HooksConfig } from './types/hooks.js';
 import type { ExtensionConfig } from './types/extension.js';
 import type { ServiceConfig } from './types/service.js';
-import type { ApiConfig } from './types/api.js';
 import type { PageDefinition } from './types/page.js';
 import type { JobConfig } from './types/job.js';
 import type { FixtureConfig } from './types/fixture.js';
 import type { RolesConfig } from './types/permissions.js';
 import type { WidgetDefinitionMeta } from './types/widget.js';
-
-export interface LayoutConfig {
-  form?: {
-    sections: Array<{ label: string; fields: string[]; columns?: number }>;
-  };
-  list?: {
-    columns: string[];
-  };
-}
 
 /**
  * Declares a model — the data structure definition that drives database tables,
@@ -135,25 +125,6 @@ export function defineService<T extends ServiceConfig>(config: T): T {
 }
 
 /**
- * Declares a custom API endpoint beyond the auto-generated CRUD routes.
- *
- * @example
- * ```ts
- * export default defineApi({
- *   path: '/api/sales/invoice/:id/submit',
- *   method: 'POST',
- *   handler: async (req, ctx) => {
- *     await ctx.service('sales.invoicing').submit(req.params.id);
- *     return { status: 'submitted' };
- *   },
- * });
- * ```
- */
-export function defineApi<T extends ApiConfig>(config: T): T {
-  return config;
-}
-
-/**
  * Declares a page — a routable screen whose content is a widget tree.
  *
  * @example
@@ -236,26 +207,6 @@ export function defineFixture<T extends FixtureConfig>(config: T): T {
  * ```
  */
 export function defineRoles<T extends RolesConfig>(config: T): T {
-  return config;
-}
-
-/**
- * Declares form and list layout for a model without writing a full page definition.
- *
- * @example
- * ```ts
- * export default defineLayout({
- *   form: {
- *     sections: [
- *       { label: 'General', fields: ['customer', 'posting_date'], columns: 2 },
- *       { label: 'Items', fields: ['items'] },
- *     ],
- *   },
- *   list: { columns: ['name', 'customer', 'total', 'status'] },
- * });
- * ```
- */
-export function defineLayout<T extends LayoutConfig>(config: T): T {
   return config;
 }
 

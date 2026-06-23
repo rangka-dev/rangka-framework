@@ -5,12 +5,10 @@ import {
   defineHooks,
   defineExtension,
   defineService,
-  defineApi,
   definePage,
   defineJob,
   defineFixture,
   defineRoles,
-  defineLayout,
   defineConfig,
 } from '../define.js';
 
@@ -45,11 +43,6 @@ describe('define functions', () => {
     expect(result).toBe(config);
   });
 
-  it('defineApi passes through config unchanged', () => {
-    const config = { getStatus: { handler: () => ({ ok: true }) } };
-    expect(defineApi(config)).toBe(config);
-  });
-
   it('definePage passes through config unchanged', () => {
     const config = {
       key: 'sales.orders',
@@ -79,11 +72,6 @@ describe('define functions', () => {
   it('defineRoles passes through config unchanged', () => {
     const config = { admin: { label: 'Admin', models: { '*': { read: true, write: true } } } };
     expect(defineRoles(config)).toBe(config);
-  });
-
-  it('defineLayout passes through config unchanged', () => {
-    const config = { form: { sections: [{ label: 'Main', fields: ['name'] }] } };
-    expect(defineLayout(config)).toBe(config);
   });
 
   it('defineConfig passes through config unchanged', () => {

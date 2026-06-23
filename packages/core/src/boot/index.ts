@@ -28,6 +28,7 @@ import { WidgetRegistry } from '../widgets/widget-registry.js';
 import { AdapterRegistry } from '../plugins/adapter-registry.js';
 import { PluginLifecycleManager } from '../plugins/lifecycle.js';
 import { loadPlugins } from '../plugins/loader.js';
+import { validateApps } from './validator.js';
 import type { PluginDefinition } from '../plugins/types.js';
 import type { RolesConfig, JobConfig } from '@rangka/shared';
 import type { JobWorkerConfig } from '../jobs/types.js';
@@ -78,6 +79,7 @@ export interface BootResult {
 // 5. If server configured: create HTTP server and mount routes
 export async function boot(options: BootOptions): Promise<BootResult> {
   const sortedApps = await discoverAndSortApps(options);
+  validateApps(sortedApps);
 
   // Load plugins and build adapter registry
   const { adapterRegistry, lifecycleManager } = await loadPluginSystem(options);

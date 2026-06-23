@@ -70,7 +70,7 @@ describe('SchemaToDesired', () => {
     expect(indexes[1].unique).toBe(true);
   });
 
-  it('generates naming_sequence table when sequence fields exist', () => {
+  it('generates rangka_naming_sequence table when sequence fields exist', () => {
     const registry = makeRegistry([
       makeModel({
         fields: [
@@ -84,17 +84,13 @@ describe('SchemaToDesired', () => {
     ]);
 
     const state = converter.convert(registry);
-    const seqTable = state.tables.find((t) => t.name === 'naming_sequence');
+    const seqTable = state.tables.find((t) => t.name === 'rangka_naming_sequence');
     expect(seqTable).toBeDefined();
-    expect(seqTable!.columns.map((c) => c.name)).toEqual([
-      'model',
-      'field',
-      'next_val',
-    ]);
+    expect(seqTable!.columns.map((c) => c.name)).toEqual(['model', 'field', 'next_val']);
     expect(seqTable!.indexes[0].unique).toBe(true);
   });
 
-  it('does not generate naming_sequence table when no sequence fields', () => {
+  it('does not generate rangka_naming_sequence table when no sequence fields', () => {
     const registry = makeRegistry([
       makeModel({
         fields: [{ name: 'title', config: { type: 'string' }, provenance: { source: 'base' } }],
@@ -102,7 +98,7 @@ describe('SchemaToDesired', () => {
     ]);
 
     const state = converter.convert(registry);
-    expect(state.tables.find((t) => t.name === 'naming_sequence')).toBeUndefined();
+    expect(state.tables.find((t) => t.name === 'rangka_naming_sequence')).toBeUndefined();
   });
 
   it('includes extra tables from closure_table tree strategy', () => {

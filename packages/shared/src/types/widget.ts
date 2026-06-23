@@ -1,9 +1,15 @@
-export interface WidgetSource {
-  model: string;
-  id?: string;
-  filters?: Record<string, unknown>;
-  limit?: number;
-}
+export type {
+  Condition,
+  WidgetBinding,
+  WidgetSource,
+  WidgetDefinitionMeta,
+  WidgetPropSchema,
+} from '../validation/schemas/widget.js';
+
+import type { Condition, WidgetBinding, WidgetSource } from '../validation/schemas/widget.js';
+
+// WidgetNode and WidgetAction must remain authored interfaces because
+// the recursive z.lazy() schema uses z.ZodType (untyped) to break circular inference.
 
 export interface WidgetNode {
   id?: string;
@@ -14,18 +20,6 @@ export interface WidgetNode {
   visible?: Condition | Condition[];
   on?: Record<string, WidgetAction | WidgetAction[]>;
   children?: WidgetNode[];
-}
-
-export interface WidgetBinding {
-  field?: string;
-  expression?: string;
-  id?: string;
-}
-
-export interface Condition {
-  field: string;
-  operator: 'eq' | 'neq' | 'in' | 'notIn' | 'empty' | 'notEmpty' | 'gt' | 'lt' | 'gte' | 'lte';
-  value?: unknown;
 }
 
 export type WidgetAction =
@@ -167,22 +161,4 @@ export interface FormSubmitAction {
 
 export interface FormResetAction {
   type: 'form.reset';
-}
-
-export interface WidgetDefinitionMeta {
-  name: string;
-  label: string;
-  category: 'input' | 'display' | 'layout' | 'action' | 'data';
-  schema: Record<string, WidgetPropSchema>;
-  binding: 'none' | 'field' | 'expression' | 'record' | 'model';
-  triggers: string[];
-  container: boolean;
-  accepts?: string[];
-}
-
-export interface WidgetPropSchema {
-  type: 'string' | 'number' | 'boolean' | 'enum' | 'object' | 'array';
-  required?: boolean;
-  default?: unknown;
-  options?: string[];
 }

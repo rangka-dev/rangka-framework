@@ -1,22 +1,12 @@
-export interface ModelPermissions {
-  read?: boolean | 'own';
-  write?: boolean | 'own';
-  create?: boolean;
-  delete?: boolean | 'own';
-  fieldPermissions?: Record<string, { read?: boolean; write?: boolean }>;
-}
+export type {
+  RolesConfig,
+  RoleConfig,
+  ModelPermissions,
+} from '../validation/schemas/permissions.js';
 
-export type FieldPermissions = { read?: boolean; write?: boolean };
+import type * as z from 'zod';
+import type { fieldPermissionsSchema } from '../validation/schemas/permissions.js';
+
+export type FieldPermissions = z.infer<typeof fieldPermissionsSchema>;
 
 export type FilterDefinition = Record<string, unknown>;
-
-export interface RoleConfig {
-  label: string;
-  extends?: string;
-  models?: Record<string, ModelPermissions>;
-  fields?: Record<string, FieldPermissions>;
-  pages?: string[];
-  filters?: Record<string, FilterDefinition>;
-}
-
-export type RolesConfig = Record<string, RoleConfig>;

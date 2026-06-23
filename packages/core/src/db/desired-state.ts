@@ -77,7 +77,7 @@ export class SchemaToDesired {
   /** Table definition for the naming_sequence counter table. */
   private buildNamingSequenceTable(): TableDefinition {
     return {
-      name: 'naming_sequence',
+      name: 'rangka_naming_sequence',
       columns: [
         { name: 'model', type: 'VARCHAR(255)', nullable: false },
         { name: 'field', type: 'VARCHAR(255)', nullable: false },
@@ -87,8 +87,8 @@ export class SchemaToDesired {
       checkConstraints: [],
       indexes: [
         {
-          name: 'uidx_naming_sequence_key',
-          table: 'naming_sequence',
+          name: 'uidx_rangka_naming_sequence_key',
+          table: 'rangka_naming_sequence',
           columns: ['model', 'field'],
           unique: true,
         },

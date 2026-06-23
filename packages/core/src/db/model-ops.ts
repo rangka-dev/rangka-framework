@@ -352,12 +352,12 @@ export class KyselyModelOps implements ModelOps {
     for (const field of sequenceFields) {
       const config = field.config as { prefix?: string; digits?: number };
       const result = await (this.db as any)
-        .insertInto('naming_sequence')
+        .insertInto('rangka_naming_sequence')
         .values({ model: this.model.qualifiedName, field: field.name, next_val: 1 })
         .onConflict((oc: any) =>
           oc
             .columns(['model', 'field'])
-            .doUpdateSet({ next_val: sql`naming_sequence.next_val + 1` }),
+            .doUpdateSet({ next_val: sql`rangka_naming_sequence.next_val + 1` }),
         )
         .returning('next_val')
         .executeTakeFirstOrThrow();

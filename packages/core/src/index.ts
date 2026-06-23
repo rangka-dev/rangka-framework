@@ -18,6 +18,8 @@ export {
   MissingDependencyError,
   CircularDependencyError,
 } from './boot/types.js';
+export { DefinitionValidationError } from './boot/validator.js';
+export type { DefinitionError } from './boot/validator.js';
 export {
   AppError,
   BadRequestError,
@@ -49,7 +51,7 @@ export { createServer } from './api/server.js';
 export { QueryParser, QueryValidationError } from './api/query-parser.js';
 export { generateRoutes } from './api/route-generator.js';
 export type { ServerConfig, ApiDefinition } from './api/types.js';
-export { defineApi, defineRoles, defineConfig } from '@rangka/shared';
+export { defineRoles, defineConfig } from '@rangka/shared';
 export type { RangkaConfig } from '@rangka/shared';
 
 // Auth & Permissions

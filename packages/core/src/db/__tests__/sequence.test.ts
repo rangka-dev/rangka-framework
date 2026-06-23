@@ -27,7 +27,7 @@ function createMockDb() {
   returningAllFn.mockReturnValue({ executeTakeFirstOrThrow: insertReturningAllExecute });
 
   insertIntoFn.mockImplementation((table: string) => {
-    if (table === 'naming_sequence') {
+    if (table === 'rangka_naming_sequence') {
       return { values: valuesFn };
     }
     return {
@@ -104,7 +104,9 @@ describe('KyselyModelOps sequence field', () => {
     await ops.create(data);
 
     expect(data.invoice_number).toBe('CUSTOM-001');
-    const namingCalls = insertIntoFn.mock.calls.filter((c: any) => c[0] === 'naming_sequence');
+    const namingCalls = insertIntoFn.mock.calls.filter(
+      (c: any) => c[0] === 'rangka_naming_sequence',
+    );
     expect(namingCalls).toHaveLength(0);
   });
 
@@ -190,7 +192,9 @@ describe('KyselyModelOps sequence field', () => {
     const data: Record<string, unknown> = { title: 'Test' };
     await ops.create(data);
 
-    const namingCalls = insertIntoFn.mock.calls.filter((c: any) => c[0] === 'naming_sequence');
+    const namingCalls = insertIntoFn.mock.calls.filter(
+      (c: any) => c[0] === 'rangka_naming_sequence',
+    );
     expect(namingCalls).toHaveLength(0);
   });
 
