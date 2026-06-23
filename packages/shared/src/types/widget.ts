@@ -6,14 +6,17 @@ export type {
   WidgetPropSchema,
 } from '../validation/schemas/widget.js';
 
+export type { BuiltinWidgetType, WidgetType } from '../validation/schemas/widget-props/index.js';
+
 import type { Condition, WidgetBinding, WidgetSource } from '../validation/schemas/widget.js';
+import type { WidgetType } from '../validation/schemas/widget-props/index.js';
 
 // WidgetNode and WidgetAction must remain authored interfaces because
 // the recursive z.lazy() schema uses z.ZodType (untyped) to break circular inference.
 
 export interface WidgetNode {
   id?: string;
-  type: string;
+  type: WidgetType;
   props?: Record<string, unknown>;
   bind?: WidgetBinding;
   source?: WidgetSource;

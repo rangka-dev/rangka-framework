@@ -20,6 +20,9 @@ export {
 } from './boot/types.js';
 export { DefinitionValidationError } from './boot/validator.js';
 export type { DefinitionError } from './boot/validator.js';
+export { validateModelReferences } from './boot/cross-validator.js';
+export { validatePageBindings } from './boot/page-utils.js';
+export type { PageValidationWarning } from './boot/page-utils.js';
 export {
   AppError,
   BadRequestError,

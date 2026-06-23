@@ -46,7 +46,9 @@ import {
   datagridPropsSchema,
 } from './data-widgets.js';
 
-export const BUILT_IN_WIDGET_PROP_SCHEMAS: Record<string, z.ZodType | undefined> = {
+// Uses an unannoted object + satisfies so `keyof typeof` resolves to literal keys.
+// An explicit Record<string, ...> annotation would widen keys to `string`.
+const _BUILT_IN_WIDGET_PROP_SCHEMAS = {
   // Input widgets
   input: inputPropsSchema,
   select: selectPropsSchema,
@@ -95,9 +97,20 @@ export const BUILT_IN_WIDGET_PROP_SCHEMAS: Record<string, z.ZodType | undefined>
   data: dataPropsSchema,
   repeat: repeatPropsSchema,
   datagrid: datagridPropsSchema,
-};
+} satisfies Record<string, z.ZodType>;
 
-export const BUILT_IN_WIDGET_TYPES = Object.keys(BUILT_IN_WIDGET_PROP_SCHEMAS);
+export type BuiltinWidgetType = keyof typeof _BUILT_IN_WIDGET_PROP_SCHEMAS;
+
+// (string & {}) preserves autocomplete for BuiltinWidgetType literals in IDEs
+// while still accepting arbitrary strings for custom widgets.
+export type WidgetType = BuiltinWidgetType | (string & {});
+
+export const BUILT_IN_WIDGET_PROP_SCHEMAS: Record<string, z.ZodType | undefined> =
+  _BUILT_IN_WIDGET_PROP_SCHEMAS;
+
+export const BUILT_IN_WIDGET_TYPES: BuiltinWidgetType[] = Object.keys(
+  _BUILT_IN_WIDGET_PROP_SCHEMAS,
+) as BuiltinWidgetType[];
 
 export function validateWidgetProps(
   widgetType: string,
