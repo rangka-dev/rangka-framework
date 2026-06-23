@@ -55,6 +55,8 @@ export interface OrFilter {
 
 export type AppliedFilter = TranslatedFilter | OrFilter;
 
+export type IncludeSpec = string | { relation: string; nested?: IncludeSpec[] };
+
 export interface QueryState {
   filters: AppliedFilter[];
   sorts: Array<{ field: string; direction: 'asc' | 'desc' }>;
@@ -62,7 +64,7 @@ export interface QueryState {
   offsetVal?: number;
   pageVal?: number;
   fieldNames: string[];
-  includes: string[];
+  includes: IncludeSpec[];
   unscopedFlag: boolean;
   includeArchivedFlag: boolean;
   auth?: RequestContext;
@@ -102,7 +104,7 @@ export interface ModelOps {
 export interface IncludeResolver {
   resolve(
     records: Record<string, unknown>[],
-    includes: string[],
+    includes: IncludeSpec[],
     sourceModel: string,
   ): Promise<void>;
 }
@@ -114,7 +116,7 @@ export interface ModelQuery {
   limit(count: number): ModelQuery;
   offset(count: number): ModelQuery;
   page(num: number): ModelQuery;
-  include(relation: string): ModelQuery;
+  include(relation: string | IncludeSpec): ModelQuery;
   fields(fieldNames: string[]): ModelQuery;
   search(term: string, fields?: string[]): ModelQuery;
   groupBy(field: string | string[]): ModelQuery;

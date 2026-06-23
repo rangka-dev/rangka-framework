@@ -6,6 +6,7 @@ import type {
   AppliedFilter,
   FilterExpression,
   IncludeResolver,
+  IncludeSpec,
   ModelOps,
   ModelQuery,
   QueryResult,
@@ -76,9 +77,12 @@ export class ModelQueryBuilder implements ModelQuery {
     return this.clone({ pageVal: num });
   }
 
-  include(relation: string): ModelQueryBuilder {
-    if (this.state.includes.includes(relation)) return this;
-    return this.clone({ includes: [...this.state.includes, relation] });
+  include(relation: string | IncludeSpec): ModelQueryBuilder {
+    const spec: IncludeSpec = relation;
+    const key = typeof spec === 'string' ? spec : spec.relation;
+    if (this.state.includes.some((i) => (typeof i === 'string' ? i : i.relation) === key))
+      return this;
+    return this.clone({ includes: [...this.state.includes, spec] });
   }
 
   fields(fieldNames: string[]): ModelQueryBuilder {
@@ -117,7 +121,7 @@ export class ModelQueryBuilder implements ModelQuery {
     return this.state.unscopedFlag;
   }
 
-  getIncludes(): string[] {
+  getIncludes(): IncludeSpec[] {
     return this.state.includes;
   }
 

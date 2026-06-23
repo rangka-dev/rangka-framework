@@ -1,12 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { FastifyRequest, FastifyReply } from 'fastify';
-import type { Kysely } from 'kysely';
 import type { ResolvedModel } from '../schema/types.js';
 import type { SchemaRegistry } from '../schema/registry.js';
 import type { ModelAccessOptions } from '../model-api/types.js';
 import { createModelAccess } from '../model-api/index.js';
 import { QueryParser, QueryValidationError } from './query-parser.js';
-import { resolveIncludes } from './include-resolver.js';
 import { getAuthContext } from '../auth/session.js';
 import { isOwnerOnly, modelHasCreatedBy } from '../auth/model-permissions.js';
 import { validateFields } from '../validation/field-validator.js';
@@ -22,7 +20,6 @@ import { BadRequestError, ForbiddenError, NotFoundError } from '../errors.js';
 export interface HandlerContext {
   model: ResolvedModel;
   registry: SchemaRegistry;
-  db: Kysely<any>;
   modelAccessOpts: Omit<ModelAccessOptions, 'auth'>;
 }
 
@@ -105,21 +102,19 @@ export function listHandler(ctx: HandlerContext) {
         queryBuilder = queryBuilder.sort(s.field, s.direction);
       }
 
+      // Apply includes via query builder
+      for (const inc of parsed.includes) {
+        queryBuilder = queryBuilder.include(
+          inc.nested && inc.nested.length > 0
+            ? { relation: inc.relation, nested: inc.nested.map((n) => n.relation) }
+            : inc.relation,
+        );
+      }
+
       // Apply pagination
       queryBuilder = queryBuilder.limit(parsed.pagination.limit).page(parsed.pagination.page);
 
       const result = await queryBuilder.execWithMeta();
-
-      if (parsed.includes.length > 0) {
-        await resolveIncludes(
-          result.data,
-          parsed.includes,
-          ctx.registry,
-          ctx.db,
-          ctx.model.qualifiedName,
-          request,
-        );
-      }
 
       return reply.send({ data: result.data, meta: result.meta });
     } catch (err: any) {
@@ -149,6 +144,14 @@ export function getHandler(ctx: HandlerContext) {
         queryBuilder = queryBuilder.fields(parsed.fields);
       }
 
+      for (const inc of parsed.includes) {
+        queryBuilder = queryBuilder.include(
+          inc.nested && inc.nested.length > 0
+            ? { relation: inc.relation, nested: inc.nested.map((n) => n.relation) }
+            : inc.relation,
+        );
+      }
+
       const record = await queryBuilder.first();
 
       if (!record) {
@@ -159,17 +162,6 @@ export function getHandler(ctx: HandlerContext) {
         if (!modelHasCreatedBy(ctx.model) || record.created_by !== authContext.user?.id) {
           throw new NotFoundError(`Record not found: ${id}`);
         }
-      }
-
-      if (parsed.includes.length > 0) {
-        await resolveIncludes(
-          [record],
-          parsed.includes,
-          ctx.registry,
-          ctx.db,
-          ctx.model.qualifiedName,
-          request,
-        );
       }
 
       return reply.send({ data: record });

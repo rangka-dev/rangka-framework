@@ -316,7 +316,9 @@ export class KyselyModelOps implements ModelOps {
   }
 
   private applySelect(query: any, state: QueryState) {
-    return state.fieldNames.length > 0 ? query.select(state.fieldNames) : query.selectAll();
+    if (state.fieldNames.length === 0) return query.selectAll();
+    const fields = state.fieldNames.includes('id') ? state.fieldNames : ['id', ...state.fieldNames];
+    return query.select(fields);
   }
 
   private applySorts(query: any, state: QueryState) {

@@ -1,6 +1,6 @@
 import type { Kysely } from 'kysely';
 import type { SchemaRegistry } from '../schema/registry.js';
-import type { IncludeResolver } from '../model-api/types.js';
+import type { IncludeResolver, IncludeSpec } from '../model-api/types.js';
 import type { AdapterRegistry } from '../plugins/adapter-registry.js';
 import type { ExternalFieldConfig } from '../external-model/types.js';
 import { resolveModelIncludes } from './model-include-resolver.js';
@@ -29,7 +29,7 @@ export class CompositeIncludeResolver implements IncludeResolver {
 
   async resolve(
     records: Record<string, unknown>[],
-    includes: string[],
+    includes: IncludeSpec[],
     sourceModel: string,
   ): Promise<void> {
     await resolveModelIncludes(records, includes, this.registry, this.db, sourceModel, {

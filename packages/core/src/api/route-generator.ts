@@ -188,7 +188,7 @@ function registerModelRoutes(
   const authHooks = buildAuthHooks(model, ctx);
   const schemas = buildRouteSchemas(model, module);
   const modelAccessOpts: Omit<ModelAccessOptions, 'auth'> = { db: ctx.db, registry: ctx.registry };
-  const handlerCtx = { model, registry: ctx.registry, db: ctx.db.kysely, modelAccessOpts };
+  const handlerCtx = { model, registry: ctx.registry, modelAccessOpts };
 
   const modelHasHooks = ctx.hookRegistry?.hasHooks(model.qualifiedName) ?? false;
   const hookMiddlewareCtx: HookMiddlewareContext = {
@@ -248,7 +248,7 @@ function registerExternalModelRoutes(
     adapterRegistry: ctx.adapterRegistry,
     adapterCapabilities: ctx.adapterCapabilities,
   };
-  const handlerCtx = { model, registry: ctx.registry, db: ctx.db.kysely, modelAccessOpts };
+  const handlerCtx = { model, registry: ctx.registry, modelAccessOpts };
 
   const capabilities = new Set(ctx.adapterCapabilities?.[model.source!] ?? ['read']);
 

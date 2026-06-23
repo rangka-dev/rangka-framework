@@ -71,18 +71,23 @@ Always run `pnpm build` after cross-package changes. Type errors in downstream p
 
 Before writing new code, check if it already exists:
 
-| Need                                    | Use this                           | Package                               |
-| --------------------------------------- | ---------------------------------- | ------------------------------------- |
-| Fetch single record (client)            | `useModelRecord`                   | `client/src/widgets/data/`            |
-| Fetch list with filters (client)        | `useModelQuery`                    | `client/src/widgets/data/`            |
-| Bind widget to field value              | `useBind`                          | `client/src/widgets/hooks/`           |
-| Dispatch widget actions                 | `useTriggerHandlers`               | `client/src/widgets/hooks/`           |
-| CRUD with scopes + permissions (server) | `ctx.models` / `createModelAccess` | `core/src/model-api/`                 |
-| Build FrameworkContext for hooks        | `createHookContext`                | `core/src/hooks/context.ts`           |
-| Emit events in a transaction            | `ctx.events.emit`                  | `core/src/events/bus.ts`              |
-| Enqueue background jobs                 | `ctx.enqueue`                      | `core/src/jobs/enqueue.ts`            |
-| Call another service                    | `ctx.service(name)`                | `core/src/services/registry.ts`       |
-| Filter/sort/paginate queries            | `ModelQueryBuilder`                | `core/src/model-api/query-builder.ts` |
+| Need                                    | Use this                           | Package                                   |
+| --------------------------------------- | ---------------------------------- | ----------------------------------------- |
+| Fetch single record (client)            | `useModelRecord`                   | `client/src/widgets/data/`                |
+| Fetch list with filters (client)        | `useModelQuery`                    | `client/src/widgets/data/`                |
+| Bind widget to field value              | `useBind`                          | `client/src/widgets/hooks/`               |
+| Dispatch widget actions                 | `useTriggerHandlers`               | `client/src/widgets/hooks/`               |
+| CRUD with scopes + permissions (server) | `ctx.models` / `createModelAccess` | `core/src/model-api/`                     |
+| Bulk create records (server)            | `ctx.models.createMany`            | `core/src/model-api/`                     |
+| Aggregate (sum/avg/count/groupBy)       | `ctx.models.query().aggregate()`   | `core/src/model-api/`                     |
+| Bulk update/delete with filters         | `.updateAll()` / `.deleteAll()`    | `core/src/model-api/query-builder.ts`     |
+| Transactional multi-record ops          | `ctx.models.transaction()`         | `core/src/model-api/`                     |
+| Filter with $or / between               | `.filter({ $or: [...] })`          | `core/src/model-api/filter-translator.ts` |
+| Build FrameworkContext for hooks        | `createHookContext`                | `core/src/hooks/context.ts`               |
+| Emit events in a transaction            | `ctx.events.emit`                  | `core/src/events/bus.ts`                  |
+| Enqueue background jobs                 | `ctx.enqueue`                      | `core/src/jobs/enqueue.ts`                |
+| Call another service                    | `ctx.service(name)`                | `core/src/services/registry.ts`           |
+| Filter/sort/paginate queries            | `ModelQueryBuilder`                | `core/src/model-api/query-builder.ts`     |
 
 If you find yourself writing logic that does the same thing as one of these, stop and use the existing one.
 

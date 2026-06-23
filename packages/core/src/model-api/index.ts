@@ -3,6 +3,7 @@ import { ModelQueryBuilder } from './query-builder.js';
 import { KyselyModelOps } from '../db/model-ops.js';
 import { ExternalModelOps } from '../external-model/external-model-ops.js';
 import { CompositeIncludeResolver } from '../db/include-resolver.js';
+import { modelToTableName } from '../db/field-mapper.js';
 
 export type {
   ModelAccess,
@@ -17,6 +18,7 @@ export type {
   OrFilter,
   AppliedFilter,
   IncludeResolver,
+  IncludeSpec,
 } from './types.js';
 export { ModelQueryBuilder } from './query-builder.js';
 export { translateFilters } from './filter-translator.js';
@@ -57,7 +59,12 @@ export function createModelAccess(opts: ModelAccessOptions): ModelAccess {
       });
     }
 
-    return new KyselyModelOps({ db, model, registry, auth });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const isDatabaseClient = typeof (db as any).kysely !== 'undefined';
+    const tableName = isDatabaseClient
+      ? model.qualifiedName
+      : modelToTableName(model.qualifiedName);
+    return new KyselyModelOps({ db, model, registry, auth, tableName });
   }
 
   return {
@@ -95,15 +102,15 @@ export function createModelAccess(opts: ModelAccessOptions): ModelAccess {
       if (typeof anyDb.transaction !== 'function') {
         throw new Error('transaction() is only supported on Kysely-backed model access');
       }
-      // Kysely: db.transaction().execute(callback)
-      if (typeof anyDb.transaction().execute === 'function') {
-        return anyDb.transaction().execute((trx: unknown) => {
+      // DatabaseClient wraps Kysely and exposes transaction(callback) directly
+      if (typeof anyDb.kysely !== 'undefined') {
+        return anyDb.transaction((trx: unknown) => {
           const scopedAccess = createModelAccess({ ...opts, db: trx as typeof db });
           return fn(scopedAccess);
         });
       }
-      // DatabaseClient: db.transaction(callback)
-      return anyDb.transaction((trx: unknown) => {
+      // Raw Kysely: db.transaction().execute(callback)
+      return anyDb.transaction().execute((trx: unknown) => {
         const scopedAccess = createModelAccess({ ...opts, db: trx as typeof db });
         return fn(scopedAccess);
       });
