@@ -13,7 +13,7 @@ export interface PageValidationWarning {
 export function extractSourceModels(page: PageDefinition): string[] {
   const models = new Set<string>();
 
-  for (const node of page.body) {
+  for (const node of page.widgets) {
     collectModelsFromWidgetNode(node, models);
   }
 
@@ -31,8 +31,8 @@ export function validatePageSources(
   const warnings: PageValidationWarning[] = [];
 
   for (const { page } of pages) {
-    for (let i = 0; i < page.body.length; i++) {
-      checkWidgetNodeSources(page.body[i], `body[${i}]`, page.key, knownModels, warnings);
+    for (let i = 0; i < page.widgets.length; i++) {
+      checkWidgetNodeSources(page.widgets[i], `widgets[${i}]`, page.key, knownModels, warnings);
     }
   }
 
@@ -112,8 +112,8 @@ export function validatePageBindings(
   const warnings: PageValidationWarning[] = [];
 
   for (const { page } of pages) {
-    for (let i = 0; i < page.body.length; i++) {
-      checkWidgetBindings(page.body[i], `body[${i}]`, page.key, null, registry, warnings);
+    for (let i = 0; i < page.widgets.length; i++) {
+      checkWidgetBindings(page.widgets[i], `widgets[${i}]`, page.key, null, registry, warnings);
     }
   }
 

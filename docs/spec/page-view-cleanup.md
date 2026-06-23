@@ -208,7 +208,7 @@ defineView({
   label: 'Canvas',
   schema: {},
   slots: {
-    body: { label: 'Body', multiple: true },
+    widgets: { label: 'Body', multiple: true },
   },
   component: ({ slots }) => <div>{slots.body}</div>,
 });
@@ -220,14 +220,13 @@ defineView({
 definePage({
   key: 'sales.orders',
   label: 'Sales Orders',
-  type: 'collection',
   layout: 'full',
   panels: {
     main: {
       view: 'canvas',
       source: { model: 'sales.order' },
       slots: {
-        body: [
+        widgets: [
           {
             type: 'table',
             bind: { model: { name: 'sales.order' } },

@@ -19,11 +19,10 @@ const actionSchema = z.object({
 export const pageDefinitionSchema = z.object({
   key: z.string().min(1),
   label: z.string().min(1),
-  type: z.enum(['collection', 'record', 'dashboard']),
   path: z.string().optional(),
   layout: z.enum(['default', 'full']).optional(),
   actions: z.array(actionSchema).optional(),
-  body: z.array(widgetNodeSchema).min(1),
+  widgets: z.array(widgetNodeSchema).min(1),
 });
 
 export type PageDefinition = z.infer<typeof pageDefinitionSchema>;

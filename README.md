@@ -54,29 +54,16 @@ export default defineModel('sales.customer', {
 ```
 
 ```typescript
-import { definePage } from 'rangka';
+import { definePage, widget } from 'rangka';
 
 export default definePage({
   key: 'sales.customers',
   label: 'Customers',
-  body: [
-    {
-      type: 'table',
-      bind: { model: { name: 'sales.customer' } },
-      props: { pageSize: 10, selectable: true },
-      children: [
-        {
-          type: 'column',
-          bind: { field: 'name' },
-          props: { label: 'Name', sortable: true, filterable: true },
-        },
-        {
-          type: 'column',
-          bind: { field: 'email' },
-          props: { label: 'Email', sortable: true },
-        },
-      ],
-    },
+  widgets: [
+    widget.table('sales.customer', { sortable: true }, [
+      widget.column('name', { label: 'Name', sortable: true, filterable: true }),
+      widget.column('email', { label: 'Email', sortable: true }),
+    ]),
   ],
 });
 ```

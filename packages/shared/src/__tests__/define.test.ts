@@ -47,8 +47,7 @@ describe('define functions', () => {
     const config = {
       key: 'sales.orders',
       label: 'Sales Orders',
-      type: 'collection' as const,
-      body: [{ type: 'data', source: { model: 'sales.order' }, children: [] }],
+      widgets: [{ type: 'data', source: { model: 'sales.order' }, children: [] }],
     };
     expect(definePage(config)).toBe(config);
   });

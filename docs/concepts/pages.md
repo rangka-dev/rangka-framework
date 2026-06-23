@@ -1,8 +1,8 @@
 ---
 status: stable
 since: 0.2.0
-last-updated: 2026-06-15
-description: Page definition, widget tree body, routing, and page types
+last-updated: 2026-06-23
+description: Page definition, widget tree, routing, and layout
 ---
 
 # Pages
@@ -10,78 +10,58 @@ description: Page definition, widget tree body, routing, and page types
 A page is a routable screen in your application. You define it as a widget tree. The framework handles routing, data fetching, and rendering.
 
 ```typescript
-import { definePage } from 'rangka';
+import { definePage, widget, action } from 'rangka';
 
 export default definePage({
   key: 'sales.orders',
   label: 'Sales Orders',
-  type: 'collection',
   actions: [
-    {
-      type: 'button',
-      label: 'New Order',
+    action.button('New Order', {
       icon: 'plus',
       action: { type: 'navigate', path: '/sales/orders/new' },
-    },
+    }),
   ],
-  body: [
-    {
-      type: 'table',
-      source: { model: 'sales.order' },
-      on: { rowClick: { type: 'setValue', field: '$state.selectedId', value: '{{id}}' } },
-      children: [
-        { type: 'column', props: { label: 'Name' }, bind: { field: 'name' } },
-        { type: 'column', props: { label: 'Customer' }, bind: { field: 'customer_name' } },
-        {
-          type: 'column',
-          props: { label: 'Status' },
-          children: [{ type: 'badge', bind: { field: 'status' } }],
-        },
+  widgets: [
+    widget.table(
+      'sales.order',
+      {
+        on: { rowClick: { type: 'setValue', field: '$state.selectedId', value: '{{id}}' } },
+      },
+      [
+        widget.column('name', { label: 'Name' }),
+        widget.column('customer_name', { label: 'Customer' }),
+        widget.column('status', { label: 'Status' }),
       ],
-    },
-    {
-      type: 'drawer',
-      props: { width: 'md', title: 'Order Detail' },
-      visible: { field: '$state.selectedId', operator: 'notEmpty' },
-      children: [
-        {
-          type: 'data',
-          source: { model: 'sales.order', id: '$state.selectedId' },
-          children: [
-            { type: 'text', bind: { field: 'name' }, props: { style: 'heading' } },
-            { type: 'input', bind: { field: 'customer_id' } },
-            { type: 'input', bind: { field: 'status' } },
-            { type: 'input', bind: { field: 'total' } },
-          ],
-        },
+    ),
+    widget.drawer(
+      {
+        width: 'md',
+        title: 'Order Detail',
+        visible: { field: '$state.selectedId', operator: 'notEmpty' },
+      },
+      [
+        widget.data('sales.order', { id: '$state.selectedId' }, [
+          widget.text('name', { style: 'heading' }),
+          widget.input('customer_id'),
+          widget.input('status'),
+          widget.input('total'),
+        ]),
       ],
-    },
+    ),
   ],
 });
 ```
 
 ## Configuration
 
-| Field     | Type         | Required | Description                                   |
-| --------- | ------------ | -------- | --------------------------------------------- |
-| `key`     | string       | yes      | Unique identifier (`module.name`)             |
-| `label`   | string       | yes      | Display name for nav, breadcrumbs, tab title  |
-| `type`    | PageType     | yes      | Routing context                               |
-| `path`    | string       | no       | Custom route path. Auto-generated if omitted. |
-| `actions` | Action[]     | no       | Topbar action buttons (shell-level)           |
-| `body`    | WidgetNode[] | yes      | The entire page content as a widget tree      |
-
-## Page types
-
-Page type is a semantic hint for the client renderer. It does not affect URL generation or routing.
-
-| Type         | Meaning                     |
-| ------------ | --------------------------- |
-| `collection` | List of records             |
-| `record`     | Single record (detail view) |
-| `dashboard`  | No implicit data context    |
-
-A `record` page does not automatically get `/$id` in its route. You must specify that via `path` if needed.
+| Field     | Type         | Required | Description                                       |
+| --------- | ------------ | -------- | ------------------------------------------------- |
+| `key`     | string       | yes      | Unique identifier (`module.name`)                 |
+| `label`   | string       | yes      | Display name for nav, breadcrumbs, tab title      |
+| `path`    | string       | no       | Custom route path. Auto-generated if omitted.     |
+| `layout`  | string       | no       | `'default'` or `'full'`. Defaults to `'default'`. |
+| `actions` | Action[]     | no       | Topbar action buttons (shell-level)               |
+| `widgets` | WidgetNode[] | yes      | The entire page content as a widget tree          |
 
 ## Routing
 
@@ -97,9 +77,9 @@ Override with `path` when you need something custom:
 ```typescript
 definePage({
   key: 'sales.order-detail',
-  type: 'record',
+  label: 'Order Detail',
   path: '/sales/orders/$id',
-  body: [...],
+  widgets: [...],
 });
 ```
 
@@ -108,27 +88,21 @@ definePage({
 Page-level actions render in the topbar. They are shell-managed and independent of the widget tree.
 
 ```typescript
+import { action } from 'rangka';
+
 actions: [
-  {
-    type: 'button',
-    label: 'New Order',
+  action.button('New Order', {
     icon: 'plus',
     action: { type: 'navigate', path: '/sales/orders/new' },
-  },
-  {
-    type: 'button',
-    label: 'Export',
+  }),
+  action.button('Export', {
     variant: 'secondary',
     action: { type: 'service', name: 'sales.export' },
-  },
-  {
-    type: 'menu',
-    label: 'More',
-    items: [
-      { label: 'Archive', action: { type: 'service', name: 'sales.archive' } },
-      { label: 'Duplicate', action: { type: 'service', name: 'sales.duplicate' } },
-    ],
-  },
+  }),
+  action.menu('More', [
+    { label: 'Archive', action: { type: 'service', name: 'sales.archive' } },
+    { label: 'Duplicate', action: { type: 'service', name: 'sales.duplicate' } },
+  ]),
 ];
 ```
 
@@ -136,22 +110,18 @@ Action types: `button`, `menu`, `toggle-group`, `separator`.
 
 ## Layout
 
-Layout is handled by widgets in the body. There is no page-level layout configuration.
+Layout is handled by widgets in the `widgets` array. There is no page-level layout configuration beyond the `layout` field which controls the shell frame.
 
 ### Side by side
 
 Use `split` to divide the page into columns:
 
 ```typescript
-body: [
-  {
-    type: 'split',
-    props: { sizes: [60, 40] },
-    children: [
-      { type: 'table', source: { model: 'sales.order' }, children: [...] },
-      { type: 'data', source: { model: 'sales.order', id: '$state.selectedId' }, children: [...] },
-    ],
-  },
+widgets: [
+  widget.split({ sizes: [60, 40] }, [
+    widget.table('sales.order', {}, [...]),
+    widget.data('sales.order', { id: '$state.selectedId' }, [...]),
+  ]),
 ]
 ```
 
@@ -160,16 +130,12 @@ body: [
 Use `grid` for a dashboard-style layout:
 
 ```typescript
-body: [
-  {
-    type: 'grid',
-    props: { columns: 3 },
-    children: [
-      { type: 'data', source: { model: 'sales.order' }, children: [...] },
-      { type: 'data', source: { model: 'sales.customer' }, children: [...] },
-      { type: 'data', source: { model: 'sales.product' }, children: [...] },
-    ],
-  },
+widgets: [
+  widget.grid({ columns: 3 }, [
+    widget.data('sales.order', {}, [...]),
+    widget.data('sales.customer', {}, [...]),
+    widget.data('sales.product', {}, [...]),
+  ]),
 ]
 ```
 
@@ -178,9 +144,9 @@ body: [
 Use `section` for collapsible groups:
 
 ```typescript
-body: [
-  { type: 'section', props: { label: 'General', collapsible: true }, children: [...] },
-  { type: 'section', props: { label: 'Line Items', collapsible: true }, children: [...] },
+widgets: [
+  widget.section({ label: 'General', collapsible: true }, [...]),
+  widget.section({ label: 'Line Items', collapsible: true }, [...]),
 ]
 ```
 
@@ -190,35 +156,33 @@ Data fetching is handled by the `data` widget, not the page. Place a `data` widg
 
 ```typescript
 // Single record from route
-{ type: 'data', source: { model: 'sales.order', id: '$route.id' }, children: [...] }
+widget.data('sales.order', { id: '$route.id' }, [...])
 
 // Collection
-{ type: 'data', source: { model: 'sales.product' }, children: [...] }
+widget.data('sales.product', {}, [...])
 
 // Nested: related record from parent context
-{ type: 'data', source: { model: 'sales.order', id: '$route.id' }, children: [
-  { type: 'input', bind: { field: 'customer_id' } },
-  { type: 'data', source: { model: 'sales.customer', id: 'customer_id' }, children: [
-    { type: 'text', bind: { field: 'company_name' } },
-  ] },
-] }
+widget.data('sales.order', { id: '$route.id' }, [
+  widget.input('customer_id'),
+  widget.data('sales.customer', { id: 'customer_id' }, [
+    widget.text('company_name'),
+  ]),
+])
 ```
 
 ## Overlays
 
-Drawers and modals are widgets in the body with `visible` conditions. No special page configuration needed.
+Drawers and modals are widgets in the `widgets` array with `visible` conditions. No special page configuration needed.
 
 ```typescript
-body: [
+widgets: [
   // Main content
-  { type: 'table', source: { model: 'sales.order' },
+  widget.table('sales.order', {
     on: { rowClick: { type: 'setValue', field: '$state.drawerOpen', value: true } },
-    children: [...] },
+  }, [...]),
 
   // Drawer appears when $state.drawerOpen is true
-  { type: 'drawer', props: { width: 'md', title: 'Detail' },
-    visible: { field: '$state.drawerOpen', operator: 'eq', value: true },
-    children: [...] },
+  widget.drawer({ width: 'md', title: 'Detail', visible: { field: '$state.drawerOpen', operator: 'eq', value: true } }, [...]),
 ]
 ```
 
@@ -229,39 +193,26 @@ Close the drawer by setting `$state.drawerOpen` back to false via a button or ot
 ### Collection with master-detail
 
 ```typescript
+import { definePage, widget } from 'rangka';
+
 definePage({
   key: 'sales.orders',
   label: 'Sales Orders',
-  type: 'collection',
-  body: [
-    {
-      type: 'split',
-      props: { sizes: [60, 40] },
-      children: [
+  widgets: [
+    widget.split({ sizes: [60, 40] }, [
+      widget.table(
+        'sales.order',
         {
-          type: 'table',
-          source: { model: 'sales.order' },
           on: { rowClick: { type: 'setValue', field: '$state.selectedId', value: '{{id}}' } },
-          children: [
-            { type: 'column', props: { label: 'Name' }, bind: { field: 'name' } },
-            {
-              type: 'column',
-              props: { label: 'Status' },
-              children: [{ type: 'badge', bind: { field: 'status' } }],
-            },
-          ],
         },
-        {
-          type: 'data',
-          source: { model: 'sales.order', id: '$state.selectedId' },
-          children: [
-            { type: 'text', bind: { field: 'name' }, props: { style: 'heading' } },
-            { type: 'badge', bind: { field: 'status' } },
-            { type: 'text', bind: { expression: '{{format_currency(total, currency)}}' } },
-          ],
-        },
-      ],
-    },
+        [widget.column('name', { label: 'Name' }), widget.column('status', { label: 'Status' })],
+      ),
+      widget.data('sales.order', { id: '$state.selectedId' }, [
+        widget.text('name', { style: 'heading' }),
+        widget.badge('status'),
+        widget.text(null, { style: 'default', expression: '{{format_currency(total, currency)}}' }),
+      ]),
+    ]),
   ],
 });
 ```
@@ -269,54 +220,36 @@ definePage({
 ### Record page with form
 
 ```typescript
+import { definePage, widget } from 'rangka';
+
 definePage({
   key: 'sales.order-detail',
   label: 'Order Detail',
-  type: 'record',
   path: '/sales/orders/$id',
-  body: [
-    {
-      type: 'data',
-      source: { model: 'sales.order', id: '$route.id' },
-      children: [
-        {
-          type: 'section',
-          props: { label: 'General' },
-          children: [
-            {
-              type: 'grid',
-              props: { columns: 2 },
-              children: [
-                { type: 'input', bind: { field: 'customer_id' } },
-                { type: 'input', bind: { field: 'order_date' } },
-                { type: 'input', bind: { field: 'status' } },
-                { type: 'input', bind: { field: 'currency' } },
-              ],
-            },
-          ],
-        },
-        {
-          type: 'section',
-          props: { label: 'Line Items' },
-          children: [
-            {
-              type: 'repeat',
-              bind: { field: 'line_items' },
-              children: [
-                { type: 'input', bind: { field: 'product_id' } },
-                { type: 'input', bind: { field: 'qty' } },
-                { type: 'input', bind: { field: 'rate' } },
-              ],
-            },
-            {
-              type: 'button',
-              props: { label: 'Add Row', icon: 'plus', variant: 'ghost' },
-              on: { click: { type: 'addRow', field: 'line_items' } },
-            },
-          ],
-        },
-      ],
-    },
+  widgets: [
+    widget.data('sales.order', { id: '$route.id' }, [
+      widget.section({ label: 'General' }, [
+        widget.grid({ columns: 2 }, [
+          widget.input('customer_id'),
+          widget.input('order_date'),
+          widget.input('status'),
+          widget.input('currency'),
+        ]),
+      ]),
+      widget.section({ label: 'Line Items' }, [
+        widget.repeat('line_items', [
+          widget.input('product_id'),
+          widget.input('qty'),
+          widget.input('rate'),
+        ]),
+        widget.button({
+          label: 'Add Row',
+          icon: 'plus',
+          variant: 'ghost',
+          on: { click: { type: 'addRow', field: 'line_items' } },
+        }),
+      ]),
+    ]),
   ],
 });
 ```
@@ -324,41 +257,22 @@ definePage({
 ### Dashboard
 
 ```typescript
+import { definePage, widget } from 'rangka';
+
 definePage({
   key: 'sales.dashboard',
   label: 'Sales Dashboard',
-  type: 'dashboard',
-  body: [
-    {
-      type: 'grid',
-      props: { columns: 4 },
-      children: [
-        {
-          type: 'data',
-          source: { model: 'sales.order' },
-          children: [
-            {
-              type: 'text',
-              props: { style: 'heading' },
-              bind: { expression: '{{count(records)}}' },
-            },
-            { type: 'text', props: { style: 'muted' }, bind: { expression: '{{"Total Orders"}}' } },
-          ],
-        },
-        {
-          type: 'data',
-          source: { model: 'sales.customer' },
-          children: [
-            {
-              type: 'text',
-              props: { style: 'heading' },
-              bind: { expression: '{{count(records)}}' },
-            },
-            { type: 'text', props: { style: 'muted' }, bind: { expression: '{{"Customers"}}' } },
-          ],
-        },
-      ],
-    },
+  widgets: [
+    widget.grid({ columns: 4 }, [
+      widget.data('sales.order', {}, [
+        widget.text(null, { style: 'heading', expression: '{{count(records)}}' }),
+        widget.text(null, { style: 'muted', expression: '{{"Total Orders"}}' }),
+      ]),
+      widget.data('sales.customer', {}, [
+        widget.text(null, { style: 'heading', expression: '{{count(records)}}' }),
+        widget.text(null, { style: 'muted', expression: '{{"Customers"}}' }),
+      ]),
+    ]),
   ],
 });
 ```

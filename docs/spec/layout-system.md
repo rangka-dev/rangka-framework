@@ -242,7 +242,7 @@ Behavior:
 Pages that need a narrower container can wrap their body in a group with `maxWidth`:
 
 ```yaml
-body:
+widgets:
   - type: group
     props: { maxWidth: '800px', marginX: auto }
     children: [...]
@@ -283,7 +283,7 @@ The renderer translates layout props to Tailwind utility classes. No custom CSS.
 ### List page
 
 ```yaml
-body:
+widgets:
   - type: group
     props: { direction: column, gap: md, padding: lg }
     children:
@@ -312,7 +312,7 @@ body:
 ### Form page (two-column)
 
 ```yaml
-body:
+widgets:
   - type: group
     props: { direction: column, gap: lg, padding: lg }
     children:
@@ -348,7 +348,7 @@ body:
 ### Dashboard
 
 ```yaml
-body:
+widgets:
   - type: group
     props: { direction: column, gap: lg, padding: lg }
     children:
@@ -377,7 +377,7 @@ body:
 ### Master-detail
 
 ```yaml
-body:
+widgets:
   - type: split
     props: { sizes: [40, 60] }
     children:

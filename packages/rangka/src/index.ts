@@ -1,4 +1,4 @@
-export { field } from '@rangka/shared';
+export { field, widget, action } from '@rangka/shared';
 export {
   defineModel,
   defineModule,

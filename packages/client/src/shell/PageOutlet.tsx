@@ -17,7 +17,7 @@ export function PageOutlet({ pageKey }: { pageKey: string }) {
       data-page-key={pageKey}
       className={`w-full h-full flex flex-col animate-page-enter ${isFull ? '' : 'px-6 py-4 gap-6'}`}
     >
-      <WidgetSlotRenderer nodes={page.body} />
+      <WidgetSlotRenderer nodes={page.widgets} />
     </div>
   );
 }

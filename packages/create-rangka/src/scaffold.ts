@@ -144,14 +144,14 @@ function tasksPage() {
   return `import { definePage } from 'rangka';
 import type { WidgetNode } from 'rangka';
 
-const body: WidgetNode[] = [
+const widgets: WidgetNode[] = [
   {
     type: 'card',
     props: { title: 'Tasks' },
     children: [
       {
         type: 'table',
-        bind: { model: { name: 'main.task' } },
+        source: { model: 'main.task' },
         props: { pageSize: 10 },
         children: [
           {
@@ -180,7 +180,7 @@ export default definePage({
   key: 'main.tasks',
   label: 'Tasks',
   path: '/main/tasks',
-  body,
+  widgets,
 });
 `;
 }

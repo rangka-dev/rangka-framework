@@ -52,11 +52,11 @@ describe('detectDuplicatePageKeys', () => {
     const pages: Array<{ module: string; page: PageDefinition }> = [
       {
         module: 'sales',
-        page: { key: 'sales.orders', label: 'Orders', type: 'collection', body: [] },
+        page: { key: 'sales.orders', label: 'Orders', widgets: [] },
       },
       {
         module: 'crm',
-        page: { key: 'sales.orders', label: 'Orders CRM', type: 'collection', body: [] },
+        page: { key: 'sales.orders', label: 'Orders CRM', widgets: [] },
       },
     ];
 
@@ -70,11 +70,11 @@ describe('detectDuplicatePageKeys', () => {
     const pages: Array<{ module: string; page: PageDefinition }> = [
       {
         module: 'sales',
-        page: { key: 'sales.orders', label: 'Orders', type: 'collection', body: [] },
+        page: { key: 'sales.orders', label: 'Orders', widgets: [] },
       },
       {
         module: 'sales',
-        page: { key: 'sales.customers', label: 'Customers', type: 'collection', body: [] },
+        page: { key: 'sales.customers', label: 'Customers', widgets: [] },
       },
     ];
 
@@ -93,8 +93,7 @@ describe('validatePageSources', () => {
         page: {
           key: 'sales.orders',
           label: 'Orders',
-          type: 'collection',
-          body: [{ type: 'data', source: { model: 'sales.order' }, children: [] }],
+          widgets: [{ type: 'data', source: { model: 'sales.order' }, children: [] }],
         },
       },
     ];
@@ -103,15 +102,14 @@ describe('validatePageSources', () => {
     expect(warnings).toHaveLength(0);
   });
 
-  it('warns when body widget references non-existent model', () => {
+  it('warns when widget references non-existent model', () => {
     const pages: Array<{ module: string; page: PageDefinition }> = [
       {
         module: 'sales',
         page: {
           key: 'sales.broken',
           label: 'Broken',
-          type: 'collection',
-          body: [{ type: 'data', source: { model: 'sales.nonexistent' }, children: [] }],
+          widgets: [{ type: 'data', source: { model: 'sales.nonexistent' }, children: [] }],
         },
       },
     ];
@@ -119,7 +117,7 @@ describe('validatePageSources', () => {
     const warnings = validatePageSources(pages, knownModels);
     expect(warnings).toHaveLength(1);
     expect(warnings[0].pageKey).toBe('sales.broken');
-    expect(warnings[0].location).toBe('body[0]');
+    expect(warnings[0].location).toBe('widgets[0]');
     expect(warnings[0].message).toContain('sales.nonexistent');
   });
 
@@ -130,8 +128,7 @@ describe('validatePageSources', () => {
         page: {
           key: 'sales.detail',
           label: 'Detail',
-          type: 'collection',
-          body: [
+          widgets: [
             {
               type: 'data',
               source: { model: 'sales.order' },
@@ -144,7 +141,7 @@ describe('validatePageSources', () => {
 
     const warnings = validatePageSources(pages, knownModels);
     expect(warnings).toHaveLength(1);
-    expect(warnings[0].location).toBe('body[0].children[0]');
+    expect(warnings[0].location).toBe('widgets[0].children[0]');
     expect(warnings[0].message).toContain('contacts.missing');
   });
 
@@ -155,8 +152,7 @@ describe('validatePageSources', () => {
         page: {
           key: 'reports.revenue',
           label: 'Revenue',
-          type: 'dashboard',
-          body: [
+          widgets: [
             { type: 'text', props: { content: 'Revenue Report' } },
             { type: 'button', props: { label: 'Refresh' } },
           ],

@@ -3,8 +3,7 @@ import { definePage } from '@rangka/shared';
 export default definePage({
   key: 'sales.customers',
   label: 'Customers',
-  type: 'collection',
-  body: [
+  widgets: [
     {
       type: 'data',
       source: { model: 'sales.customer' },

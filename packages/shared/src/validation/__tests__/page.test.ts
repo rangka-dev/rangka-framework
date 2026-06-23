@@ -6,8 +6,7 @@ describe('validatePage', () => {
     const result = validatePage({
       key: 'sales.orders',
       label: 'Orders',
-      type: 'collection',
-      body: [
+      widgets: [
         {
           type: 'table',
           source: { model: 'sales.order' },
@@ -23,28 +22,16 @@ describe('validatePage', () => {
   it('rejects missing key', () => {
     const result = validatePage({
       label: 'Orders',
-      type: 'collection',
-      body: [{ type: 'text' }],
+      widgets: [{ type: 'text' }],
     });
     expect(result.success).toBe(false);
   });
 
-  it('rejects empty body', () => {
+  it('rejects empty widgets', () => {
     const result = validatePage({
       key: 'sales.orders',
       label: 'Orders',
-      type: 'collection',
-      body: [],
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it('rejects invalid page type', () => {
-    const result = validatePage({
-      key: 'sales.orders',
-      label: 'Orders',
-      type: 'invalid',
-      body: [{ type: 'text' }],
+      widgets: [],
     });
     expect(result.success).toBe(false);
   });
@@ -53,7 +40,6 @@ describe('validatePage', () => {
     const result = validatePage({
       key: 'sales.orders',
       label: 'Orders',
-      type: 'collection',
       actions: [
         {
           type: 'button',
@@ -62,7 +48,7 @@ describe('validatePage', () => {
           action: { type: 'navigate', path: '/new' },
         },
       ],
-      body: [{ type: 'table', source: { model: 'sales.order' } }],
+      widgets: [{ type: 'table', source: { model: 'sales.order' } }],
     });
     expect(result.success).toBe(true);
   });
@@ -71,9 +57,8 @@ describe('validatePage', () => {
     const result = validatePage({
       key: 'sales.dashboard',
       label: 'Dashboard',
-      type: 'dashboard',
       layout: 'full',
-      body: [{ type: 'grid', children: [{ type: 'text' }] }],
+      widgets: [{ type: 'grid', children: [{ type: 'text' }] }],
     });
     expect(result.success).toBe(true);
   });

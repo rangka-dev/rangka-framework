@@ -1,4 +1,6 @@
 export { field } from './field.js';
+export { widget } from './widget.js';
+export { action } from './action.js';
 export * from './validation/index.js';
 export {
   defineModel,

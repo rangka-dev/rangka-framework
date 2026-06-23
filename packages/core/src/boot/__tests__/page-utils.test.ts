@@ -7,8 +7,7 @@ describe('extractSourceModels', () => {
     const page: PageDefinition = {
       key: 'sales.orders',
       label: 'Orders',
-      type: 'collection',
-      body: [
+      widgets: [
         {
           type: 'data',
           source: { model: 'sales.order' },
@@ -26,8 +25,7 @@ describe('extractSourceModels', () => {
     const page: PageDefinition = {
       key: 'sales.orders',
       label: 'Orders',
-      type: 'collection',
-      body: [
+      widgets: [
         {
           type: 'data',
           source: { model: 'sales.order' },
@@ -52,8 +50,7 @@ describe('extractSourceModels', () => {
     const page: PageDefinition = {
       key: 'sales.orders',
       label: 'Orders',
-      type: 'collection',
-      body: [
+      widgets: [
         {
           type: 'table',
           source: { model: 'sales.invoice' },
@@ -71,8 +68,7 @@ describe('extractSourceModels', () => {
     const page: PageDefinition = {
       key: 'sales.orders',
       label: 'Orders',
-      type: 'collection',
-      body: [
+      widgets: [
         { type: 'data', source: { model: 'sales.order' }, children: [] },
         { type: 'data', source: { model: 'contacts.contact' }, children: [] },
       ],
@@ -84,12 +80,11 @@ describe('extractSourceModels', () => {
     expect(models).toHaveLength(2);
   });
 
-  it('returns empty for body without data sources', () => {
+  it('returns empty for widgets without data sources', () => {
     const page: PageDefinition = {
       key: 'sales.dashboard',
       label: 'Dashboard',
-      type: 'dashboard',
-      body: [
+      widgets: [
         { type: 'text', props: { content: 'Hello' } },
         { type: 'button', props: { label: 'Click' } },
       ],
@@ -103,8 +98,7 @@ describe('extractSourceModels', () => {
     const page: PageDefinition = {
       key: 'sales.orders',
       label: 'Orders',
-      type: 'collection',
-      body: [
+      widgets: [
         { type: 'data', source: { model: 'sales.order' }, children: [] },
         { type: 'table', source: { model: 'sales.order' }, children: [] },
       ],
@@ -125,8 +119,7 @@ describe('validatePageSources', () => {
         page: {
           key: 'sales.broken',
           label: 'Broken',
-          type: 'collection',
-          body: [
+          widgets: [
             {
               type: 'data',
               source: { model: 'sales.nonexistent' },
@@ -140,7 +133,7 @@ describe('validatePageSources', () => {
     const warnings = validatePageSources(pages, knownModels);
     expect(warnings).toHaveLength(1);
     expect(warnings[0].pageKey).toBe('sales.broken');
-    expect(warnings[0].location).toBe('body[0]');
+    expect(warnings[0].location).toBe('widgets[0]');
     expect(warnings[0].message).toContain('sales.nonexistent');
   });
 
@@ -151,8 +144,7 @@ describe('validatePageSources', () => {
         page: {
           key: 'sales.nested',
           label: 'Nested',
-          type: 'collection',
-          body: [
+          widgets: [
             {
               type: 'data',
               source: { model: 'sales.order' },
@@ -171,7 +163,7 @@ describe('validatePageSources', () => {
 
     const warnings = validatePageSources(pages, knownModels);
     expect(warnings).toHaveLength(1);
-    expect(warnings[0].location).toBe('body[0].children[0]');
+    expect(warnings[0].location).toBe('widgets[0].children[0]');
     expect(warnings[0].message).toContain('sales.ghost');
   });
 
@@ -182,8 +174,7 @@ describe('validatePageSources', () => {
         page: {
           key: 'sales.table',
           label: 'Table',
-          type: 'collection',
-          body: [
+          widgets: [
             {
               type: 'table',
               source: { model: 'sales.missing' },
@@ -196,7 +187,7 @@ describe('validatePageSources', () => {
 
     const warnings = validatePageSources(pages, knownModels);
     expect(warnings).toHaveLength(1);
-    expect(warnings[0].location).toBe('body[0]');
+    expect(warnings[0].location).toBe('widgets[0]');
     expect(warnings[0].message).toContain('sales.missing');
   });
 
@@ -207,8 +198,7 @@ describe('validatePageSources', () => {
         page: {
           key: 'sales.orders',
           label: 'Orders',
-          type: 'collection',
-          body: [
+          widgets: [
             {
               type: 'data',
               source: { model: 'sales.order' },

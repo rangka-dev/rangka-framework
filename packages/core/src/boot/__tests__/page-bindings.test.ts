@@ -35,8 +35,7 @@ describe('validatePageBindings', () => {
         page: {
           key: 'sales.orders',
           label: 'Orders',
-          type: 'collection',
-          body: [
+          widgets: [
             {
               type: 'form',
               source: { model: 'sales.order' },
@@ -61,8 +60,7 @@ describe('validatePageBindings', () => {
         page: {
           key: 'sales.orders',
           label: 'Orders',
-          type: 'collection',
-          body: [
+          widgets: [
             {
               type: 'form',
               source: { model: 'sales.order' },
@@ -76,7 +74,7 @@ describe('validatePageBindings', () => {
     const warnings = validatePageBindings(pages, registry);
     expect(warnings).toHaveLength(1);
     expect(warnings[0].pageKey).toBe('sales.orders');
-    expect(warnings[0].location).toBe('body[0].children[0]');
+    expect(warnings[0].location).toBe('widgets[0].children[0]');
     expect(warnings[0].message).toContain('nonexistent_field');
     expect(warnings[0].message).toContain('sales.order');
   });
@@ -88,8 +86,7 @@ describe('validatePageBindings', () => {
         page: {
           key: 'sales.orphan',
           label: 'Orphan',
-          type: 'collection',
-          body: [{ type: 'input', bind: { field: 'name' } }],
+          widgets: [{ type: 'input', bind: { field: 'name' } }],
         },
       },
     ];
@@ -106,8 +103,7 @@ describe('validatePageBindings', () => {
         page: {
           key: 'sales.nested',
           label: 'Nested',
-          type: 'collection',
-          body: [
+          widgets: [
             {
               type: 'form',
               source: { model: 'sales.order' },
@@ -139,8 +135,7 @@ describe('validatePageBindings', () => {
         page: {
           key: 'sales.nested-sources',
           label: 'Nested Sources',
-          type: 'collection',
-          body: [
+          widgets: [
             {
               type: 'form',
               source: { model: 'sales.order' },
@@ -168,8 +163,7 @@ describe('validatePageBindings', () => {
         page: {
           key: 'sales.wrong-context',
           label: 'Wrong Context',
-          type: 'collection',
-          body: [
+          widgets: [
             {
               type: 'form',
               source: { model: 'sales.order' },
@@ -199,8 +193,7 @@ describe('validatePageBindings', () => {
         page: {
           key: 'sales.computed',
           label: 'Computed',
-          type: 'collection',
-          body: [
+          widgets: [
             {
               type: 'form',
               source: { model: 'sales.order' },
@@ -222,8 +215,7 @@ describe('validatePageBindings', () => {
         page: {
           key: 'sales.unknown-model',
           label: 'Unknown',
-          type: 'collection',
-          body: [
+          widgets: [
             {
               type: 'form',
               source: { model: 'sales.nonexistent' },
@@ -245,8 +237,7 @@ describe('validatePageBindings', () => {
         page: {
           key: 'sales.page1',
           label: 'Page 1',
-          type: 'collection',
-          body: [
+          widgets: [
             {
               type: 'form',
               source: { model: 'sales.order' },
@@ -260,8 +251,7 @@ describe('validatePageBindings', () => {
         page: {
           key: 'sales.page2',
           label: 'Page 2',
-          type: 'collection',
-          body: [
+          widgets: [
             {
               type: 'form',
               source: { model: 'sales.order' },

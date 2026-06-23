@@ -67,8 +67,6 @@ modules/sales/
 ├── fixtures/
 │   └── seed.ts            # defineFixture()
 ├── roles.ts               # defineRoles()
-├── api/
-│   └── reports.ts         # defineApi()
 └── widgets/
     └── PipelineBoard.tsx  # defineWidget()
 ```
@@ -87,7 +85,6 @@ The framework loads files based on their parent folder:
 | `services/` | `defineService()` | Service name from config          |
 | `jobs/`     | `defineJob()`     | Job name from config              |
 | `fixtures/` | `defineFixture()` | Target model from config          |
-| `api/`      | `defineApi()`     | Routes from config keys           |
 | `widgets/`  | `defineWidget()`  | Widget name from config           |
 | `roles.ts`  | `defineRoles()`   | Module root scan                  |
 

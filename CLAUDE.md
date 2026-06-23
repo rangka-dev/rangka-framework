@@ -42,17 +42,19 @@ Import rules:
 
 The framework has two audiences. Know which one you're affecting:
 
-| Audience                   | What they use                                                                                      | Packages                                               |
-| -------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| **App developers**         | `defineModel`, `defineHooks`, `defineService`, `definePage`, builders, `FrameworkContext` in hooks | `@rangka/shared` exports, `FrameworkContext` interface |
-| **Framework contributors** | Internal registries, model-api, hook pipeline, widget renderer, boot sequence                      | Everything in `core/src/`, `client/src/`               |
+| Audience                   | What they use                                                                                                         | Packages                                               |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| **App developers**         | `defineModel`, `defineHooks`, `defineService`, `definePage`, `field`, `widget`, `action`, `FrameworkContext` in hooks | `@rangka/shared` exports, `FrameworkContext` interface |
+| **Framework contributors** | Internal registries, model-api, hook pipeline, widget renderer, boot sequence                                         | Everything in `core/src/`, `client/src/`               |
 
 Rules:
 
 - Interfaces in `@rangka/shared/src/types/` are the public contract. Breaking them breaks every app.
 - `FrameworkContext` (`shared/src/types/context.ts`) is the most sensitive interface. Every hook, service, and job receives it.
+- `PageDefinition` (`shared/src/types/page.ts`) defines page structure. Uses `widgets: WidgetNode[]` (not `body`). No `type` field.
 - `WidgetProps` (`client/src/widgets/types.ts`) is the widget contract. Every widget component depends on it.
 - `BootPayload` (`shared/src/types/boot.ts`) bridges server and client. Changing it requires updating both.
+- The `field`, `widget`, and `action` factories (`shared/src/field.ts`, `shared/src/widget.ts`, `shared/src/action.ts`) are the app developer DSL. Their signatures are public API.
 
 ## Cross-package modification rules
 
@@ -61,11 +63,33 @@ When changing code that crosses package boundaries:
 1. **Changing a type in `shared`** → rebuild shared first, then check all consumers compile: `pnpm build`
 2. **Adding a field to `FrameworkContext`** → update `shared/src/types/context.ts` + `core/src/hooks/context.ts` + `core/src/context.ts`
 3. **Adding a field to `WidgetProps`** → update `client/src/widgets/types.ts` + verify all widget components handle it
-4. **Adding a new `WidgetAction`** → update `shared/src/types/widget.ts` union + `client/src/widgets/action/dispatcher.ts`
-5. **Adding a field to `BootPayload`** → update `shared/src/types/boot.ts` + `core/src/api/meta-handler.ts` + `client/src/boot/`
-6. **Renaming or removing anything in `shared`** → grep the entire monorepo, update all consumers in the same commit
+4. **Adding a new `WidgetAction`** → update `shared/src/types/widget.ts` union + `client/src/widgets/action/dispatcher.ts` + add helper to `shared/src/action.ts`
+5. **Adding a new built-in widget type** → add props schema in `shared/src/validation/schemas/widget-props/` + add helper to `shared/src/widget.ts`
+6. **Adding a field to `PageDefinition`** → update `shared/src/types/page.ts` + `shared/src/validation/schemas/page.ts` + `core/src/boot/page-utils.ts`
+7. **Adding a field to `BootPayload`** → update `shared/src/types/boot.ts` + `core/src/api/meta-handler.ts` + `client/src/boot/`
+8. **Renaming or removing anything in `shared`** → grep the entire monorepo, update all consumers in the same commit
 
 Always run `pnpm build` after cross-package changes. Type errors in downstream packages mean you missed a consumer.
+
+## Page definition API (current)
+
+Pages use `widgets` (not `body`) and have no `type` field:
+
+```typescript
+import { definePage, widget, action } from 'rangka';
+
+export default definePage({
+  key: 'sales.orders',
+  label: 'Orders',
+  widgets: [
+    widget.card({ title: 'Orders' }, [
+      widget.table('sales.order', [widget.column('name', { label: 'Name' })]),
+    ]),
+  ],
+});
+```
+
+Never use `body:` or `type: 'collection'|'record'|'dashboard'` in page definitions. These are removed.
 
 ## Reusable logic (don't reinvent)
 

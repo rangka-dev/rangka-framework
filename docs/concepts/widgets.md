@@ -17,8 +17,7 @@ A page's content is a flat array of widget nodes. Each node can contain children
 definePage({
   key: 'sales.orders',
   label: 'Sales Orders',
-  type: 'collection',
-  body: [
+  widgets: [
     {
       type: 'table',
       source: { model: 'sales.order' },

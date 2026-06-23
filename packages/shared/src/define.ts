@@ -132,9 +132,8 @@ export function defineService<T extends ServiceConfig>(config: T): T {
  * export default definePage({
  *   key: 'sales.orders',
  *   label: 'Orders',
- *   type: 'collection',
- *   body: [
- *     { type: 'table', bind: { model: { name: 'sales.order' } }, children: [
+ *   widgets: [
+ *     { type: 'table', source: { model: 'sales.order' }, children: [
  *       { type: 'column', props: { label: 'Number' }, bind: { field: 'order_number' } },
  *     ]},
  *   ],

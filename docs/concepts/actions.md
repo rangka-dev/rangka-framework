@@ -19,12 +19,11 @@ Page-level actions render in the topbar. The shell manages them.
 definePage({
   key: 'sales.orders',
   label: 'Sales Orders',
-  type: 'collection',
   actions: [
     { type: 'button', label: 'New Order', icon: 'plus', action: { type: 'navigate', path: '/sales/orders/new' } },
     { type: 'button', label: 'Export', variant: 'secondary', action: { type: 'service', name: 'sales.export' } },
   ],
-  body: [...],
+  widgets: [...],
 });
 ```
 
@@ -204,7 +203,6 @@ A sales order page with status transitions:
 definePage({
   key: 'sales.orders',
   label: 'Sales Orders',
-  type: 'collection',
   actions: [
     {
       type: 'button',
@@ -213,7 +211,7 @@ definePage({
       action: { type: 'navigate', path: '/sales/orders/new' },
     },
   ],
-  body: [
+  widgets: [
     {
       type: 'table',
       source: { model: 'sales.order' },

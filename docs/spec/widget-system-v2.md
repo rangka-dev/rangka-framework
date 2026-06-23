@@ -13,7 +13,7 @@ The visual editor, code-first authoring, and builder API all produce the same JS
 
 ```
 definePage()
-  └── body: WidgetNode[]
+  └── widgets: WidgetNode[]
         └── recursive tree of widgets
               ├── layout widgets (split, grid, group, section)
               ├── data widgets (data, table)
@@ -44,13 +44,10 @@ A page is a routable screen with a widget tree as its content.
 interface PageDefinition {
   key: string;
   label: string;
-  type: PageType;
   path?: string;
   actions?: Action[];
-  body: WidgetNode[];
+  widgets: WidgetNode[];
 }
-
-type PageType = 'collection' | 'record' | 'dashboard';
 ```
 
 ### Fields
@@ -59,20 +56,9 @@ type PageType = 'collection' | 'record' | 'dashboard';
 | --------- | ------------ | -------- | -------------------------------------------- |
 | `key`     | string       | yes      | Unique identifier (`module.name`)            |
 | `label`   | string       | yes      | Display name for nav, breadcrumbs, tab title |
-| `type`    | PageType     | yes      | Routing context                              |
 | `path`    | string       | no       | Custom route path. Auto-generated if omitted |
 | `actions` | Action[]     | no       | Topbar action buttons (shell-level)          |
-| `body`    | WidgetNode[] | yes      | The entire page content as a widget tree     |
-
-### Page types
-
-| Type         | URL Pattern          | Meaning                        |
-| ------------ | -------------------- | ------------------------------ |
-| `collection` | `/:module/:page`     | List of records                |
-| `record`     | `/:module/:page/:id` | Single record (`:id` in route) |
-| `dashboard`  | `/:module/:page`     | No implicit data context       |
-
-Page type determines routing and whether `$route.id` is available. It does not control data fetching. Data fetching is handled by `data` and `table` widgets in the tree.
+| `widgets` | WidgetNode[] | yes      | The entire page content as a widget tree     |
 
 ### Example
 
@@ -80,8 +66,7 @@ Page type determines routing and whether `$route.id` is available. It does not c
 definePage({
   key: 'sales.orders',
   label: 'Sales Orders',
-  type: 'collection',
-  body: [
+  widgets: [
     {
       type: 'split',
       props: { sizes: [60, 40] },
@@ -949,14 +934,14 @@ conditional(condition, then, else?)
 ### Page factory
 
 ```typescript
-page(key, label, type).body([...]).toJSON()
+page(key, label).widgets([...]).toJSON()
 ```
 
 ### Example
 
 ```typescript
-export default page('sales.orders', 'Sales Orders', 'collection')
-  .body([
+export default page('sales.orders', 'Sales Orders')
+  .widgets([
     $split([60, 40]).children([
       $table('sales.order')
         .on('rowClick', setValue('$state.selectedId', '{{id}}'))
@@ -1014,7 +999,7 @@ useWidgetContext(); // access current record/model/mode
 Route match
   → Shell (sidebar, topbar)
     → PageRenderer (looks up PageDefinition by key)
-      → WidgetRenderer (recursive, walks body tree)
+      → WidgetRenderer (recursive, walks widgets tree)
         → for each WidgetNode:
           → evaluate visible conditions
           → resolve props expressions
@@ -1033,7 +1018,7 @@ No panels. No views. No layout renderer. The widget tree IS the page.
 
 | Concept                               | Replacement                              |
 | ------------------------------------- | ---------------------------------------- |
-| `panels` on PageDefinition            | Widget tree in `body`                    |
+| `panels` on PageDefinition            | Widget tree in `widgets`                 |
 | `layout` field (full/split/dashboard) | `split`, `grid` widgets                  |
 | `defineView()` / ViewRegistry         | Everything is a widget                   |
 | `source` on panels                    | `data` widget                            |
@@ -1072,7 +1057,7 @@ No panels. No views. No layout renderer. The widget tree IS the page.
 | `$sort.{model}`           | Reactive list sorting                |
 | `$page.{model}`           | Reactive pagination                  |
 | `$route.id`               | Route parameter access               |
-| `page.body`               | Flat widget tree replaces panels     |
+| `page.widgets`            | Flat widget tree replaces panels     |
 
 ---
 
@@ -1097,16 +1082,15 @@ interface BootResponse {
 
 The framework validates page definitions at startup:
 
-1. `type` must be `'collection' | 'record' | 'dashboard'`.
-2. Every `WidgetNode.type` in `body` must reference a registered widget.
-3. `props` validated against widget's `schema`.
-4. `children` only allowed if widget has `container: true`.
-5. If widget has `accepts`, children types are checked.
-6. `on` keys must match widget's declared `triggers`.
-7. `bind` mode must match widget's declared `binding` mode.
-8. `source` only allowed on widgets that support it (`data`).
+1. Every `WidgetNode.type` in `widgets` must reference a registered widget.
+2. `props` validated against widget's `schema`.
+3. `children` only allowed if widget has `container: true`.
+4. If widget has `accepts`, children types are checked.
+5. `on` keys must match widget's declared `triggers`.
+6. `bind` mode must match widget's declared `binding` mode.
+7. `source` only allowed on widgets that support it (`data`).
 
-Invalid definitions produce a startup error with the path (e.g. `pages.sales.orders.body[0].children[1]`).
+Invalid definitions produce a startup error with the path (e.g. `pages.sales.orders.widgets[0].children[1]`).
 
 ---
 
@@ -1114,7 +1098,7 @@ Invalid definitions produce a startup error with the path (e.g. `pages.sales.ord
 
 ### Phase 1: Spec alignment
 
-Update shared types. Remove panels, views, layout from PageDefinition. Add `body` field. Update `defineWidget` to accept `data` category. Add `WidgetSource` type.
+Update shared types. Remove panels, views, layout from PageDefinition. Add `widgets` field. Update `defineWidget` to accept `data` category. Add `WidgetSource` type.
 
 ### Phase 2: New layout widgets
 

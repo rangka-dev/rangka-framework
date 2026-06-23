@@ -22,7 +22,7 @@ The tree structure is the same. The difference is code vs data.
 | React                                    | Rangka                                     | Notes                                                    |
 | ---------------------------------------- | ------------------------------------------ | -------------------------------------------------------- |
 | Component                                | Widget                                     | But you do not write the render function (unless custom) |
-| JSX tree                                 | `body: WidgetNode[]`                       | Same tree structure, data instead of code                |
+| JSX tree                                 | `widgets: WidgetNode[]`                    | Same tree structure, data instead of code                |
 | `useState`                               | `$state.key`                               | Page-scoped, flat, no hook rules                         |
 | `useEffect` for fetching                 | `data` widget with `source`                | Declarative. No cleanup. No race conditions.             |
 | `useContext`                             | Context tree (automatic)                   | `data` widget creates scope, children inherit            |

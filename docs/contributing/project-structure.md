@@ -73,15 +73,15 @@ shared/src/
 │   ├── hooks.ts       — HookDefinition, HookType
 │   ├── auth.ts        — Session, TokenPayload
 │   └── ...            — app, service, job, fixture, extension, api, layout
-├── builders.ts        — Functional widget node builders (input, text, button, etc.)
-├── widget-builder.ts  — Fluent WidgetBuilder/PageBuilder ($input, $text, etc.)
+├── widget.ts          — Widget node builders and types
+├── action.ts          — Action builders and types
 ├── define.ts          — defineModel, defineModule, defineHooks, defineService, etc.
 ├── field.ts           — field() helper for typed FieldConfig creation
 ├── traits.ts          — Built-in trait definitions (timestamped, soft_delete)
 └── index.ts           — Public exports
 ```
 
-Key exports: `defineModel`, `defineModule`, `defineHooks`, `defineService`, `definePage`, `defineJob`, `defineFixture`, `defineRoles`, `defineLayout`, `defineConfig`, `defineWidget`, `field`, `TRAITS`.
+Key exports: `defineModel`, `defineModule`, `defineHooks`, `defineService`, `definePage`, `defineJob`, `defineFixture`, `defineRoles`, `defineConfig`, `defineWidget`, `field`, `TRAITS`.
 
 ### packages/core
 
@@ -212,7 +212,7 @@ studio-local/src/
 | ------------------------------------ | ------------------------------------------- |
 | Type definitions                     | `packages/shared/src/types/`                |
 | Declarative API (`define*`, `field`) | `packages/shared/src/define.ts`, `field.ts` |
-| Widget node builders                 | `packages/shared/src/builders.ts`           |
+| Widget node builders                 | `packages/shared/src/widget.ts`             |
 | Boot orchestration                   | `packages/core/src/boot/`                   |
 | Schema resolution                    | `packages/core/src/schema/`                 |
 | Database operations                  | `packages/core/src/db/`                     |

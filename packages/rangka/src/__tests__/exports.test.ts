@@ -277,6 +277,62 @@ describe('rangka public API exports', () => {
     });
   });
 
+  describe('widget helper', () => {
+    it('exports widget factory as function', () => {
+      expect(rangka.widget).toBeTypeOf('function');
+    });
+
+    it('widget.input', () => {
+      expect(rangka.widget.input).toBeTypeOf('function');
+    });
+
+    it('widget.table', () => {
+      expect(rangka.widget.table).toBeTypeOf('function');
+    });
+
+    it('widget.section', () => {
+      expect(rangka.widget.section).toBeTypeOf('function');
+    });
+
+    it('widget.grid', () => {
+      expect(rangka.widget.grid).toBeTypeOf('function');
+    });
+
+    it('widget.card', () => {
+      expect(rangka.widget.card).toBeTypeOf('function');
+    });
+
+    it('widget.button', () => {
+      expect(rangka.widget.button).toBeTypeOf('function');
+    });
+  });
+
+  describe('action helper', () => {
+    it('exports action factory as function', () => {
+      expect(rangka.action).toBeTypeOf('function');
+    });
+
+    it('action.navigate', () => {
+      expect(rangka.action.navigate).toBeTypeOf('function');
+    });
+
+    it('action.service', () => {
+      expect(rangka.action.service).toBeTypeOf('function');
+    });
+
+    it('action.submit', () => {
+      expect(rangka.action.submit).toBeTypeOf('function');
+    });
+
+    it('action.setValue', () => {
+      expect(rangka.action.setValue).toBeTypeOf('function');
+    });
+
+    it('action.sequence', () => {
+      expect(rangka.action.sequence).toBeTypeOf('function');
+    });
+  });
+
   describe('deprecated APIs are removed', () => {
     it('does not export defineLayout', () => {
       expect((rangka as any).defineLayout).toBeUndefined();

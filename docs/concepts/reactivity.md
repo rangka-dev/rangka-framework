@@ -154,7 +154,7 @@ This is how overlays work. No open/close commands. Just state and conditions.
 A complete reactive flow for a master-detail pattern:
 
 ```typescript
-body: [
+widgets: [
   // 1. Table fetches orders, renders rows
   { type: 'table', source: { model: 'sales.order' },
     // 2. Row click sets $state.selectedId (action mutates state)

@@ -43,9 +43,7 @@ describe('validateApps', () => {
 
   it('throws DefinitionValidationError for invalid page', () => {
     const app = makeApp({
-      pages: [
-        { module: 'test', page: { key: '', label: 'Bad', type: 'collection', body: [] } as any },
-      ],
+      pages: [{ module: 'test', page: { key: '', label: 'Bad', widgets: [] } as any }],
     });
     expect(() => validateApps([app])).toThrow(DefinitionValidationError);
   });
