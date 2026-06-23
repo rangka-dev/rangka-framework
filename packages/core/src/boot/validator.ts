@@ -70,7 +70,7 @@ export function validateApps(apps: DiscoveredApp[]): void {
         if (!result.success) {
           errors.push({
             app: app.config.name,
-            file: `${basePath}/module.ts`,
+            file: `${basePath}/modules/${mod.name ?? 'unknown'}/module.ts`,
             defType: 'module',
             name: mod.name ?? '(unknown)',
             issues: result.error.issues.map((i) => ({
@@ -88,7 +88,7 @@ export function validateApps(apps: DiscoveredApp[]): void {
       if (!result.success) {
         errors.push({
           app: app.config.name,
-          file: `${basePath}/models/${schema.name ?? 'unknown'}.ts`,
+          file: `${basePath}/modules/${module}/models/${schema.name ?? 'unknown'}.ts`,
           defType: 'model',
           name: schema.name ? `${module}.${schema.name}` : '(unknown)',
           issues: result.error.issues.map((i) => ({
@@ -118,12 +118,12 @@ export function validateApps(apps: DiscoveredApp[]): void {
 
     // Validate pages
     if (app.pages) {
-      for (const { page } of app.pages) {
+      for (const { module, page } of app.pages) {
         const result = validatePage(page);
         if (!result.success) {
           errors.push({
             app: app.config.name,
-            file: `${basePath}/pages/${page.key ?? 'unknown'}.ts`,
+            file: `${basePath}/modules/${module}/pages/${page.key?.split('.').pop() ?? 'unknown'}.ts`,
             defType: 'page',
             name: page.key ?? '(unknown)',
             issues: result.error.issues.map((i) => ({
@@ -140,9 +140,10 @@ export function validateApps(apps: DiscoveredApp[]): void {
       for (const { model, hooks } of app.hooks) {
         const result = validateHooks(hooks);
         if (!result.success) {
+          const hookModule = model.includes('.') ? model.split('.')[0] : app.config.name;
           errors.push({
             app: app.config.name,
-            file: `${basePath}/hooks/${model}.ts`,
+            file: `${basePath}/modules/${hookModule}/hooks/${model}.ts`,
             defType: 'hooks',
             name: model,
             issues: result.error.issues.map((i) => ({
@@ -161,7 +162,7 @@ export function validateApps(apps: DiscoveredApp[]): void {
         if (!result.success) {
           errors.push({
             app: app.config.name,
-            file: `${basePath}/roles.ts`,
+            file: `${basePath}/modules/${roleSrc}/roles.ts`,
             defType: 'roles',
             name: roleSrc,
             issues: result.error.issues.map((i) => ({
