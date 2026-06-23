@@ -187,6 +187,22 @@ describe('CRUD handlers via route generation', () => {
       expect(body.meta.limit).toBe(25);
     });
 
+    it('returns empty result when search is provided but no fields are searchable', async () => {
+      (db as any)._records['sales.invoice'] = [
+        { id: '1', name: 'INV-001', amount: 100 },
+        { id: '2', name: 'INV-002', amount: 200 },
+      ];
+
+      const res = await server.inject({
+        method: 'GET',
+        url: '/api/sales/invoice?search=test',
+      });
+      expect(res.statusCode).toBe(200);
+      const body = JSON.parse(res.body);
+      expect(body.data).toEqual([]);
+      expect(body.meta.total).toBe(0);
+    });
+
     it('returns 400 for invalid filter field', async () => {
       const res = await server.inject({
         method: 'GET',
