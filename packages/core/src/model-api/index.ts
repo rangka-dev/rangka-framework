@@ -14,6 +14,8 @@ export type {
   QueryResultWithMeta,
   QueryState,
   TranslatedFilter,
+  OrFilter,
+  AppliedFilter,
   IncludeResolver,
 } from './types.js';
 export { ModelQueryBuilder } from './query-builder.js';
@@ -81,6 +83,30 @@ export function createModelAccess(opts: ModelAccessOptions): ModelAccess {
 
     async delete(modelName: string, id: string) {
       return resolveOps(modelName).delete(id, auth);
+    },
+
+    async createMany(modelName: string, data: Record<string, unknown>[]) {
+      return resolveOps(modelName).createMany(data, auth);
+    },
+
+    async transaction<T>(fn: (models: ModelAccess) => Promise<T>): Promise<T> {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const anyDb = db as any;
+      if (typeof anyDb.transaction !== 'function') {
+        throw new Error('transaction() is only supported on Kysely-backed model access');
+      }
+      // Kysely: db.transaction().execute(callback)
+      if (typeof anyDb.transaction().execute === 'function') {
+        return anyDb.transaction().execute((trx: unknown) => {
+          const scopedAccess = createModelAccess({ ...opts, db: trx as typeof db });
+          return fn(scopedAccess);
+        });
+      }
+      // DatabaseClient: db.transaction(callback)
+      return anyDb.transaction((trx: unknown) => {
+        const scopedAccess = createModelAccess({ ...opts, db: trx as typeof db });
+        return fn(scopedAccess);
+      });
     },
   };
 }

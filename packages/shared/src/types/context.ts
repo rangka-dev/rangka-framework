@@ -1,5 +1,13 @@
 import type { SchemaRegistryInterface } from './schema-registry.js';
 import type { ContextAuth } from './auth.js';
+import type {
+  FilterExpression,
+  AggregateSpec,
+  AggregateResult,
+  GroupedAggregateResult,
+  QueryResult,
+  QueryResultWithMeta,
+} from './model-api.js';
 
 export interface JobOptions {
   delay?: number;
@@ -13,22 +21,27 @@ export interface ServiceInstance {
 }
 
 export interface ModelQueryInterface {
-  filter(conditions: Record<string, unknown>): ModelQueryInterface;
+  filter(conditions: FilterExpression): ModelQueryInterface;
+  search(term: string, fields?: string[]): ModelQueryInterface;
   sort(field: string, direction?: 'asc' | 'desc'): ModelQueryInterface;
   limit(count: number): ModelQueryInterface;
   offset(count: number): ModelQueryInterface;
   page(num: number): ModelQueryInterface;
-  include(relation: string): ModelQueryInterface;
   fields(fieldNames: string[]): ModelQueryInterface;
+  include(relation: string): ModelQueryInterface;
   unscoped(): ModelQueryInterface;
   includeArchived(): ModelQueryInterface;
-  exec(): Promise<{ data: Record<string, unknown>[]; total?: number; hasMore?: boolean }>;
-  execWithMeta(): Promise<{
-    data: Record<string, unknown>[];
-    meta: { total: number; page: number; limit: number; totalPages: number };
-  }>;
+  groupBy(field: string): ModelQueryInterface;
+  groupBy(fields: string[]): ModelQueryInterface;
+
+  exec(): Promise<QueryResult>;
+  execWithMeta(): Promise<QueryResultWithMeta>;
   first(): Promise<Record<string, unknown> | null>;
   count(): Promise<number>;
+  aggregate(spec: AggregateSpec): Promise<AggregateResult | GroupedAggregateResult>;
+
+  updateAll(data: Record<string, unknown>): Promise<{ count: number }>;
+  deleteAll(): Promise<{ count: number }>;
 }
 
 export interface ModelAccessInterface {
@@ -41,6 +54,8 @@ export interface ModelAccessInterface {
     data: Record<string, unknown>,
   ): Promise<Record<string, unknown>>;
   delete(model: string, id: string): Promise<Record<string, unknown>>;
+  createMany(model: string, data: Record<string, unknown>[]): Promise<Record<string, unknown>[]>;
+  transaction<T>(fn: (tx: ModelAccessInterface) => Promise<T>): Promise<T>;
 }
 
 export interface FrameworkContext {

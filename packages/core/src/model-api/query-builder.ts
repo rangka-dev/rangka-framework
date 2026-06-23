@@ -1,7 +1,9 @@
 import type { SchemaRegistry } from '../schema/registry.js';
 import type { ResolvedModel } from '../schema/types.js';
 import type { RequestContext } from '../auth/types.js';
+import type { AggregateResult, AggregateSpec, GroupedAggregateResult } from '@rangka/shared';
 import type {
+  AppliedFilter,
   FilterExpression,
   IncludeResolver,
   ModelOps,
@@ -9,7 +11,6 @@ import type {
   QueryResult,
   QueryResultWithMeta,
   QueryState,
-  TranslatedFilter,
 } from './types.js';
 import { translateFilters } from './filter-translator.js';
 
@@ -55,7 +56,7 @@ export class ModelQueryBuilder implements ModelQuery {
     return this.clone({ filters: [...this.state.filters, ...translated] });
   }
 
-  filterRaw(filters: TranslatedFilter[]): ModelQueryBuilder {
+  filterRaw(filters: AppliedFilter[]): ModelQueryBuilder {
     return this.clone({ filters: [...this.state.filters, ...filters] });
   }
 
@@ -92,13 +93,24 @@ export class ModelQueryBuilder implements ModelQuery {
     return this.clone({ includeArchivedFlag: true });
   }
 
-  search(term: string, fields: string[]): ModelQueryBuilder {
-    if (!term || fields.length === 0) return this;
-    return this.clone({ searchTerm: term, searchFields: fields });
+  search(term: string, fields?: string[]): ModelQueryBuilder {
+    if (!term) return this;
+    const searchFields =
+      fields ??
+      this.model.fields
+        .filter((f) => (f.config as { searchable?: boolean }).searchable)
+        .map((f) => f.name);
+    if (searchFields.length === 0) return this;
+    return this.clone({ searchTerm: term, searchFields });
   }
 
   withAuth(auth: RequestContext): ModelQueryBuilder {
     return this.clone({ auth });
+  }
+
+  groupBy(field: string | string[]): ModelQueryBuilder {
+    const fields = Array.isArray(field) ? field : [field];
+    return this.clone({ groupByFields: fields });
   }
 
   isUnscoped(): boolean {
@@ -151,5 +163,17 @@ export class ModelQueryBuilder implements ModelQuery {
 
   async count(): Promise<number> {
     return this.ops.count(this.state);
+  }
+
+  async aggregate(spec: AggregateSpec): Promise<AggregateResult | GroupedAggregateResult> {
+    return this.ops.aggregate(this.clone({ aggregateSpec: spec }).state);
+  }
+
+  async updateAll(data: Record<string, unknown>): Promise<{ count: number }> {
+    return this.ops.updateAll(this.state, data);
+  }
+
+  async deleteAll(): Promise<{ count: number }> {
+    return this.ops.deleteAll(this.state);
   }
 }

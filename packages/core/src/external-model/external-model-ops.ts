@@ -1,11 +1,24 @@
-import type { ModelOps, QueryState, QueryResult, QueryResultWithMeta } from '../model-api/types.js';
+import type {
+  ModelOps,
+  QueryState,
+  QueryResult,
+  QueryResultWithMeta,
+  TranslatedFilter,
+  AppliedFilter,
+} from '../model-api/types.js';
 import type { RequestContext } from '../auth/types.js';
 import type { DataAdapter, AdapterCapability } from '../plugins/types.js';
 import type { ExternalFieldConfig } from './types.js';
+import type { AggregateResult, GroupedAggregateResult } from '@rangka/shared';
+import { UnsupportedOperationError } from '@rangka/shared';
 import { ExternalQueryExecutor } from './query-executor.js';
 import { ExternalMutationExecutor, CapabilityNotSupportedError } from './mutation-executor.js';
 
 export { CapabilityNotSupportedError };
+
+function toTranslatedFilters(filters: AppliedFilter[]): TranslatedFilter[] {
+  return filters.filter((f): f is TranslatedFilter => f.operator !== '$or');
+}
 
 export interface ExternalModelOpsConfig {
   adapter: DataAdapter;
@@ -18,8 +31,10 @@ export interface ExternalModelOpsConfig {
 export class ExternalModelOps implements ModelOps {
   private readonly queryExecutor: ExternalQueryExecutor;
   private readonly mutationExecutor: ExternalMutationExecutor;
+  private readonly modelName: string;
 
   constructor(config: ExternalModelOpsConfig) {
+    this.modelName = config.modelName;
     this.queryExecutor = new ExternalQueryExecutor({
       adapter: config.adapter,
       modelName: config.modelName,
@@ -37,7 +52,7 @@ export class ExternalModelOps implements ModelOps {
 
   async find(state: QueryState): Promise<QueryResult> {
     const result = await this.queryExecutor.execList({
-      filters: state.filters,
+      filters: toTranslatedFilters(state.filters),
       sorts: state.sorts,
       fieldNames: state.fieldNames,
       limitVal: state.limitVal,
@@ -51,7 +66,7 @@ export class ExternalModelOps implements ModelOps {
     const limit = state.limitVal ?? 25;
     const page = state.pageVal ?? 1;
     const result = await this.queryExecutor.execList({
-      filters: state.filters,
+      filters: toTranslatedFilters(state.filters),
       sorts: state.sorts,
       fieldNames: state.fieldNames,
       limitVal: limit,
@@ -64,7 +79,7 @@ export class ExternalModelOps implements ModelOps {
 
   async findOne(state: QueryState): Promise<Record<string, unknown> | null> {
     const result = await this.queryExecutor.execList({
-      filters: state.filters,
+      filters: toTranslatedFilters(state.filters),
       sorts: state.sorts,
       fieldNames: state.fieldNames,
       limitVal: 1,
@@ -74,7 +89,7 @@ export class ExternalModelOps implements ModelOps {
 
   async count(state: QueryState): Promise<number> {
     return this.queryExecutor.execCount({
-      filters: state.filters,
+      filters: toTranslatedFilters(state.filters),
       sorts: state.sorts,
       fieldNames: state.fieldNames,
     });
@@ -104,5 +119,40 @@ export class ExternalModelOps implements ModelOps {
     if (!record) throw new Error(`Record not found: ${id}`);
     await this.mutationExecutor.delete(id);
     return record;
+  }
+
+  async createMany(
+    _data: Record<string, unknown>[],
+    _auth?: RequestContext,
+  ): Promise<Record<string, unknown>[]> {
+    throw new UnsupportedOperationError(
+      this.modelName,
+      'createMany',
+      'not supported on external models',
+    );
+  }
+
+  async aggregate(_state: QueryState): Promise<AggregateResult | GroupedAggregateResult> {
+    throw new UnsupportedOperationError(
+      this.modelName,
+      'aggregate',
+      'not supported on external models',
+    );
+  }
+
+  async updateAll(_state: QueryState, _data: Record<string, unknown>): Promise<{ count: number }> {
+    throw new UnsupportedOperationError(
+      this.modelName,
+      'updateAll',
+      'not supported on external models',
+    );
+  }
+
+  async deleteAll(_state: QueryState): Promise<{ count: number }> {
+    throw new UnsupportedOperationError(
+      this.modelName,
+      'deleteAll',
+      'not supported on external models',
+    );
   }
 }
