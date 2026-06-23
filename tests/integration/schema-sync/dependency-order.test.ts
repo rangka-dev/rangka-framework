@@ -65,10 +65,10 @@ describe('schema-sync: dependency order', () => {
     expect(referencedTables).toContain('hr__employee');
   });
 
-  it('naming_sequence table exists (sequence fields present)', async () => {
+  it('rangka_naming_sequence table exists (sequence fields present)', async () => {
     const { rows } = await sql<{ table_name: string }>`
       SELECT table_name FROM information_schema.tables
-      WHERE table_schema = 'public' AND table_name = 'naming_sequence'
+      WHERE table_schema = 'public' AND table_name = 'rangka_naming_sequence'
     `.execute(bootResult.db!.kysely);
     expect(rows.length).toBe(1);
   });

@@ -176,19 +176,15 @@ describe('validateModelReferences', () => {
   });
 
   describe('manyToMany fields', () => {
-    it('passes when both target and through models exist', () => {
+    it('passes when target model exists (through table is auto-created)', () => {
       const models = [
         makeModel('sales.order', [
           {
             name: 'tags',
-            config: { type: 'manyToMany', model: 'sales.tag', through: 'sales.order_tag' },
+            config: { type: 'manyToMany', model: 'sales.tag', through: 'order_tag' },
           },
         ]),
         makeModel('sales.tag', [{ name: 'name', config: { type: 'string' } }]),
-        makeModel('sales.order_tag', [
-          { name: 'order_id', config: { type: 'link', model: 'sales.order' } },
-          { name: 'tag_id', config: { type: 'link', model: 'sales.tag' } },
-        ]),
       ];
       const registry = new SchemaRegistry(models);
 
@@ -200,31 +196,13 @@ describe('validateModelReferences', () => {
         makeModel('sales.order', [
           {
             name: 'tags',
-            config: { type: 'manyToMany', model: 'sales.ghost', through: 'sales.order_tag' },
+            config: { type: 'manyToMany', model: 'sales.ghost', through: 'order_tag' },
           },
-        ]),
-        makeModel('sales.order_tag', [
-          { name: 'order_id', config: { type: 'link', model: 'sales.order' } },
         ]),
       ];
       const registry = new SchemaRegistry(models);
 
       expect(() => validateModelReferences(registry, [])).toThrow('sales.ghost');
-    });
-
-    it('throws when manyToMany through model does not exist', () => {
-      const models = [
-        makeModel('sales.order', [
-          {
-            name: 'tags',
-            config: { type: 'manyToMany', model: 'sales.tag', through: 'sales.ghost_junction' },
-          },
-        ]),
-        makeModel('sales.tag', [{ name: 'name', config: { type: 'string' } }]),
-      ];
-      const registry = new SchemaRegistry(models);
-
-      expect(() => validateModelReferences(registry, [])).toThrow('sales.ghost_junction');
     });
   });
 
@@ -241,15 +219,15 @@ describe('validateModelReferences', () => {
       expect(() => validateModelReferences(registry, [])).not.toThrow();
     });
 
-    it('throws when modelField does not exist on the same model', () => {
+    it('passes when modelField is auto-created by the dynamicLink itself', () => {
       const models = [
         makeModel('sales.comment', [
-          { name: 'target_id', config: { type: 'dynamicLink', modelField: 'nonexistent_field' } },
+          { name: 'target_id', config: { type: 'dynamicLink', modelField: 'target_model' } },
         ]),
       ];
       const registry = new SchemaRegistry(models);
 
-      expect(() => validateModelReferences(registry, [])).toThrow('nonexistent_field');
+      expect(() => validateModelReferences(registry, [])).not.toThrow();
     });
   });
 

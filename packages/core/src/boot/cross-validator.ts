@@ -47,7 +47,6 @@ function validateModelFields(
   registry: SchemaRegistry,
 ): CrossDefinitionError[] {
   const errors: CrossDefinitionError[] = [];
-  const fieldNames = new Set(model.fields.map((f) => f.name));
 
   for (const field of model.fields) {
     const config = field.config;
@@ -118,27 +117,13 @@ function validateModelFields(
             message: `ManyToMany target model "${config.model}" does not exist`,
           });
         }
-        const throughName = resolveModelName(config.through, model.module);
-        if (!registry.getModel(throughName)) {
-          errors.push({
-            model: model.qualifiedName,
-            field: field.name,
-            message: `ManyToMany through model "${config.through}" does not exist`,
-          });
-        }
+        // through table is auto-created by the field mapper as a junction table
         break;
       }
 
-      case 'dynamicLink': {
-        if (!fieldNames.has(config.modelField)) {
-          errors.push({
-            model: model.qualifiedName,
-            field: field.name,
-            message: `DynamicLink modelField "${config.modelField}" does not exist on this model`,
-          });
-        }
+      case 'dynamicLink':
+        // modelField column is auto-created by the field mapper, no validation needed
         break;
-      }
     }
   }
 

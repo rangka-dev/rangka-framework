@@ -45,7 +45,7 @@ describe('schema-sync: idempotent', () => {
     expect(tableNames).toContain('project__project');
     expect(tableNames).toContain('project__task');
     expect(tableNames).toContain('project__timesheet');
-    expect(tableNames).toContain('naming_sequence');
+    expect(tableNames).toContain('rangka_naming_sequence');
   });
 
   it('second autoSync produces zero non-destructive operations', async () => {
