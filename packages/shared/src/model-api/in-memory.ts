@@ -73,8 +73,7 @@ function matchesFilter(
 }
 
 function isOperatorObject(value: unknown): value is FilterOperators {
-  if (value === null || value === undefined) return false;
-  if (typeof value !== 'object' || Array.isArray(value)) return false;
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
   const keys = Object.keys(value);
   const ops = new Set([
     'eq',
