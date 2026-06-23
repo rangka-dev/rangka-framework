@@ -63,10 +63,6 @@ export class StudioServer {
       this.broadcast({ type: 'runtime.error', message });
     });
 
-    this.subprocess.on('sync_pending', (operations) => {
-      this.broadcast({ type: 'schema.diff', operations });
-    });
-
     this.subprocess.on('exit', (code: number | null, signal: string | null) => {
       if (this.runtimeStatus === 'ready') {
         this.runtimeStatus = 'error';
@@ -180,11 +176,6 @@ export class StudioServer {
         });
       }
 
-      const ops = this.subprocess.getPendingOps();
-      if (ops.length > 0) {
-        this.broadcast({ type: 'schema.diff', operations: ops });
-      }
-
       if (this.subprocess.isRunning()) {
         this.send(ws, { type: 'preview.reload' });
       }
@@ -212,11 +203,6 @@ export class StudioServer {
 
     this.sendSessionCurrent(ws);
     this.send(ws, { type: 'agent.status', busy: this.isAgentBusy });
-
-    const pendingOps = this.subprocess.getPendingOps();
-    if (pendingOps.length > 0) {
-      this.send(ws, { type: 'schema.diff', operations: pendingOps });
-    }
 
     ws.on('message', (data) => {
       try {

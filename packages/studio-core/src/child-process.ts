@@ -127,10 +127,10 @@ function handleIntrospect(requestId: string, type: IntrospectType, module?: stri
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function introspectResource(
   type: IntrospectType,
   module?: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): { data: any[]; count: number } | { error: string } {
   if (!bootResult) return { error: 'Framework not booted yet.' };
 
