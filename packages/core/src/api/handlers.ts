@@ -82,6 +82,11 @@ export function listHandler(ctx: HandlerContext) {
           .map((f) => f.name);
         if (searchableFields.length > 0) {
           queryBuilder = queryBuilder.search(parsed.search, searchableFields);
+        } else {
+          return reply.send({
+            data: [],
+            meta: { total: 0, page: parsed.pagination.page, limit: parsed.pagination.limit },
+          });
         }
       }
 
