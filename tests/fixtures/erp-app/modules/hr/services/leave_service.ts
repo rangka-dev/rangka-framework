@@ -7,13 +7,11 @@ export default defineService({
   factory(ctx) {
     return {
       async getBalance(employeeId: string) {
-        const result = await ctx.db
-          .selectFrom('hr__leave_request')
-          .select(ctx.db.fn.sum('days').as('total_days'))
-          .where('employee', '=', employeeId)
-          .where('status', '=', 'Approved')
-          .executeTakeFirst();
-        const used = Number((result as Record<string, unknown>)?.total_days ?? 0);
+        const result = await ctx.models
+          .query('hr.leave_request')
+          .filter({ employee: employeeId, status: 'Approved' })
+          .aggregate({ sum: 'days' });
+        const used = (result as { sum?: Record<string, number> }).sum?.days ?? 0;
         return { annual: 20, used, remaining: 20 - used };
       },
     };

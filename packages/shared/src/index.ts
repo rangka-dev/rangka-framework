@@ -18,6 +18,13 @@ export type { LayoutConfig, RangkaConfig } from './define.js';
 export { TRAITS } from './traits.js';
 export type * from './types/index.js';
 export {
+  ModelNotFoundError,
+  ReadOnlyViolationError,
+  UnsupportedOperationError,
+  ModelValidationError,
+} from './types/model-api.js';
+export { InMemoryModelAccess } from './model-api/in-memory.js';
+export {
   input,
   text,
   button,

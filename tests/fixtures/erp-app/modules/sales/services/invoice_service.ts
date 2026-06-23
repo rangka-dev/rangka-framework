@@ -10,11 +10,7 @@ export default defineService({
         return items.reduce((sum, item) => sum + item.qty * item.rate, 0);
       },
       async markAsPaid(invoiceId: string) {
-        await ctx.db
-          .updateTable('sales__invoice')
-          .set({ status: 'Paid' })
-          .where('id', '=', invoiceId)
-          .execute();
+        await ctx.models.update('sales.invoice', invoiceId, { status: 'Paid' });
       },
     };
   },

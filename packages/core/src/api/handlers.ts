@@ -4,9 +4,16 @@ import type { Kysely } from 'kysely';
 import type { ResolvedModel } from '../schema/types.js';
 import type { SchemaRegistry } from '../schema/registry.js';
 import type { ModelAccessOptions } from '../model-api/types.js';
+import type { HookRegistry } from '../hooks/registry.js';
+import type { HookDocument } from '../hooks/types.js';
+import type { ServiceRegistry } from '../services/registry.js';
+import type { EventBus } from '../events/bus.js';
 import { createModelAccess } from '../model-api/index.js';
+import { KyselyModelOps } from '../db/model-ops.js';
+import { modelToTableName } from '../db/field-mapper.js';
+import { executeHookPipeline } from '../hooks/executor.js';
+import { ValidationError } from '../hooks/errors.js';
 import { QueryParser, QueryValidationError } from './query-parser.js';
-import { resolveIncludes } from './include-resolver.js';
 import { getAuthContext } from '../auth/session.js';
 import { isOwnerOnly, modelHasCreatedBy } from '../auth/model-permissions.js';
 import { validateFields } from '../validation/field-validator.js';
@@ -18,17 +25,27 @@ import { BadRequestError, ForbiddenError, NotFoundError } from '../errors.js';
 
 // ---------- Types ----------
 
-/** Shared dependencies passed to each handler factory. */
+/** Context for read handlers and external model write handlers. */
 export interface HandlerContext {
   model: ResolvedModel;
   registry: SchemaRegistry;
-  db: Kysely<any>;
   modelAccessOpts: Omit<ModelAccessOptions, 'auth'>;
+}
+
+/** Context for unified write handlers (internal models). */
+export interface WriteHandlerContext {
+  model: ResolvedModel;
+  registry: SchemaRegistry;
+  modelAccessOpts: Omit<ModelAccessOptions, 'auth'>;
+  db: Kysely<any>;
+  hookRegistry?: HookRegistry;
+  serviceRegistry?: ServiceRegistry;
+  eventBus?: EventBus;
+  config: Record<string, unknown>;
 }
 
 // ---------- Internal helpers ----------
 
-/** Creates a QueryParser configured with the model's fields and relationship names. */
 function createParserForModel(ctx: HandlerContext): QueryParser {
   const relationFieldNames = ctx.registry
     .getRelationshipsForModel(ctx.model.qualifiedName)
@@ -36,7 +53,6 @@ function createParserForModel(ctx: HandlerContext): QueryParser {
   return new QueryParser(ctx.model.fields, relationFieldNames);
 }
 
-/** Validates that the request body is a non-null object. Throws BadRequestError if invalid. */
 function parseRequestBody(request: FastifyRequest): Record<string, unknown> {
   const body = request.body as Record<string, unknown> | undefined;
   if (!body || typeof body !== 'object') {
@@ -45,7 +61,17 @@ function parseRequestBody(request: FastifyRequest): Record<string, unknown> {
   return body;
 }
 
-// ---------- Route handler factories ----------
+function handleHookError(err: unknown): never {
+  if (err instanceof ValidationError) {
+    throw new BadRequestError(err.code, err.message, err.field ? { field: err.field } : undefined);
+  }
+  if (err instanceof Error) {
+    throw new BadRequestError('VALIDATION_ERROR', err.message);
+  }
+  throw err;
+}
+
+// ---------- Read handlers ----------
 
 /** GET /model — Returns a paginated list of records with filtering, sorting, and field selection. */
 export function listHandler(ctx: HandlerContext) {
@@ -72,10 +98,8 @@ export function listHandler(ctx: HandlerContext) {
         queryBuilder = queryBuilder.includeArchived();
       }
 
-      // Apply parsed filters directly (already translated by QueryParser)
       queryBuilder = queryBuilder.filterRaw(parsed.filters);
 
-      // Apply search across searchable fields
       if (parsed.search) {
         const searchableFields = ctx.model.fields
           .filter((f) => 'searchable' in f.config && f.config.searchable)
@@ -90,36 +114,29 @@ export function listHandler(ctx: HandlerContext) {
         }
       }
 
-      // Apply owner-only filter
       if (ownerRead) {
         queryBuilder = queryBuilder.filter({ created_by: authContext.user!.id });
       }
 
-      // Apply field selection
       if (parsed.fields.length > 0) {
         queryBuilder = queryBuilder.fields(parsed.fields);
       }
 
-      // Apply sorting
       for (const s of parsed.sort) {
         queryBuilder = queryBuilder.sort(s.field, s.direction);
       }
 
-      // Apply pagination
+      for (const inc of parsed.includes) {
+        queryBuilder = queryBuilder.include(
+          inc.nested && inc.nested.length > 0
+            ? { relation: inc.relation, nested: inc.nested.map((n) => n.relation) }
+            : inc.relation,
+        );
+      }
+
       queryBuilder = queryBuilder.limit(parsed.pagination.limit).page(parsed.pagination.page);
 
       const result = await queryBuilder.execWithMeta();
-
-      if (parsed.includes.length > 0) {
-        await resolveIncludes(
-          result.data,
-          parsed.includes,
-          ctx.registry,
-          ctx.db,
-          ctx.model.qualifiedName,
-          request,
-        );
-      }
 
       return reply.send({ data: result.data, meta: result.meta });
     } catch (err: any) {
@@ -149,6 +166,14 @@ export function getHandler(ctx: HandlerContext) {
         queryBuilder = queryBuilder.fields(parsed.fields);
       }
 
+      for (const inc of parsed.includes) {
+        queryBuilder = queryBuilder.include(
+          inc.nested && inc.nested.length > 0
+            ? { relation: inc.relation, nested: inc.nested.map((n) => n.relation) }
+            : inc.relation,
+        );
+      }
+
       const record = await queryBuilder.first();
 
       if (!record) {
@@ -161,17 +186,6 @@ export function getHandler(ctx: HandlerContext) {
         }
       }
 
-      if (parsed.includes.length > 0) {
-        await resolveIncludes(
-          [record],
-          parsed.includes,
-          ctx.registry,
-          ctx.db,
-          ctx.model.qualifiedName,
-          request,
-        );
-      }
-
       return reply.send({ data: record });
     } catch (err: any) {
       if (err instanceof QueryValidationError) {
@@ -182,12 +196,13 @@ export function getHandler(ctx: HandlerContext) {
   };
 }
 
-/** POST /model — Creates a new record after validating required fields. */
-export function createHandler(ctx: HandlerContext) {
+// ---------- Unified write handlers (internal models) ----------
+
+/** POST /model — Creates a new record. Runs hook pipeline if hooks are registered. */
+export function createHandler(ctx: WriteHandlerContext) {
   return async (request: FastifyRequest, reply: FastifyReply) => {
     const body = parseRequestBody(request);
 
-    // Validate required fields
     const missing = findMissingRequiredFields(ctx.model, body);
     if (missing.length > 0) {
       throw new BadRequestError(
@@ -197,7 +212,189 @@ export function createHandler(ctx: HandlerContext) {
       );
     }
 
-    // Validate field rules
+    const violations = validateFields(ctx.model, body, 'create');
+    if (violations.length > 0) {
+      throw new BadRequestError(
+        'VALIDATION_ERROR',
+        violations.map((v) => v.message).join('; '),
+        violations,
+      );
+    }
+
+    const authContext = getAuthContext(request);
+    stampCreate(body, ctx.model, authContext);
+
+    const chain = ctx.hookRegistry?.getChain(ctx.model.qualifiedName);
+
+    if (!chain) {
+      const models = createModelAccess({ ...ctx.modelAccessOpts, auth: authContext });
+      const record = await models.create(ctx.model.qualifiedName, body);
+      return reply.status(201).send({ data: record });
+    }
+
+    try {
+      const ops = new KyselyModelOps({
+        db: ctx.db,
+        model: ctx.model,
+        registry: ctx.registry,
+        tableName: modelToTableName(ctx.model.qualifiedName),
+      });
+      const result = await executeHookPipeline({
+        model: ctx.model.qualifiedName,
+        operation: 'create',
+        chain,
+        doc: body as HookDocument,
+        db: ctx.db,
+        schema: ctx.registry,
+        auth: authContext,
+        eventBus: ctx.eventBus,
+        serviceRegistry: ctx.serviceRegistry,
+        config: ctx.config,
+        execute: async (doc, trx) => {
+          const txOps = ops.withTransaction!(trx);
+          return txOps.create(doc) as Promise<HookDocument>;
+        },
+      });
+      return reply.status(201).send({ data: result });
+    } catch (err: unknown) {
+      return handleHookError(err);
+    }
+  };
+}
+
+/** PUT /model/:id — Updates an existing record. Runs hook pipeline if hooks are registered. */
+export function updateHandler(ctx: WriteHandlerContext) {
+  return async (request: FastifyRequest, reply: FastifyReply) => {
+    const { id } = request.params as { id: string };
+    const body = parseRequestBody(request);
+
+    const violations = validateFields(ctx.model, body, 'update');
+    if (violations.length > 0) {
+      throw new BadRequestError(
+        'VALIDATION_ERROR',
+        violations.map((v) => v.message).join('; '),
+        violations,
+      );
+    }
+
+    const authContext = getAuthContext(request);
+    const models = createModelAccess({ ...ctx.modelAccessOpts, auth: authContext });
+
+    const existing = await models.query(ctx.model.qualifiedName).filter({ id }).first();
+    if (!existing) {
+      throw new NotFoundError(`Record not found: ${id}`);
+    }
+
+    assertOwnership(authContext.permissions, ctx.model, existing, authContext.user?.id, 'write');
+    stampUpdate(body, ctx.model, authContext);
+
+    const chain = ctx.hookRegistry?.getChain(ctx.model.qualifiedName);
+
+    if (!chain) {
+      const record = await models.update(ctx.model.qualifiedName, id, body);
+      return reply.send({ data: record });
+    }
+
+    try {
+      const ops = new KyselyModelOps({
+        db: ctx.db,
+        model: ctx.model,
+        registry: ctx.registry,
+        tableName: modelToTableName(ctx.model.qualifiedName),
+      });
+      const result = await executeHookPipeline({
+        model: ctx.model.qualifiedName,
+        operation: 'update',
+        chain,
+        doc: { ...body, id } as HookDocument,
+        db: ctx.db,
+        schema: ctx.registry,
+        auth: authContext,
+        eventBus: ctx.eventBus,
+        serviceRegistry: ctx.serviceRegistry,
+        config: ctx.config,
+        execute: async (doc, trx) => {
+          const { id: docId, ...data } = doc;
+          const txOps = ops.withTransaction!(trx);
+          return txOps.update(docId as string, data) as Promise<HookDocument>;
+        },
+      });
+      return reply.send({ data: result });
+    } catch (err: unknown) {
+      return handleHookError(err);
+    }
+  };
+}
+
+/** DELETE /model/:id — Deletes a record. Runs hook pipeline if hooks are registered. */
+export function deleteHandler(ctx: WriteHandlerContext) {
+  return async (request: FastifyRequest, reply: FastifyReply) => {
+    const { id } = request.params as { id: string };
+
+    const authContext = getAuthContext(request);
+    const models = createModelAccess({ ...ctx.modelAccessOpts, auth: authContext });
+
+    const existing = await models.query(ctx.model.qualifiedName).filter({ id }).first();
+    if (!existing) {
+      throw new NotFoundError(`Record not found: ${id}`);
+    }
+
+    assertOwnership(authContext.permissions, ctx.model, existing, authContext.user?.id, 'delete');
+
+    const chain = ctx.hookRegistry?.getChain(ctx.model.qualifiedName);
+
+    if (!chain) {
+      await models.delete(ctx.model.qualifiedName, id);
+      return reply.status(204).send();
+    }
+
+    try {
+      const ops = new KyselyModelOps({
+        db: ctx.db,
+        model: ctx.model,
+        registry: ctx.registry,
+        tableName: modelToTableName(ctx.model.qualifiedName),
+      });
+      await executeHookPipeline({
+        model: ctx.model.qualifiedName,
+        operation: 'delete',
+        chain,
+        doc: existing as HookDocument,
+        db: ctx.db,
+        schema: ctx.registry,
+        auth: authContext,
+        eventBus: ctx.eventBus,
+        serviceRegistry: ctx.serviceRegistry,
+        config: ctx.config,
+        execute: async (doc, trx) => {
+          const txOps = ops.withTransaction!(trx);
+          await txOps.delete(doc.id as string);
+          return doc;
+        },
+      });
+      return reply.status(204).send();
+    } catch (err: unknown) {
+      return handleHookError(err);
+    }
+  };
+}
+
+// ---------- External model write handlers (no hooks, no transactions) ----------
+
+/** POST /model — Creates a record on an external adapter-backed model. */
+export function externalCreateHandler(ctx: HandlerContext) {
+  return async (request: FastifyRequest, reply: FastifyReply) => {
+    const body = parseRequestBody(request);
+
+    const missing = findMissingRequiredFields(ctx.model, body);
+    if (missing.length > 0) {
+      throw new BadRequestError(
+        'VALIDATION_ERROR',
+        `Missing required fields: ${missing.join(', ')}`,
+        missing,
+      );
+    }
+
     const violations = validateFields(ctx.model, body, 'create');
     if (violations.length > 0) {
       throw new BadRequestError(
@@ -217,14 +414,12 @@ export function createHandler(ctx: HandlerContext) {
   };
 }
 
-/** PUT /model/:id — Updates an existing record after verifying it exists within auth scopes. */
-export function updateHandler(ctx: HandlerContext) {
+/** PUT /model/:id — Updates a record on an external adapter-backed model. */
+export function externalUpdateHandler(ctx: HandlerContext) {
   return async (request: FastifyRequest, reply: FastifyReply) => {
     const { id } = request.params as { id: string };
-
     const body = parseRequestBody(request);
 
-    // Validate field rules
     const violations = validateFields(ctx.model, body, 'update');
     if (violations.length > 0) {
       throw new BadRequestError(
@@ -237,43 +432,35 @@ export function updateHandler(ctx: HandlerContext) {
     const authContext = getAuthContext(request);
     const models = createModelAccess({ ...ctx.modelAccessOpts, auth: authContext });
 
-    // Verify record exists within auth scopes
     const existing = await models.query(ctx.model.qualifiedName).filter({ id }).first();
-
     if (!existing) {
       throw new NotFoundError(`Record not found: ${id}`);
     }
 
-    // Check owner-only permission
     assertOwnership(authContext.permissions, ctx.model, existing, authContext.user?.id, 'write');
-
     stampUpdate(body, ctx.model, authContext);
-    const record = await models.update(ctx.model.qualifiedName, id, body);
 
+    const record = await models.update(ctx.model.qualifiedName, id, body);
     return reply.send({ data: record });
   };
 }
 
-/** DELETE /model/:id — Deletes a record after verifying it exists within auth scopes. */
-export function deleteHandler(ctx: HandlerContext) {
+/** DELETE /model/:id — Deletes a record on an external adapter-backed model. */
+export function externalDeleteHandler(ctx: HandlerContext) {
   return async (request: FastifyRequest, reply: FastifyReply) => {
     const { id } = request.params as { id: string };
 
     const authContext = getAuthContext(request);
     const models = createModelAccess({ ...ctx.modelAccessOpts, auth: authContext });
 
-    // Verify record exists within auth scopes
     const existing = await models.query(ctx.model.qualifiedName).filter({ id }).first();
-
     if (!existing) {
       throw new NotFoundError(`Record not found: ${id}`);
     }
 
-    // Check owner-only permission
     assertOwnership(authContext.permissions, ctx.model, existing, authContext.user?.id, 'delete');
 
     await models.delete(ctx.model.qualifiedName, id);
-
     return reply.status(204).send();
   };
 }

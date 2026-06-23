@@ -157,8 +157,29 @@ Jobs have: retries (count + backoff), concurrency limit, timeout.
 
 ## FrameworkContext essentials
 
-ctx.models — high-level CRUD (respects hooks, permissions, scoping). Default choice.
-ctx.db — raw Kysely query builder. Use only when you need joins, aggregates, or bulk operations that ctx.models can't express.
+ctx.models — high-level CRUD, bulk ops, aggregates, transactions. Default choice for all data access.
+  - ctx.models.get(model, id) — fetch one record
+  - ctx.models.create(model, data) — insert one record
+  - ctx.models.update(model, id, data) — update one record
+  - ctx.models.delete(model, id) — delete (or soft-delete) one record
+  - ctx.models.createMany(model, items) — bulk insert atomically
+  - ctx.models.transaction(async (tx) => { ... }) — wrap multiple operations in a transaction
+  - ctx.models.query(model) — chainable query builder:
+    .filter({ field: value, field: { operator: value }, $or: [...] })
+    .search(term, fields?)
+    .sort(field, direction?)
+    .limit(n).offset(n).page(n)
+    .include(relation)
+    .fields([...])
+    .groupBy(field)
+    .unscoped().includeArchived()
+    Terminals: .exec(), .execWithMeta(), .first(), .count(), .aggregate(spec)
+    Bulk mutate: .updateAll(data), .deleteAll()
+  - Filter operators: eq, neq, gt, gte, lt, lte, in, notIn, contains, startsWith, endsWith, is (null/'not_null'), between
+  - Aggregate spec: { sum: 'field', avg: 'field', min: 'field', max: 'field', count: true }
+  - With groupBy: returns { groups: [{ key: {...}, sum: {...}, count: N }] }
+
+ctx.db — raw Kysely query builder. Use only for complex joins, window functions, or CTEs that ctx.models can't express.
 ctx.service('name') — call another service.
 ctx.enqueue('job', payload) — schedule background work.
 ctx.events.emit('name', data) — emit event for subscribers.

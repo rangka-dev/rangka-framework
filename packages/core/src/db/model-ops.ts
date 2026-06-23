@@ -4,6 +4,7 @@ import type { ResolvedModel } from '../schema/types.js';
 import type { SchemaRegistry } from '../schema/registry.js';
 import type { RequestContext } from '../auth/types.js';
 import type { ModelOps, QueryState, QueryResult, QueryResultWithMeta } from '../model-api/types.js';
+import type { AggregateSpec, AggregateResult, GroupedAggregateResult } from '@rangka/shared';
 import { applyModelFilters, applySearchFilter } from './filter-applier.js';
 import { applyScopeEnforcement } from './scope-enforcer.js';
 import { modelToTableName } from './field-mapper.js';
@@ -15,6 +16,37 @@ interface DbLike {
   insertInto(table: string): any;
   updateTable(table: string): any;
   deleteFrom(table: string): any;
+}
+
+function toFieldArray(val: string | string[] | undefined): string[] {
+  if (!val) return [];
+  return Array.isArray(val) ? val : [val];
+}
+
+function extractAggValues(row: any, spec: AggregateSpec): AggregateResult {
+  const result: AggregateResult = {};
+  if (spec.count !== undefined) result.count = Number(row.__count ?? 0);
+  const sumFields = toFieldArray(spec.sum as string | string[] | undefined);
+  const avgFields = toFieldArray(spec.avg as string | string[] | undefined);
+  const minFields = toFieldArray(spec.min as string | string[] | undefined);
+  const maxFields = toFieldArray(spec.max as string | string[] | undefined);
+  if (sumFields.length > 0) {
+    result.sum = {};
+    for (const f of sumFields) result.sum[f] = Number(row[`__sum__${f}`] ?? 0);
+  }
+  if (avgFields.length > 0) {
+    result.avg = {};
+    for (const f of avgFields) result.avg[f] = Number(row[`__avg__${f}`] ?? 0);
+  }
+  if (minFields.length > 0) {
+    result.min = {};
+    for (const f of minFields) result.min[f] = row[`__min__${f}`];
+  }
+  if (maxFields.length > 0) {
+    result.max = {};
+    for (const f of maxFields) result.max[f] = row[`__max__${f}`];
+  }
+  return result;
 }
 
 export interface KyselyModelOpsConfig {
@@ -147,6 +179,95 @@ export class KyselyModelOps implements ModelOps {
     return record;
   }
 
+  async createMany(
+    data: Record<string, unknown>[],
+    _auth?: RequestContext,
+  ): Promise<Record<string, unknown>[]> {
+    if (data.length === 0) return [];
+    const rows = [...data];
+    for (const row of rows) {
+      await this.assignSequenceValues(row);
+    }
+    const records = await this.db.insertInto(this.tableName).values(rows).returningAll().execute();
+    return records as Record<string, unknown>[];
+  }
+
+  async aggregate(state: QueryState): Promise<AggregateResult | GroupedAggregateResult> {
+    const spec = state.aggregateSpec;
+    if (!spec) throw new Error('aggregate() called without aggregateSpec on QueryState');
+
+    const groupByFields = state.groupByFields ?? [];
+    const baseQuery: any = this.buildBaseQuery(state);
+
+    // Build the list of select expressions
+    const selects: any[] = [...groupByFields];
+    if (spec.count !== undefined) {
+      const countField = spec.count === true ? sql`count(*)` : sql.raw(`count(${spec.count})`);
+      selects.push(countField.as('__count'));
+    }
+    for (const field of toFieldArray(spec.sum))
+      selects.push(sql.raw(`sum(${field})`).as(`__sum__${field}`));
+    for (const field of toFieldArray(spec.avg))
+      selects.push(sql.raw(`avg(${field})`).as(`__avg__${field}`));
+    for (const field of toFieldArray(spec.min))
+      selects.push(sql.raw(`min(${field})`).as(`__min__${field}`));
+    for (const field of toFieldArray(spec.max))
+      selects.push(sql.raw(`max(${field})`).as(`__max__${field}`));
+
+    let query = baseQuery.select(selects);
+    for (const g of groupByFields) query = query.groupBy(g);
+
+    if (groupByFields.length > 0) {
+      const rows: any[] = await query.execute();
+      return {
+        groups: rows.map((row) => {
+          const key: Record<string, unknown> = {};
+          for (const g of groupByFields) key[g] = row[g];
+          return { key, ...extractAggValues(row, spec) };
+        }),
+      } as GroupedAggregateResult;
+    }
+
+    const row: any = await query.executeTakeFirst();
+    return row ? extractAggValues(row, spec) : {};
+  }
+
+  async updateAll(state: QueryState, data: Record<string, unknown>): Promise<{ count: number }> {
+    let query: any = this.db.updateTable(this.tableName).set(data);
+
+    if (this.model.traits.includes('soft_delete') && !state.includeArchivedFlag) {
+      query = query.where('archived_at', 'is', null);
+    }
+    query = applyModelFilters(query, state.filters);
+    if (state.searchTerm && state.searchFields && state.searchFields.length > 0) {
+      query = applySearchFilter(query, state.searchTerm, state.searchFields);
+    }
+    if (!state.unscopedFlag && state.auth) {
+      query = applyScopeEnforcement(query, state.auth, { model: this.model, checkOwnership: true });
+    }
+
+    const result = await query.executeTakeFirst();
+    return { count: Number(result?.numUpdatedRows ?? 0) };
+  }
+
+  async deleteAll(state: QueryState): Promise<{ count: number }> {
+    if (this.model.traits.includes('soft_delete') && !state.includeArchivedFlag) {
+      return this.updateAll(state, { archived_at: new Date().toISOString() });
+    }
+
+    let query: any = this.db.deleteFrom(this.tableName);
+    query = applyModelFilters(query, state.filters);
+    if (state.searchTerm && state.searchFields && state.searchFields.length > 0) {
+      query = applySearchFilter(query, state.searchTerm, state.searchFields);
+    }
+    if (!state.unscopedFlag && state.auth) {
+      query = applyScopeEnforcement(query, state.auth, { model: this.model, checkOwnership: true });
+    }
+
+    const result = await query.executeTakeFirst();
+    return { count: Number(result?.numDeletedRows ?? 0) };
+  }
+
   withTransaction(trx: unknown): ModelOps {
     return new KyselyModelOps({
       db: trx as DbLike,
@@ -195,7 +316,9 @@ export class KyselyModelOps implements ModelOps {
   }
 
   private applySelect(query: any, state: QueryState) {
-    return state.fieldNames.length > 0 ? query.select(state.fieldNames) : query.selectAll();
+    if (state.fieldNames.length === 0) return query.selectAll();
+    const fields = state.fieldNames.includes('id') ? state.fieldNames : ['id', ...state.fieldNames];
+    return query.select(fields);
   }
 
   private applySorts(query: any, state: QueryState) {

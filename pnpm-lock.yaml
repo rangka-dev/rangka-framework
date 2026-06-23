@@ -284,6 +284,9 @@ importers:
 
   packages/shared:
     devDependencies:
+      kysely:
+        specifier: 0.29.2
+        version: 0.29.2
       typescript:
         specifier: ^5.8.0
         version: 5.9.3
