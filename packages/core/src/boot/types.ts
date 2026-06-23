@@ -24,16 +24,16 @@ export interface RangkaPackageInfo {
 export interface DiscoveredApp {
   packageInfo: RangkaPackageInfo;
   config: ModuleConfig;
-  schemas: Array<{ module: string; schema: ModelConfig }>;
+  schemas: Array<{ module: string; schema: ModelConfig; file?: string }>;
   extensions: Array<{ target: string; config: ExtensionConfig }>;
   modules?: ModuleConfig[];
-  hooks?: Array<{ model: string; hooks: HooksConfig }>;
+  hooks?: Array<{ model: string; hooks: HooksConfig; file?: string }>;
   roles?: Array<{ config: RolesConfig; app: string }>;
-  jobs?: Array<{ name: string; config: JobConfig }>;
-  services?: ServiceDefinition[];
+  jobs?: Array<{ name: string; config: JobConfig; file?: string }>;
+  services?: Array<ServiceDefinition & { file?: string }>;
   apiDefinitions?: ApiDefinition[];
-  fixtures?: FixtureDefinition[];
-  pages?: Array<{ module: string; page: PageDefinition }>;
+  fixtures?: Array<FixtureDefinition & { file?: string }>;
+  pages?: Array<{ module: string; page: PageDefinition; file?: string }>;
   widgets?: WidgetDefinitionMeta[];
 }
 

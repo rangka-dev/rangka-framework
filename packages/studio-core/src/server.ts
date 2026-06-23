@@ -5,7 +5,7 @@ import * as http from 'node:http';
 import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
 import type { ServerMessage, ClientMessage, FileNode } from './protocol.js';
-import { RuntimeManager } from './runtime-manager.js';
+import { SubprocessManager } from './subprocess-manager.js';
 import { FileWatcher } from './file-watcher.js';
 import { AgentEngine } from './agent-engine.js';
 import { loadConfig, saveConfig } from './config.js';
@@ -20,7 +20,7 @@ export class StudioServer {
   private wss: WebSocketServer | null = null;
   private httpServer: http.Server | null = null;
   private uiApp: ReturnType<typeof Fastify> | null = null;
-  private runtime: RuntimeManager;
+  private subprocess: SubprocessManager;
   private fileWatcher: FileWatcher | null = null;
   private agentEngine: AgentEngine | null = null;
   private config: StudioServerConfig;
@@ -30,9 +30,47 @@ export class StudioServer {
 
   constructor(config: StudioServerConfig) {
     this.config = config;
-    this.runtime = new RuntimeManager({
+    this.subprocess = new SubprocessManager({
       projectRoot: config.projectRoot,
       frameworkPort: config.frameworkPort,
+    });
+    this.wireSubprocessEvents();
+  }
+
+  private wireSubprocessEvents(): void {
+    this.subprocess.on('phase', (phase: string) => {
+      console.log(`[studio] Child phase: ${phase}`);
+    });
+
+    this.subprocess.on('ready', (status, sessionToken) => {
+      this.runtimeStatus = 'ready';
+      console.log(
+        `[studio] Framework ready on http://localhost:${this.config.frameworkPort ?? 3000}`,
+      );
+      this.broadcast({
+        type: 'runtime.status',
+        status: 'ready',
+        models: status.models,
+        pages: status.pages,
+        services: status.services,
+        sessionToken: sessionToken ?? undefined,
+      });
+    });
+
+    this.subprocess.on('error', (message: string) => {
+      this.runtimeStatus = 'error';
+      console.error(`[studio] Framework error: ${message}`);
+      this.broadcast({ type: 'runtime.error', message });
+    });
+
+    this.subprocess.on('exit', (code: number | null, signal: string | null) => {
+      if (this.runtimeStatus === 'ready') {
+        this.runtimeStatus = 'error';
+        this.broadcast({
+          type: 'runtime.error',
+          message: `Framework process crashed (code=${code}, signal=${signal})`,
+        });
+      }
     });
   }
 
@@ -65,27 +103,14 @@ export class StudioServer {
     console.log(`[studio] Studio UI + WebSocket on http://localhost:${this.config.wsPort}`);
 
     try {
-      await this.runtime.boot();
-      this.runtimeStatus = 'ready';
-      console.log(
-        `[studio] Framework ready on http://localhost:${this.config.frameworkPort ?? 3000}`,
-      );
-      this.broadcast({
-        type: 'runtime.status',
-        status: 'ready',
-        ...this.runtime.getStatus(),
-        sessionToken: this.runtime.getSessionToken() ?? undefined,
-      });
+      await this.subprocess.start();
       this.startFileWatcher();
       await this.initializeAgent();
     } catch (err) {
       this.runtimeStatus = 'error';
       const message = err instanceof Error ? err.message : String(err);
       console.error(`[studio] Framework boot failed: ${message}`);
-      this.broadcast({
-        type: 'runtime.error',
-        message,
-      });
+      this.broadcast({ type: 'runtime.error', message });
     }
   }
 
@@ -95,7 +120,7 @@ export class StudioServer {
     try {
       this.agentEngine = new AgentEngine({
         projectRoot: this.config.projectRoot,
-        runtime: this.runtime,
+        subprocess: this.subprocess,
         apiKey: config?.apiKey,
         provider: config?.provider,
         baseUrl: config?.baseUrl,
@@ -135,56 +160,49 @@ export class StudioServer {
   }
 
   private async handleApply(ws: WebSocket): Promise<void> {
-    await this.handleRescan();
-    this.send(ws, { type: 'preview.reload' });
-  }
+    try {
+      this.broadcast({ type: 'runtime.status', status: 'booting' });
+      await this.subprocess.restart();
 
-  private async handleRescan(): Promise<void> {
-    const result = await this.runtime.rescan();
-    if (!result.success) {
-      this.broadcast({
-        type: 'runtime.error',
-        message: result.error!,
-      });
-    } else {
-      this.broadcast({
-        type: 'runtime.status',
-        status: 'ready',
-        ...this.runtime.getStatus(),
-      });
-      this.broadcast({ type: 'resources.data', modules: this.runtime.getResources() });
-      this.broadcast({ type: 'models.data', graph: this.runtime.getModelGraph() });
-      if (result.operations && result.operations.length > 0) {
-        this.broadcast({ type: 'schema.diff', operations: result.operations });
+      const status = this.subprocess.getLastStatus();
+      if (status) {
+        this.broadcast({
+          type: 'runtime.status',
+          status: 'ready',
+          models: status.models,
+          pages: status.pages,
+          services: status.services,
+          sessionToken: this.subprocess.getSessionToken() ?? undefined,
+        });
       }
+
+      if (this.subprocess.isRunning()) {
+        this.send(ws, { type: 'preview.reload' });
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      this.broadcast({ type: 'runtime.error', message });
     }
   }
 
   private handleConnection(ws: WebSocket): void {
     this.activeClient = ws;
-    const status = this.runtime.getStatus();
+    const status = this.subprocess.getLastStatus();
     this.send(ws, {
       type: 'runtime.status',
       status: this.runtimeStatus,
-      ...status,
-      sessionToken: this.runtime.getSessionToken() ?? undefined,
+      models: status?.models ?? 0,
+      pages: status?.pages ?? 0,
+      services: status?.services ?? 0,
+      sessionToken: this.subprocess.getSessionToken() ?? undefined,
     });
 
     if (this.runtimeStatus === 'ready') {
-      this.send(ws, { type: 'resources.data', modules: this.runtime.getResources() });
-      this.send(ws, { type: 'models.data', graph: this.runtime.getModelGraph() });
       this.handleFilesList(ws);
     }
 
     this.sendSessionCurrent(ws);
     this.send(ws, { type: 'agent.status', busy: this.isAgentBusy });
-
-    if (this.runtimeStatus === 'ready') {
-      const pendingOps = this.runtime.getPendingOperations();
-      if (pendingOps.length > 0) {
-        this.send(ws, { type: 'schema.diff', operations: pendingOps });
-      }
-    }
 
     ws.on('message', (data) => {
       try {
@@ -223,7 +241,7 @@ export class StudioServer {
         this.handleSchemaApprove(ws, msg.operationIds);
         break;
       case 'schema.reject':
-        this.runtime.rejectOperations();
+        this.subprocess.rejectSync(msg.reason ?? 'User rejected schema changes');
         if (this.agentEngine) {
           this.agentEngine.resolveSchemaGate(false, msg.reason ?? 'User rejected schema changes');
         }
@@ -265,7 +283,7 @@ export class StudioServer {
         this.handleSessionRename(ws, msg.name);
         break;
       case 'resources.list':
-        this.send(ws, { type: 'resources.data', modules: this.runtime.getResources() });
+        this.handleResourcesList(ws);
         break;
       case 'runtime.apply':
         this.handleApply(ws);
@@ -276,6 +294,18 @@ export class StudioServer {
       case 'file.read':
         this.handleFileRead(ws, msg.path);
         break;
+    }
+  }
+
+  private async handleResourcesList(ws: WebSocket): Promise<void> {
+    try {
+      const result = await this.subprocess.introspect('modules');
+      this.send(ws, {
+        type: 'resources.data',
+        modules: result.data as import('./protocol.js').ResourceModule[],
+      });
+    } catch {
+      this.send(ws, { type: 'resources.data', modules: [] });
     }
   }
 
@@ -324,16 +354,16 @@ export class StudioServer {
 
   private async handleSchemaApprove(ws: WebSocket, operationIds: string[]): Promise<void> {
     console.log(`[studio] Schema approved: ${operationIds.join(', ')}`);
-    const result = await this.runtime.applyOperations(operationIds);
+    const result = await this.subprocess.approveSync(operationIds);
     if (result.error) {
       this.send(ws, { type: 'schema.error', message: result.error, operationIds });
       if (this.agentEngine) {
         this.agentEngine.resolveSchemaGate(false, `Schema apply failed: ${result.error}`);
       }
     } else {
-      this.send(ws, { type: 'schema.applied', operationIds: result.applied });
+      this.send(ws, { type: 'schema.applied', operationIds });
       if (this.agentEngine) {
-        this.agentEngine.resolveSchemaGate(true, `${result.applied.length} operation(s) applied`);
+        this.agentEngine.resolveSchemaGate(true, `${operationIds.length} operation(s) applied`);
       }
     }
   }
@@ -515,7 +545,7 @@ export class StudioServer {
     }
 
     const resolved = path.resolve(this.config.projectRoot, filePath);
-    if (!resolved.startsWith(path.resolve(this.config.projectRoot))) {
+    if (!resolved.startsWith(path.resolve(this.config.projectRoot) + path.sep)) {
       this.send(ws, { type: 'file.error', path: filePath, message: 'Access denied' });
       return;
     }
@@ -563,7 +593,7 @@ export class StudioServer {
       }
       this.wss.close();
     }
-    await this.runtime.shutdown();
+    await this.subprocess.shutdown();
     console.log(`[studio] Shut down.`);
   }
 
