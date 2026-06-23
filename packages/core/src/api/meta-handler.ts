@@ -87,12 +87,12 @@ function resolveAccessiblePages(
 }
 
 /**
- * Collects all model names referenced by a page's body widget tree.
+ * Collects all model names referenced by a page's widget tree.
  */
 function collectModelRefs(page: PageDefinition): string[] {
   const models = new Set<string>();
 
-  for (const node of page.body) {
+  for (const node of page.widgets) {
     collectModelRefsFromNode(node, models);
   }
 

@@ -239,8 +239,7 @@ Use it in a page:
 definePage({
   key: 'sales.pipeline',
   label: 'Pipeline',
-  type: 'collection',
-  body: [
+  widgets: [
     {
       type: 'sales.pipeline-board',
       props: { showLabels: true },

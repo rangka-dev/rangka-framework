@@ -245,7 +245,20 @@ export class ProjectScanner {
       try {
         const mod = await this.importFile(path.join(pagesDir, entry.name));
         if (mod.default) {
-          pages.push({ module: moduleName, page: mod.default });
+          const page = mod.default;
+          if (!page.widgets && page.body) {
+            console.warn(
+              `[rangka] Page "${page.key ?? entry.name}" uses deprecated "body" field. Rename it to "widgets".`,
+            );
+            page.widgets = page.body;
+          }
+          if (!page.widgets) {
+            console.warn(
+              `[rangka] Page file modules/${moduleName}/pages/${entry.name} is missing "widgets" array — skipping.`,
+            );
+            continue;
+          }
+          pages.push({ module: moduleName, page });
         }
       } catch (err) {
         console.warn(

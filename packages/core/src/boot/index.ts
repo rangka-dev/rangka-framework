@@ -28,6 +28,9 @@ import { WidgetRegistry } from '../widgets/widget-registry.js';
 import { AdapterRegistry } from '../plugins/adapter-registry.js';
 import { PluginLifecycleManager } from '../plugins/lifecycle.js';
 import { loadPlugins } from '../plugins/loader.js';
+import { validateApps } from './validator.js';
+import { validateModelReferences } from './cross-validator.js';
+import { validatePageBindings } from './page-utils.js';
 import type { PluginDefinition } from '../plugins/types.js';
 import type { RolesConfig, JobConfig } from '@rangka/shared';
 import type { JobWorkerConfig } from '../jobs/types.js';
@@ -78,12 +81,29 @@ export interface BootResult {
 // 5. If server configured: create HTTP server and mount routes
 export async function boot(options: BootOptions): Promise<BootResult> {
   const sortedApps = await discoverAndSortApps(options);
+  validateApps(sortedApps);
 
   // Load plugins and build adapter registry
   const { adapterRegistry, lifecycleManager } = await loadPluginSystem(options);
   await lifecycleManager.emit('beforeBoot');
 
   const registry = buildSchemaRegistry(sortedApps);
+
+  // Warn about invalid widget bindings (does not halt boot)
+  const allPagesForValidation: Array<{
+    module: string;
+    page: import('@rangka/shared').PageDefinition;
+  }> = [];
+  for (const app of sortedApps) {
+    if (app.pages) allPagesForValidation.push(...app.pages);
+  }
+  if (allPagesForValidation.length > 0) {
+    const bindWarnings = validatePageBindings(allPagesForValidation, registry);
+    for (const warning of bindWarnings) {
+      console.warn(`[rangka] ${warning.pageKey} (${warning.location}): ${warning.message}`);
+    }
+  }
+
   const registries = buildRegistries(sortedApps, registry, options);
 
   if (!options.database) {
@@ -181,7 +201,11 @@ function buildSchemaRegistry(sortedApps: DiscoveredApp[]): SchemaRegistry {
   const existingNames = new Set(mergeResult.models.map((m) => m.qualifiedName));
   const missingCoreModels = coreModels.filter((m) => !existingNames.has(m.qualifiedName));
 
-  return new SchemaRegistry([...missingCoreModels, ...mergeResult.models]);
+  const registry = new SchemaRegistry([...missingCoreModels, ...mergeResult.models]);
+
+  validateModelReferences(registry, loadResult.extensions);
+
+  return registry;
 }
 
 // --- Phase 3: Registries ---

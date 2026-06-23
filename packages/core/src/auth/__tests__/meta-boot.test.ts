@@ -90,9 +90,8 @@ const pages: Array<{ module: string; page: PageDefinition }> = [
     page: {
       key: 'sales.orders',
       label: 'Orders',
-      type: 'collection',
       path: '/sales/orders',
-      body: [
+      widgets: [
         { type: 'data', source: { model: 'sales.order' }, children: [] },
         { type: 'data', source: { model: 'contacts.contact' }, children: [] },
       ],
@@ -103,9 +102,8 @@ const pages: Array<{ module: string; page: PageDefinition }> = [
     page: {
       key: 'hr.payroll',
       label: 'Payroll',
-      type: 'collection',
       path: '/hr/payroll',
-      body: [{ type: 'data', source: { model: 'hr.payslip' }, children: [] }],
+      widgets: [{ type: 'data', source: { model: 'hr.payslip' }, children: [] }],
     },
   },
   {
@@ -113,9 +111,8 @@ const pages: Array<{ module: string; page: PageDefinition }> = [
     page: {
       key: 'admin.dashboard',
       label: 'Admin Dashboard',
-      type: 'dashboard',
       path: '/admin/dashboard',
-      body: [{ type: 'text', props: { content: 'Dashboard' } }],
+      widgets: [{ type: 'text', props: { content: 'Dashboard' } }],
     },
   },
 ];

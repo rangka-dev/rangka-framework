@@ -145,8 +145,7 @@ import { definePage } from 'rangka';
 export default definePage({
   key: 'loyalty.dashboard',
   label: 'Points Overview',
-  type: 'collection',
-  body: [
+  widgets: [
     {
       type: 'table',
       source: { model: 'sales.customer', filters: { loyalty_points: { gt: 0 } } },

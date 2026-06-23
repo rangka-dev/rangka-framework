@@ -1,29 +1,13 @@
-export interface NavigationItem {
-  page: string;
-  label: string;
-  icon?: string;
-}
+export type { ModuleConfig } from '../validation/schemas/module.js';
 
-export interface NavigationSection {
-  section: string;
-  items: NavigationItem[];
-}
+// These sub-types are inferred from Zod schemas
+import type * as z from 'zod';
+import type {
+  navigationItemSchema,
+  navigationSectionSchema,
+  scopeDefinitionSchema,
+} from '../validation/schemas/module.js';
 
-export interface ScopeDefinition {
-  model: string;
-  default: string;
-  switchable?: boolean;
-}
-
-export interface ModuleConfig {
-  name: string;
-  label: string;
-  description?: string;
-  icon?: string;
-  color?: string;
-  order?: number;
-  type?: 'internal' | 'external';
-  depends?: string[];
-  scopes?: Record<string, ScopeDefinition>;
-  navigation?: NavigationSection[];
-}
+export type NavigationItem = z.infer<typeof navigationItemSchema>;
+export type NavigationSection = z.infer<typeof navigationSectionSchema>;
+export type ScopeDefinition = z.infer<typeof scopeDefinitionSchema>;

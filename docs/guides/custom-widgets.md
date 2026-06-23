@@ -62,8 +62,7 @@ Reference your widget by name in the page body. It participates in the same syst
 definePage({
   key: 'sales.pipeline',
   label: 'Pipeline',
-  type: 'collection',
-  body: [
+  widgets: [
     {
       type: 'sales.pipeline-board',
       props: { groupField: 'status', showLabels: true },

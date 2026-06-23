@@ -10,7 +10,7 @@ These no longer exist in the framework:
 | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
 | `defineView()`                                                              | `defineWidget()`                                                                          |
 | Built-in views (list, form, kanban, timeline, etc.)                         | Built-in widgets (table, data, repeat, etc.) + opinionated widgets (future)               |
-| `panels` on PageDefinition                                                  | `body: WidgetNode[]`                                                                      |
+| `panels` on PageDefinition                                                  | `widgets: WidgetNode[]`                                                                   |
 | `layout` field (full/split/dashboard)                                       | `split`, `grid` layout widgets                                                            |
 | `drawer` on PageDefinition                                                  | `drawer` widget with `visible` condition                                                  |
 | `source` on panels                                                          | `data` widget                                                                             |
@@ -46,7 +46,7 @@ These files are entirely about the old architecture. They need full rewrites, no
 
 Rewrite to describe the v2 page model:
 
-- A page is a flat widget tree (`body: WidgetNode[]`)
+- A page is a flat widget tree (`widgets: WidgetNode[]`)
 - Page types (collection, record, dashboard) control routing only
 - No panels, no layouts, no views, no drawer config
 - Data fetching handled by `data` widget
@@ -62,10 +62,9 @@ Rewrite to match current `PageDefinition`:
 interface PageDefinition {
   key: string;
   label: string;
-  type: 'collection' | 'record' | 'dashboard';
   path?: string;
   actions?: Action[];
-  body: WidgetNode[];
+  widgets: WidgetNode[];
 }
 ```
 
@@ -138,7 +137,7 @@ Reference for the chainable builder API:
 
 - Widget factories (`$input`, `$text`, `$button`, `$badge`, `$table`, `$data`, `$repeat`, `$split`, `$grid`, `$drawer`, `$modal`, etc.)
 - Action factories (`setValue`, `clearValue`, `setValues`, `service`, `navigate`, `sequence`, `conditional`)
-- Page factory (`page(key, label, type).body([...]).toJSON()`)
+- Page factory (`page(key, label).widgets([...]).toJSON()`)
 - `WidgetBuilder` methods (props, bind, bindField, bindModel, source, visible, on, children, toJSON)
 
 ## Files to update
@@ -183,7 +182,7 @@ Remove all examples using panels, views, drawer config. Replace with widget-base
 
 ### `docs/guides/extending-models.md`
 
-Lines 121, 148-151: Replace page definition examples that use `layout`, `panels`, `view` with v2 widget tree body.
+Lines 121, 148-151: Replace page definition examples that use `layout`, `panels`, `view` with v2 widget tree.
 
 ### `docs/reference/cli.md`
 

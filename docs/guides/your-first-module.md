@@ -71,7 +71,7 @@ The `timestamped` trait adds `created_at` and `updated_at` automatically. You do
 import { definePage } from 'rangka';
 import type { WidgetNode } from 'rangka';
 
-const body: WidgetNode[] = [
+const widgets: WidgetNode[] = [
   {
     type: 'table',
     source: { model: 'tasks.task' },
@@ -103,7 +103,7 @@ export default definePage({
   key: 'tasks.tasks',
   label: 'Tasks',
   path: '/tasks',
-  body,
+  widgets,
 });
 ```
 

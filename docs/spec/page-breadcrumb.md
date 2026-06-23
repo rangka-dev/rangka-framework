@@ -31,7 +31,7 @@ export interface PageDefinition {
   path?: string;
   actions?: Action[];
   breadcrumb?: PageBreadcrumb;
-  body: WidgetNode[];
+  widgets: WidgetNode[];
 }
 ```
 
@@ -52,7 +52,7 @@ path: order/:id
 breadcrumb:
   model: sales.order
   field: order_number
-body:
+widgets:
   - type: data
     source: { model: sales.order }
     # ...
@@ -65,7 +65,7 @@ Breadcrumb displays: `Sales > Orders > ORD-1042`
 key: sales.order.list
 label: Orders
 path: order
-body:
+widgets:
   - type: table
     source: { model: sales.order }
 ```
@@ -85,17 +85,16 @@ This is a lightweight fetch. The `fields` query param limits the response to a s
 
 ### Drop `type` field from PageDefinition
 
-The `type` field (`'collection' | 'record' | 'dashboard'`) is removed. It has no runtime behavior. All page layout is determined by the widget tree in `body`.
+The `type` field (`'collection' | 'record' | 'dashboard'`) is removed. It has no runtime behavior. All page layout is determined by the widget tree in `widgets`.
 
 ```typescript
 // Before
 export interface PageDefinition {
   key: string;
   label: string;
-  type: 'collection' | 'record' | 'dashboard';
   path?: string;
   actions?: Action[];
-  body: WidgetNode[];
+  widgets: WidgetNode[];
 }
 
 // After
@@ -105,7 +104,7 @@ export interface PageDefinition {
   path?: string;
   actions?: Action[];
   breadcrumb?: PageBreadcrumb;
-  body: WidgetNode[];
+  widgets: WidgetNode[];
 }
 ```
 

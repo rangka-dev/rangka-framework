@@ -1,4 +1,5 @@
 import type { PageDefinition, WidgetNode } from '@rangka/shared';
+import type { SchemaRegistry } from '../schema/registry.js';
 
 export interface PageValidationWarning {
   pageKey: string;
@@ -12,7 +13,7 @@ export interface PageValidationWarning {
 export function extractSourceModels(page: PageDefinition): string[] {
   const models = new Set<string>();
 
-  for (const node of page.body) {
+  for (const node of page.widgets) {
     collectModelsFromWidgetNode(node, models);
   }
 
@@ -30,8 +31,8 @@ export function validatePageSources(
   const warnings: PageValidationWarning[] = [];
 
   for (const { page } of pages) {
-    for (let i = 0; i < page.body.length; i++) {
-      checkWidgetNodeSources(page.body[i], `body[${i}]`, page.key, knownModels, warnings);
+    for (let i = 0; i < page.widgets.length; i++) {
+      checkWidgetNodeSources(page.widgets[i], `widgets[${i}]`, page.key, knownModels, warnings);
     }
   }
 
@@ -93,6 +94,72 @@ function checkWidgetNodeSources(
         `${path}.children[${i}]`,
         pageKey,
         knownModels,
+        warnings,
+      );
+    }
+  }
+}
+
+/**
+ * Validate that widget bindings reference fields that exist on their
+ * source model context. Walks the widget tree tracking the nearest
+ * ancestor source. Returns warnings (does not halt boot).
+ */
+export function validatePageBindings(
+  pages: Array<{ module: string; page: PageDefinition }>,
+  registry: SchemaRegistry,
+): PageValidationWarning[] {
+  const warnings: PageValidationWarning[] = [];
+
+  for (const { page } of pages) {
+    for (let i = 0; i < page.widgets.length; i++) {
+      checkWidgetBindings(page.widgets[i], `widgets[${i}]`, page.key, null, registry, warnings);
+    }
+  }
+
+  return warnings;
+}
+
+function checkWidgetBindings(
+  node: WidgetNode,
+  path: string,
+  pageKey: string,
+  sourceModel: string | null,
+  registry: SchemaRegistry,
+  warnings: PageValidationWarning[],
+): void {
+  const currentSource = node.source?.model ?? sourceModel;
+
+  if (node.bind?.field) {
+    if (!currentSource) {
+      warnings.push({
+        pageKey,
+        location: path,
+        message: `Widget has bind.field "${node.bind.field}" but no source model in scope`,
+      });
+    } else {
+      const model = registry.getModel(currentSource);
+      if (model) {
+        const fieldExists = model.fields.some((f) => f.name === node.bind!.field);
+        if (!fieldExists) {
+          warnings.push({
+            pageKey,
+            location: path,
+            message: `Field "${node.bind.field}" does not exist on model "${currentSource}"`,
+          });
+        }
+      }
+    }
+  }
+
+  if (node.children) {
+    for (let i = 0; i < node.children.length; i++) {
+      checkWidgetBindings(
+        node.children[i],
+        `${path}.children[${i}]`,
+        pageKey,
+        currentSource,
+        registry,
         warnings,
       );
     }

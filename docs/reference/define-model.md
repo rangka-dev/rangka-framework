@@ -548,40 +548,5 @@ interface ExtensionConfig {
   fields?: Record<string, FieldConfig>;
   hooks?: HooksConfig;
   actions?: Record<string, ActionConfig>;
-  layout?: LayoutConfig;
-}
-```
-
-## Layout
-
-Control form and list layout without full page definitions.
-
-```typescript
-import { defineLayout } from 'rangka';
-
-export default defineLayout({
-  form: {
-    sections: [
-      { label: 'General', fields: ['customer', 'posting_date', 'due_date'], columns: 2 },
-      { label: 'Items', fields: ['items'] },
-      { label: 'Totals', fields: ['subtotal', 'tax', 'total'], columns: 3 },
-    ],
-  },
-  list: {
-    columns: ['name', 'customer', 'posting_date', 'total', 'status'],
-  },
-});
-```
-
-### LayoutConfig
-
-```typescript
-interface LayoutConfig {
-  form?: {
-    sections: Array<{ label: string; fields: string[]; columns?: number }>;
-  };
-  list?: {
-    columns: string[];
-  };
 }
 ```

@@ -31,10 +31,10 @@ src/
 │   ├── extension.ts — ExtensionConfig
 │   ├── api.ts       — ApiRouteConfig
 │   └── schema-registry.ts — SchemaRegistryInterface
-├── builders.ts      — Functional widget node builders (input, text, button, table, etc.)
-├── widget-builder.ts — Fluent WidgetBuilder and PageBuilder classes ($input, $text, etc.)
 ├── define.ts        — defineModel, defineModule, defineHooks, etc. (app authors use these)
 ├── field.ts         — field() helper for FieldConfig creation
+├── widget.ts        — widget() helper for WidgetNode creation
+├── action.ts        — action() helper for WidgetAction creation
 ├── traits.ts        — Built-in trait definitions (timestamped, soft_delete, etc.)
 └── index.ts         — Public exports (re-exports everything)
 ```
@@ -54,14 +54,23 @@ src/
 | `BootPayload`      | `types/boot.ts`        | core (API), client (boot provider)          |
 | `RolesConfig`      | `types/permissions.ts` | core (permission registry)                  |
 
-## Builder functions
+## Builder factories (public API)
 
-Two API styles for building widget trees in page definitions:
+Three factory exports for app developers. All produce plain objects (no classes, no wrappers).
 
-1. **Functional builders** (`builders.ts`): `input({ field: 'name' })`, `table({ ... })`
-2. **Fluent builders** (`widget-builder.ts`): `$input().bind('name').props({ ... }).build()`
+| Factory  | File        | Returns        | Pattern                                        |
+| -------- | ----------- | -------------- | ---------------------------------------------- |
+| `field`  | `field.ts`  | `FieldConfig`  | `field.string()`, `field.link('model')`        |
+| `widget` | `widget.ts` | `WidgetNode`   | `widget.input('name')`, `widget('kanban', {})` |
+| `action` | `action.ts` | `WidgetAction` | `action.navigate('/path')`, `action.submit()`  |
 
-Both produce `WidgetNode` objects. Same output, different authoring style.
+Rules:
+
+- `widget(type, opts)` is the base. Named helpers (`.input()`, `.table()`) are sugar.
+- `action(type, params)` is the base. Named helpers (`.navigate()`, `.service()`) are sugar.
+- Adding a new built-in widget type requires adding a helper to `widget.ts`.
+- Adding a new action type requires adding a helper to `action.ts`.
+- All helpers must return plain `WidgetNode` or `WidgetAction` objects. No wrappers.
 
 ## Rules for modifying shared types
 
@@ -79,17 +88,20 @@ Safe for consumers that switch on `type`. They'll hit the default case. But disp
 
 1. Add the interface to `types/widget.ts`
 2. Add it to the `WidgetAction` union
-3. Handle it in `packages/client/src/widgets/action/dispatcher.ts`
+3. Add a named helper to `action.ts`
+4. Handle it in `packages/client/src/widgets/action/dispatcher.ts`
 
 ### Renaming or removing a field/interface
 
 Breaking change. Grep the entire monorepo. Update all consumers in the same commit.
 
-### Adding a new builder function
+### Adding a new built-in widget type
 
-1. Add to `builders.ts` (functional) and optionally `widget-builder.ts` (fluent)
-2. Export from `index.ts`
-3. The builder must produce a valid `WidgetNode` — same shape as all others
+1. Add props schema in `validation/schemas/widget-props/`
+2. Register in `validation/schemas/widget-props/index.ts`
+3. Add a named helper to `widget.ts`
+4. Export from `index.ts`
+5. The helper must produce a valid `WidgetNode`
 
 ## Commands
 
@@ -107,3 +119,6 @@ pnpm --filter @rangka/shared test     # Unit tests (if any)
 - Don't duplicate types that already exist — search before creating (e.g., don't create a new FieldType if one exists)
 - Don't put React-specific types here — this package is framework-agnostic
 - Don't change builder output shapes without verifying against the client renderer expectations
+- Don't use `body` in PageDefinition — the field is `widgets`
+- Don't add `type` to PageDefinition — it was removed (no `collection`/`record`/`dashboard`)
+- Don't create wrapper classes or chainable builders — the `widget`/`action` factories return plain objects

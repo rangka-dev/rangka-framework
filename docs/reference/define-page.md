@@ -1,8 +1,8 @@
 ---
 status: stable
 since: 0.2.0
-last-updated: 2026-06-15
-description: definePage() API — page types, widget tree, and routing config
+last-updated: 2026-06-23
+description: definePage() API — widget tree, routing config, and builder helpers
 ---
 
 # definePage
@@ -14,34 +14,27 @@ See [Pages concept](/concepts/pages) for usage patterns. See [Widgets concept](/
 ## Signature
 
 ```typescript
-import { definePage } from 'rangka';
+import { definePage, widget, action } from 'rangka';
 
 export default definePage({
   key: 'sales.orders',
   label: 'Sales Orders',
-  type: 'collection',
   actions: [
     {
       type: 'button',
       label: 'New Order',
       icon: 'plus',
-      action: { type: 'navigate', path: '/sales/orders/new' },
+      action: action.navigate('/sales/orders/new'),
     },
   ],
-  body: [
-    {
-      type: 'table',
-      source: { model: 'sales.order' },
-      on: { rowClick: { type: 'setValue', field: '$state.selectedId', value: '{{id}}' } },
-      children: [
-        { type: 'column', props: { label: 'Name' }, bind: { field: 'name' } },
-        {
-          type: 'column',
-          props: { label: 'Status' },
-          children: [{ type: 'badge', bind: { field: 'status' } }],
-        },
-      ],
-    },
+  widgets: [
+    widget.card({ title: 'All Orders' }, [
+      widget.table('sales.order', { sortable: true }, [
+        widget.column('name', { label: 'Name', sortable: true }),
+        widget.column('status', { label: 'Status', filterable: true }),
+        widget.column('total', { label: 'Total', align: 'right' }),
+      ]),
+    ]),
   ],
 });
 ```
@@ -52,11 +45,10 @@ export default definePage({
 interface PageDefinition {
   key: string;
   label: string;
-  type: 'collection' | 'record' | 'dashboard';
   path?: string;
   layout?: 'default' | 'full';
   actions?: Action[];
-  body: WidgetNode[];
+  widgets: WidgetNode[];
 }
 ```
 
@@ -66,21 +58,10 @@ interface PageDefinition {
 | --------- | ------------ | ----------- | ---------------------------------------------------------------------------------------------- |
 | `key`     | string       | —           | Unique identifier. Format: `module.name`.                                                      |
 | `label`   | string       | —           | Page title. Displayed in breadcrumbs and tab title.                                            |
-| `type`    | enum         | —           | Semantic hint for the client renderer. Does not affect routing.                                |
 | `path`    | string       | auto        | Custom URL path. Auto-generated from key if omitted.                                           |
 | `layout`  | enum         | `'default'` | Page layout mode. `default` adds padding. `full` removes all padding for edge-to-edge content. |
 | `actions` | Action[]     | —           | Topbar buttons rendered by the shell.                                                          |
-| `body`    | WidgetNode[] | —           | The entire page content as a widget tree.                                                      |
-
-## Page types
-
-| Type         | Description                                           |
-| ------------ | ----------------------------------------------------- |
-| `collection` | List of records. Client renders list-oriented layout. |
-| `record`     | Single record. Client renders detail-oriented layout. |
-| `dashboard`  | No implicit data context. Free-form widget layout.    |
-
-The `type` field is a semantic hint for the client renderer. It does not affect URL generation or routing. A `record` page does not automatically get `/$id` in its route. You must specify that via `path` if needed.
+| `widgets` | WidgetNode[] | —           | The entire page content as a widget tree.                                                      |
 
 ## Layout
 
@@ -89,20 +70,18 @@ The `type` field is a semantic hint for the client renderer. It does not affect 
 | `default` | Standard page padding (`px-6 py-4`). Used for most pages.                          |
 | `full`    | No padding. Content fills edge-to-edge. Used for datagrids and full-bleed widgets. |
 
-Use `layout: 'full'` when the page body is a single widget that should fill the entire viewport. The datagrid widget is the primary use case.
+Use `layout: 'full'` when the page content is a single widget that should fill the entire viewport. The datagrid widget is the primary use case.
 
 ```typescript
 definePage({
   key: 'sales.orders',
   label: 'Sales Orders',
-  type: 'collection',
   layout: 'full',
-  body: [
-    {
-      type: 'datagrid',
+  widgets: [
+    widget('datagrid', {
       source: { model: 'sales.order' },
       props: { pageSize: 50, editable: true, addRow: true },
-    },
+    }),
   ],
 });
 ```
@@ -122,9 +101,9 @@ Override with `path` for custom routes:
 ```typescript
 definePage({
   key: 'sales.order-detail',
-  type: 'record',
+  label: 'Order Detail',
   path: '/sales/orders/$id',
-  body: [...],
+  widgets: [...],
 });
 ```
 
@@ -163,26 +142,42 @@ interface ActionItem {
 ### Examples
 
 ```typescript
+import { action } from 'rangka';
+
 // Navigate to a page
-{ type: 'button', label: 'New Order', icon: 'plus', action: { type: 'navigate', path: '/sales/orders/new' } }
+{ type: 'button', label: 'New Order', icon: 'plus', action: action.navigate('/sales/orders/new') }
 
 // Call a service
-{ type: 'button', label: 'Export', variant: 'secondary', action: { type: 'service', name: 'sales.export' } }
+{ type: 'button', label: 'Export', variant: 'secondary', action: action.service('sales.export') }
 ```
 
-Page actions use the same `WidgetAction` format as widget triggers. See [Actions concept](/concepts/actions) for all available action types.
+Page actions use the same `WidgetAction` format as widget triggers. See [Actions concept](/concepts/actions) for all available action types. The `action` helper provides typed shortcuts for all built-in actions.
 
-## Body
+## Widgets
 
-The `body` field is an array of `WidgetNode` objects forming a recursive tree. This is the complete page content. Layout, data fetching, overlays, and interactions are all expressed as widgets in the tree.
+The `widgets` field is an array of `WidgetNode` objects forming a recursive tree. This is the complete page content. Layout, data fetching, overlays, and interactions are all expressed as widgets in the tree.
 
-See [Widgets concept](/concepts/widgets) for the `WidgetNode` shape and [Built-in Widgets reference](/reference/built-in-widgets) for available widget types.
+You can write widget nodes as raw objects or use the `widget` helper for a shorter syntax:
+
+```typescript
+// Raw WidgetNode — always works
+widgets: [{ type: 'input', bind: { field: 'name' }, props: { required: true } }];
+
+// widget helper — same output, less typing
+widgets: [widget.input('name', { required: true })];
+```
+
+See [Widget Builder reference](/reference/widget-builder) for the full `widget` and `action` helper API. See [Built-in Widgets reference](/reference/built-in-widgets) for available widget types.
 
 ## Validation at boot
 
-Currently the framework warns about duplicate page keys and invalid source model references at startup.
+The framework validates pages at startup:
 
-> **Planned** — not yet implemented. Full widget schema validation at boot is planned. This will include checking widget types against the registry, validating props against widget schemas, enforcing container rules, and verifying binding modes.
+- Warns about duplicate page keys across modules.
+- Warns about source models that do not exist in the schema registry.
+- Warns about bind.field references that do not exist on the source model in scope.
+
+Pages with the deprecated `body` field are auto-migrated to `widgets` with a warning.
 
 ## Rendering chain
 
@@ -190,7 +185,7 @@ Currently the framework warns about duplicate page keys and invalid source model
 Route match
   → Shell (sidebar, topbar)
     → PageRenderer (looks up PageDefinition by key)
-      → WidgetRenderer (recursive, walks body tree)
+      → WidgetRenderer (recursive, walks widget tree)
         → for each WidgetNode:
           → evaluate visible conditions
           → resolve props expressions

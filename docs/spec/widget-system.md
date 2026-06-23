@@ -188,7 +188,7 @@ defineView({
   label: 'Custom',
   schema: {},
   slots: {
-    body: { label: 'Body', multiple: true },
+    widgets: { label: 'Body', multiple: true },
   },
   component: ({ slots }) => <div>{slots.body}</div>,
 })

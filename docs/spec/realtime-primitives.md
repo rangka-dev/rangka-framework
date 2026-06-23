@@ -15,9 +15,8 @@ Chat is the hardest realtime UI to express declaratively. It combines live colle
 ```typescript
 definePage({
   key: 'messaging.conversation',
-  type: 'document',
   multiplayer: true,
-  body: [
+  widgets: [
     { type: 'presence', props: { display: 'avatars' } },
 
     {
@@ -74,7 +73,7 @@ definePage({
                   model: 'messaging.message',
                   data: {
                     conversation_id: '$route.id',
-                    body: '$state.draft',
+                    widgets: '$state.draft',
                     sender_id: '$session.user.id',
                   },
                 },

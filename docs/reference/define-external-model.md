@@ -155,8 +155,7 @@ External models work in pages and widgets.
 definePage({
   key: 'crm.customers',
   label: 'Customers',
-  type: 'collection',
-  body: [
+  widgets: [
     {
       type: 'table',
       source: { model: 'crm.customer' },

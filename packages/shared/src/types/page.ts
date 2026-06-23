@@ -18,9 +18,8 @@ export interface Action {
 export interface PageDefinition {
   key: string;
   label: string;
-  type: 'collection' | 'record' | 'dashboard';
   path?: string;
   layout?: 'default' | 'full';
   actions?: Action[];
-  body: WidgetNode[];
+  widgets: WidgetNode[];
 }
