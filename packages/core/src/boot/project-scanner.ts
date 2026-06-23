@@ -20,6 +20,12 @@ import { validatePageSources, detectDuplicatePageKeys } from './page-utils.js';
 export interface ProjectScanResult {
   app: DiscoveredApp;
   rangkaConfig: RangkaConfig;
+  warnings: ScanWarning[];
+}
+
+export interface ScanWarning {
+  file: string;
+  message: string;
 }
 
 export interface DatabaseConfig {
@@ -51,6 +57,7 @@ export class ProjectScanner {
     const jobs: Array<{ name: string; config: JobConfig }> = [];
     const fixtures: FixtureDefinition[] = [];
     const pages: Array<{ module: string; page: PageDefinition }> = [];
+    const warnings: ScanWarning[] = [];
 
     for (const moduleConfig of modules) {
       await this.collectModuleArtifacts(moduleConfig, {
@@ -61,6 +68,7 @@ export class ProjectScanner {
         jobs,
         fixtures,
         pages,
+        warnings,
       });
     }
 
@@ -80,7 +88,7 @@ export class ProjectScanner {
       pages,
     });
 
-    return { app, rangkaConfig };
+    return { app, rangkaConfig, warnings };
   }
 
   // ---------- Top-level loading ----------
@@ -130,6 +138,7 @@ export class ProjectScanner {
       jobs: Array<{ name: string; config: JobConfig }>;
       fixtures: FixtureDefinition[];
       pages: Array<{ module: string; page: PageDefinition }>;
+      warnings: ScanWarning[];
     },
   ): Promise<void> {
     const moduleName = moduleConfig.name;
@@ -153,7 +162,10 @@ export class ProjectScanner {
     accumulators.services.push(...(await this.scanServices(moduleName)));
     accumulators.jobs.push(...(await this.scanJobs(moduleName)));
     accumulators.fixtures.push(...(await this.scanFixtures(moduleName)));
-    accumulators.pages.push(...(await this.scanPages(moduleName)));
+
+    const { pages: scannedPages, warnings: pageWarnings } = await this.scanPages(moduleName);
+    accumulators.pages.push(...scannedPages);
+    accumulators.warnings.push(...pageWarnings);
   }
 
   // ---------- Model scanning (flat files) ----------
@@ -233,15 +245,17 @@ export class ProjectScanner {
   /** Scans .ts files in modules/<name>/pages/ for page definitions (with error handling). */
   private async scanPages(
     moduleName: string,
-  ): Promise<Array<{ module: string; page: PageDefinition }>> {
+  ): Promise<{ pages: Array<{ module: string; page: PageDefinition }>; warnings: ScanWarning[] }> {
     const pagesDir = path.join(this.root, 'modules', moduleName, 'pages');
-    if (!(await this.dirExists(pagesDir))) return [];
+    if (!(await this.dirExists(pagesDir))) return { pages: [], warnings: [] };
 
     const entries = await fs.readdir(pagesDir, { withFileTypes: true });
     const pages: Array<{ module: string; page: PageDefinition }> = [];
+    const warnings: ScanWarning[] = [];
 
     for (const entry of entries) {
       if (!entry.isFile() || !entry.name.endsWith('.ts')) continue;
+      const filePath = `modules/${moduleName}/pages/${entry.name}`;
       try {
         const mod = await this.importFile(path.join(pagesDir, entry.name));
         if (mod.default) {
@@ -253,21 +267,54 @@ export class ProjectScanner {
             page.widgets = page.body;
           }
           if (!page.widgets) {
-            console.warn(
-              `[rangka] Page file modules/${moduleName}/pages/${entry.name} is missing "widgets" array — skipping.`,
-            );
+            const msg = `Missing "widgets" array — skipping`;
+            warnings.push({ file: filePath, message: msg });
+            console.warn(`[rangka] ${filePath}: ${msg}`);
             continue;
           }
+
+          const issues = this.validatePageDefinition(page, filePath);
+          if (issues.length > 0) {
+            for (const issue of issues) {
+              warnings.push({ file: filePath, message: issue });
+              console.warn(`[rangka] ${filePath}: ${issue}`);
+            }
+          }
+
           pages.push({ module: moduleName, page });
         }
       } catch (err) {
-        console.warn(
-          `[rangka] Failed to import page file modules/${moduleName}/pages/${entry.name}: ${(err as Error).message}`,
-        );
+        const msg = `Failed to import: ${(err as Error).message}`;
+        warnings.push({ file: filePath, message: msg });
+        console.warn(`[rangka] ${filePath}: ${msg}`);
       }
     }
 
-    return pages;
+    return { pages, warnings };
+  }
+
+  private validatePageDefinition(page: Record<string, unknown>, _filePath: string): string[] {
+    const issues: string[] = [];
+
+    if (page.label !== undefined && typeof page.label !== 'string') {
+      issues.push(`"label" must be a string, got ${typeof page.label}`);
+    }
+
+    if (page.key !== undefined && typeof page.key !== 'string') {
+      issues.push(`"key" must be a string, got ${typeof page.key}`);
+    }
+
+    if (Array.isArray(page.widgets)) {
+      const nullCount = page.widgets.filter((w: unknown) => w == null).length;
+      if (nullCount > 0) {
+        issues.push(
+          `"widgets" contains ${nullCount} null/undefined ${nullCount === 1 ? 'entry' : 'entries'} (removed)`,
+        );
+        page.widgets = page.widgets.filter((w: unknown) => w != null);
+      }
+    }
+
+    return issues;
   }
 
   /** Scans extensions/ directory for extension definitions. */

@@ -32,7 +32,7 @@ export {
 } from './errors.js';
 export { NodeModulesDiscoverySource, MemoryDiscoverySource } from './boot/discovery.js';
 export { ProjectScanner } from './boot/project-scanner.js';
-export type { ProjectScanResult } from './boot/project-scanner.js';
+export type { ProjectScanResult, ScanWarning } from './boot/project-scanner.js';
 export { DatabaseClient } from './db/client.js';
 export type { DatabaseClientConfig } from './db/client.js';
 export type {

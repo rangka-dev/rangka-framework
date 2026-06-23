@@ -12,12 +12,12 @@ import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { SYSTEM_PROMPT } from './system-prompt.js';
 import { createStudioTools } from './tools.js';
-import type { RuntimeManager } from './runtime-manager.js';
+import type { SubprocessManager } from './subprocess-manager.js';
 import type { ServerMessage, SessionInfo } from './protocol.js';
 
 export interface AgentEngineConfig {
   projectRoot: string;
-  runtime: RuntimeManager;
+  subprocess: SubprocessManager;
   apiKey?: string;
   provider?: 'anthropic' | 'openai';
   baseUrl?: string;
@@ -157,7 +157,8 @@ export class AgentEngine {
       console.log(`[studio:agent] Registered provider "${provider}" with baseUrl: ${baseUrl}`);
     }
 
-    const studioTools = createStudioTools(this.config.runtime, this.config.projectRoot);
+    const subprocess = this.config.subprocess;
+    const studioTools = createStudioTools(subprocess, this.config.projectRoot);
 
     const reloadTool = studioTools.find((t) => t.name === 'reload_preview')!;
     const originalReloadExecute = reloadTool.execute;
@@ -170,45 +171,39 @@ export class AgentEngine {
 
     const syncTool = studioTools.find((t) => t.name === 'sync_schema')!;
     syncTool.execute = async () => {
-      console.log(`[studio:sync] Starting rescan...`);
-      const rescanResult = await this.config.runtime.rescan();
-      console.log(
-        `[studio:sync] Rescan done: success=${rescanResult.success}, operations=${rescanResult.operations?.length ?? 0}`,
-      );
+      console.log(`[studio:sync] Starting subprocess restart for sync...`);
 
-      if (!rescanResult.success) {
-        return {
-          content: [
-            {
-              type: 'text' as const,
-              text: `Schema sync failed: ${rescanResult.error}`,
-            },
-          ],
-          details: { status: 'error', error: rescanResult.error },
-        };
+      // If not already waiting for sync, restart to pick up changes
+      if (!subprocess.isWaitingForSync()) {
+        try {
+          await subprocess.restart();
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          return {
+            content: [{ type: 'text' as const, text: `Schema sync failed: ${message}` }],
+            details: { status: 'error', error: message },
+          };
+        }
       }
 
-      this.config.onMessage({
-        type: 'runtime.status',
-        status: 'ready',
-        ...this.config.runtime.getStatus(),
-      });
-      this.config.onMessage({
-        type: 'resources.data',
-        modules: this.config.runtime.getResources(),
-      });
-      this.config.onMessage({ type: 'models.data', graph: this.config.runtime.getModelGraph() });
+      const status = subprocess.getLastStatus();
+      if (status) {
+        this.config.onMessage({
+          type: 'runtime.status',
+          status: 'ready',
+          models: status.models,
+          pages: status.pages,
+          services: status.services,
+        });
+      }
       this.config.onMessage({ type: 'preview.reload' });
 
-      const safeOps = (rescanResult.operations ?? []).filter((op) => !op.destructive);
+      const safeOps = subprocess.getPendingOps();
 
       if (safeOps.length === 0) {
         return {
           content: [
-            {
-              type: 'text' as const,
-              text: 'Schema is already up to date. No changes needed.',
-            },
+            { type: 'text' as const, text: 'Schema is already up to date. No changes needed.' },
           ],
           details: { status: 'up_to_date', operations: 0 },
         };
@@ -254,17 +249,23 @@ export class AgentEngine {
     applyTool.execute = async (...args: unknown[]) => {
       const result = await originalApplyExecute(...args);
       if (result.details?.success) {
-        this.config.onMessage({
-          type: 'runtime.status',
-          status: 'ready',
-          ...this.config.runtime.getStatus(),
-        });
-        this.config.onMessage({
-          type: 'resources.data',
-          modules: this.config.runtime.getResources(),
-        });
-        this.config.onMessage({ type: 'models.data', graph: this.config.runtime.getModelGraph() });
+        const status = subprocess.getLastStatus();
+        if (status) {
+          this.config.onMessage({
+            type: 'runtime.status',
+            status: 'ready',
+            models: status.models,
+            pages: status.pages,
+            services: status.services,
+            sessionToken: subprocess.getSessionToken() ?? undefined,
+          });
+        }
         this.config.onMessage({ type: 'preview.reload' });
+
+        const ops = subprocess.getPendingOps();
+        if (ops.length > 0) {
+          this.config.onMessage({ type: 'schema.diff', operations: ops });
+        }
       }
       return result;
     };
@@ -424,9 +425,5 @@ export class AgentEngine {
     return new Promise((resolve) => {
       this.schemaGate = { resolve };
     });
-  }
-
-  private isModelFile(filePath: string): boolean {
-    return filePath.includes('/models/') || filePath.includes('\\models\\');
   }
 }

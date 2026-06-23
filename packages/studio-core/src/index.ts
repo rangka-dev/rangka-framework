@@ -1,7 +1,7 @@
 export { createStudioServer, StudioServer } from './server.js';
 export type { StudioServerConfig } from './server.js';
-export { RuntimeManager } from './runtime-manager.js';
-export type { RuntimeManagerConfig } from './runtime-manager.js';
+export { SubprocessManager } from './subprocess-manager.js';
+export type { SubprocessManagerConfig } from './subprocess-manager.js';
 export { FileWatcher } from './file-watcher.js';
 export type { FileWatcherConfig } from './file-watcher.js';
 export { AgentEngine } from './agent-engine.js';
@@ -18,3 +18,13 @@ export type {
   ModelGraphEdge,
   ModelGraphField,
 } from './protocol.js';
+export type {
+  ChildMessage,
+  ParentMessage,
+  ChildPhase,
+  ChildStatusSnapshot,
+  RuntimeStatus,
+  SerializedDdlOperation,
+  IntrospectType,
+  DatabaseConfig,
+} from './ipc-protocol.js';
