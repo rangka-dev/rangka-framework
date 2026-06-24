@@ -30,3 +30,6 @@ packages/studio-core/ui/
 
 # Local publish testing
 .local-registry/
+
+# Rangka local data
+.rangka/
