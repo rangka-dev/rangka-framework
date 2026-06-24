@@ -1,32 +1,167 @@
-:root {
-  --vp-c-brand-1: #4761d6;
-  --vp-c-brand-2: #3a52c5;
-  --vp-c-brand-3: #2d43b4;
-  --vp-c-brand-soft: #4761d612;
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap');
 
-  --vp-c-tip-1: #4761d6;
-  --vp-c-tip-2: #4761d612;
-  --vp-c-tip-3: #4761d608;
+:root {
+  --vp-c-brand-1: #1a1a1a;
+  --vp-c-brand-2: #333333;
+  --vp-c-brand-3: #4a4a4a;
+  --vp-c-brand-soft: rgba(26, 26, 26, 0.08);
+
+  --vp-c-tip-1: #1a1a1a;
+  --vp-c-tip-2: rgba(26, 26, 26, 0.12);
+  --vp-c-tip-3: rgba(26, 26, 26, 0.06);
 
   --vp-c-success-1: #297a7a;
-  --vp-c-success-2: #297a7a20;
-  --vp-c-success-3: #297a7a10;
+  --vp-c-success-2: rgba(41, 122, 122, 0.12);
+  --vp-c-success-3: rgba(41, 122, 122, 0.06);
 
   --vp-c-warning-1: #e8724a;
-  --vp-c-warning-2: #e8724a20;
-  --vp-c-warning-3: #e8724a10;
+  --vp-c-warning-2: rgba(232, 114, 74, 0.12);
+  --vp-c-warning-3: rgba(232, 114, 74, 0.06);
 
   --vp-c-danger-1: #d42c27;
-  --vp-c-danger-2: #d42c2720;
-  --vp-c-danger-3: #d42c2710;
+  --vp-c-danger-2: rgba(212, 44, 39, 0.12);
+  --vp-c-danger-3: rgba(212, 44, 39, 0.06);
 
-  --vp-font-family-base: 'Inter', sans-serif;
-  --vp-font-family-mono: 'DM Mono', ui-monospace, monospace;
+  --vp-c-bg: #ffffff;
+  --vp-c-bg-alt: #f7f7f5;
+  --vp-c-bg-elv: #ffffff;
+  --vp-c-bg-soft: #f7f7f5;
+
+  --vp-c-border: #e8e5e1;
+  --vp-c-divider: #e8e5e1;
+  --vp-c-gutter: #e8e5e1;
+
+  --vp-c-text-1: #1a1a1a;
+  --vp-c-text-2: #6b6b6b;
+  --vp-c-text-3: #9a9a9a;
+
+  --vp-font-family-base: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  --vp-font-family-mono: 'Fira Code', ui-monospace, monospace;
+
+  --vp-code-block-bg: #1a1a1a;
+  --vp-code-block-divider-color: #2a2a2a;
+
+  --vp-button-brand-bg: #1a1a1a;
+  --vp-button-brand-text: #ffffff;
+  --vp-button-brand-hover-bg: #333333;
+  --vp-button-brand-hover-text: #ffffff;
+  --vp-button-brand-active-bg: #4a4a4a;
+  --vp-button-brand-active-text: #ffffff;
+
+  --vp-button-alt-bg: #f7f7f5;
+  --vp-button-alt-text: #4a4a4a;
+  --vp-button-alt-hover-bg: #e8e5e1;
+  --vp-button-alt-hover-text: #1a1a1a;
+
+  --vp-nav-bg: rgba(255, 255, 255, 0.85);
+
+  --vp-sidebar-bg-color: #f7f7f5;
 }
 
 .dark {
-  --vp-c-brand-1: #6b80e0;
-  --vp-c-brand-2: #4761d6;
-  --vp-c-brand-3: #3a52c5;
-  --vp-c-brand-soft: #4761d620;
+  --vp-c-brand-1: #ededed;
+  --vp-c-brand-2: rgba(255, 255, 255, 0.85);
+  --vp-c-brand-3: rgba(255, 255, 255, 0.7);
+  --vp-c-brand-soft: rgba(255, 255, 255, 0.06);
+
+  --vp-c-tip-1: #ededed;
+  --vp-c-tip-2: rgba(255, 255, 255, 0.12);
+  --vp-c-tip-3: rgba(255, 255, 255, 0.06);
+
+  --vp-c-bg: #000000;
+  --vp-c-bg-alt: #0a0a0a;
+  --vp-c-bg-elv: #111111;
+  --vp-c-bg-soft: #0a0a0a;
+
+  --vp-c-border: rgba(255, 255, 255, 0.08);
+  --vp-c-divider: rgba(255, 255, 255, 0.08);
+  --vp-c-gutter: rgba(255, 255, 255, 0.08);
+
+  --vp-c-text-1: #ededed;
+  --vp-c-text-2: #888888;
+  --vp-c-text-3: #555555;
+
+  --vp-code-block-bg: #0a0a0a;
+  --vp-code-block-divider-color: rgba(255, 255, 255, 0.08);
+
+  --vp-button-brand-bg: #ffffff;
+  --vp-button-brand-text: #000000;
+  --vp-button-brand-hover-bg: rgba(255, 255, 255, 0.85);
+  --vp-button-brand-hover-text: #000000;
+  --vp-button-brand-active-bg: rgba(255, 255, 255, 0.7);
+  --vp-button-brand-active-text: #000000;
+
+  --vp-button-alt-bg: rgba(255, 255, 255, 0.04);
+  --vp-button-alt-text: #888888;
+  --vp-button-alt-hover-bg: rgba(255, 255, 255, 0.08);
+  --vp-button-alt-hover-text: #ededed;
+
+  --vp-nav-bg: rgba(0, 0, 0, 0.7);
+
+  --vp-sidebar-bg-color: #0a0a0a;
+}
+
+/* Navbar backdrop blur */
+.VPNav {
+  backdrop-filter: blur(12px);
+}
+
+/* Sidebar styling */
+.VPSidebar {
+  background-color: var(--vp-sidebar-bg-color) !important;
+  border-right-color: var(--vp-c-border) !important;
+}
+
+.VPSidebarItem .item .link {
+  border-radius: 6px;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.VPSidebarItem.is-active > .item > .link {
+  background-color: var(--vp-c-brand-soft);
+}
+
+.VPSidebarItem.is-active > .item > .link .text {
+  color: var(--vp-c-brand-1);
+  font-weight: 600;
+}
+
+.VPSidebarItem .item .link:hover {
+  background-color: var(--vp-c-bg-soft);
+}
+
+/* Sidebar group titles */
+.VPSidebarItem.level-0 > .item > .text {
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--vp-c-text-3);
+}
+
+/* Align child items with section title text (after icon) */
+.VPSidebarItem.level-0 > .items {
+  padding-left: 22px;
+}
+
+/* Code inline */
+:not(pre) > code {
+  background-color: var(--vp-c-bg-soft);
+  border: 1px solid var(--vp-c-border);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.875em;
+}
+
+/* Content links */
+.vp-doc a {
+  text-decoration-color: var(--vp-c-border);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.15s ease;
+}
+
+.vp-doc a:hover {
+  text-decoration-color: var(--vp-c-brand-1);
 }

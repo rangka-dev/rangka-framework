@@ -296,4 +296,4 @@ When the renderer encounters a widget `type`:
 - [Pages](/concepts/pages): how widget trees become routable screens
 - [defineWidget reference](/reference/define-widget): registering custom widgets
 - [Built-in Widgets](/reference/built-in-widgets): all available widgets
-- [Builder API](/reference/builder-api): chainable shorthand for widget trees
+- [Builder API](/reference/widget-builder): chainable shorthand for widget trees

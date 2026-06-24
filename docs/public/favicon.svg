@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="8" fill="#0a0a0a"/>
+  <g fill="white">
+    <!-- Row 1: filled, filled, empty -->
+    <rect x="6" y="6" width="5.5" height="5.5" rx="1"/>
+    <rect x="13.25" y="6" width="5.5" height="5.5" rx="1"/>
+    <!-- Row 2: filled, empty, filled -->
+    <rect x="6" y="13.25" width="5.5" height="5.5" rx="1"/>
+    <rect x="20.5" y="13.25" width="5.5" height="5.5" rx="1"/>
+    <!-- Row 3: empty, filled, filled -->
+    <rect x="13.25" y="20.5" width="5.5" height="5.5" rx="1"/>
+    <rect x="20.5" y="20.5" width="5.5" height="5.5" rx="1"/>
+  </g>
+</svg>
