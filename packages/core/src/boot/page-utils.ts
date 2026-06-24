@@ -3,6 +3,7 @@ import type { SchemaRegistry } from '../schema/registry.js';
 
 export interface PageValidationWarning {
   pageKey: string;
+  file?: string;
   location: string;
   message: string;
 }
@@ -106,14 +107,23 @@ function checkWidgetNodeSources(
  * ancestor source. Returns warnings (does not halt boot).
  */
 export function validatePageBindings(
-  pages: Array<{ module: string; page: PageDefinition }>,
+  pages: Array<{ module: string; page: PageDefinition; file?: string }>,
   registry: SchemaRegistry,
 ): PageValidationWarning[] {
   const warnings: PageValidationWarning[] = [];
 
-  for (const { page } of pages) {
+  for (const { module, page, file } of pages) {
+    const filePath = file ? `modules/${module}/pages/${file}` : undefined;
     for (let i = 0; i < page.widgets.length; i++) {
-      checkWidgetBindings(page.widgets[i], `widgets[${i}]`, page.key, null, registry, warnings);
+      checkWidgetBindings(
+        page.widgets[i],
+        `widgets[${i}]`,
+        page.key,
+        filePath,
+        null,
+        registry,
+        warnings,
+      );
     }
   }
 
@@ -124,6 +134,7 @@ function checkWidgetBindings(
   node: WidgetNode,
   path: string,
   pageKey: string,
+  file: string | undefined,
   sourceModel: string | null,
   registry: SchemaRegistry,
   warnings: PageValidationWarning[],
@@ -134,6 +145,7 @@ function checkWidgetBindings(
     if (!currentSource) {
       warnings.push({
         pageKey,
+        file,
         location: path,
         message: `Widget has bind.field "${node.bind.field}" but no source model in scope`,
       });
@@ -144,6 +156,7 @@ function checkWidgetBindings(
         if (!fieldExists) {
           warnings.push({
             pageKey,
+            file,
             location: path,
             message: `Field "${node.bind.field}" does not exist on model "${currentSource}"`,
           });
@@ -158,6 +171,7 @@ function checkWidgetBindings(
         node.children[i],
         `${path}.children[${i}]`,
         pageKey,
+        file,
         currentSource,
         registry,
         warnings,

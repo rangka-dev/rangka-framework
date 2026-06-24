@@ -93,6 +93,7 @@ export async function boot(options: BootOptions): Promise<BootResult> {
   const allPagesForValidation: Array<{
     module: string;
     page: import('@rangka/shared').PageDefinition;
+    file?: string;
   }> = [];
   for (const app of sortedApps) {
     if (app.pages) allPagesForValidation.push(...app.pages);
@@ -100,7 +101,10 @@ export async function boot(options: BootOptions): Promise<BootResult> {
   if (allPagesForValidation.length > 0) {
     const bindWarnings = validatePageBindings(allPagesForValidation, registry);
     for (const warning of bindWarnings) {
-      console.warn(`[rangka] ${warning.pageKey} (${warning.location}): ${warning.message}`);
+      const location = warning.file ?? warning.pageKey;
+      console.warn(
+        `[rangka] ${location} → ${warning.pageKey} (${warning.location}): ${warning.message}`,
+      );
     }
   }
 

@@ -15,8 +15,10 @@ export function StatusBar() {
       ? runtimeStatus.status === 'ready'
         ? 'Connected'
         : runtimeStatus.status === 'booting'
-          ? 'Booting...'
-          : 'Error'
+          ? 'Starting...'
+          : runtimeStatus.status === 'idle'
+            ? 'Ready'
+            : 'Error'
       : connectionStatus === 'connecting'
         ? 'Connecting...'
         : 'Disconnected';

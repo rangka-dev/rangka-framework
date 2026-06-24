@@ -405,11 +405,19 @@ async function main(): Promise<void> {
     // Validate page bindings post-boot (requires registry)
     if (pages.length > 0) {
       const bindWarnings = validatePageBindings(
-        pages as Array<{ module: string; page: import('@rangka/shared').PageDefinition }>,
+        pages as Array<{
+          module: string;
+          page: import('@rangka/shared').PageDefinition;
+          file?: string;
+        }>,
         bootResult.registry,
       );
       for (const w of bindWarnings) {
-        scanWarnings.push({ file: `${w.pageKey} (${w.location})`, message: w.message });
+        const location = w.file ? `modules/${w.pageKey.split('.')[0]}/pages/${w.file}` : w.pageKey;
+        scanWarnings.push({
+          file: location,
+          message: `${w.pageKey} (${w.location}): ${w.message}`,
+        });
       }
     }
 
