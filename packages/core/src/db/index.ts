@@ -1,4 +1,4 @@
-export { DatabaseClient } from './client.js';
+export { DatabaseClient, resolveDatabaseConfig } from './client.js';
 export type { DatabaseClientConfig } from './client.js';
 export type {
   ColumnDefinition,

@@ -5,6 +5,7 @@ import { dirname } from 'node:path';
 import pg from 'pg';
 import type { SchemaRegistry } from '../schema/registry.js';
 import { modelToTableName } from './field-mapper.js';
+import { configurePragmas } from './sqlite/pragmas.js';
 
 export interface PostgresConfig {
   dialect?: 'postgres';
@@ -28,9 +29,32 @@ export type DatabaseClientConfig = PostgresConfig | SqliteConfig;
 
 export type Dialect = 'postgres' | 'sqlite';
 
+export interface RawDatabaseConfig {
+  dialect?: string;
+  host?: string;
+  port?: number;
+  database?: string;
+  user?: string;
+  password?: string;
+  path?: string;
+}
+
+export function resolveDatabaseConfig(raw: RawDatabaseConfig | undefined): DatabaseClientConfig {
+  if (!raw || raw.dialect === 'sqlite') {
+    const sqlitePath = raw?.path ?? '.rangka/dev.db';
+    return { dialect: 'sqlite', path: sqlitePath };
+  }
+  return {
+    host: raw.host ?? 'localhost',
+    port: raw.port ?? 5432,
+    database: raw.database ?? 'rangka',
+    user: raw.user ?? 'postgres',
+    password: raw.password ?? '',
+  };
+}
+
 function detectDialect(config: DatabaseClientConfig): Dialect {
-  if ('host' in config && config.host) return 'postgres';
-  return 'sqlite';
+  return config.dialect === 'sqlite' ? 'sqlite' : 'postgres';
 }
 
 /**
@@ -57,7 +81,7 @@ export class DatabaseClient {
       const path = sqliteConfig.path ?? '.rangka/dev.db';
       mkdirSync(dirname(path), { recursive: true });
       const sqliteDb = new Database(path);
-      this.configureSqlitePragmas(sqliteDb);
+      configurePragmas(sqliteDb);
       this.db = new Kysely({ dialect: new SqliteDialect({ database: sqliteDb }) });
     }
 
@@ -159,15 +183,6 @@ export class DatabaseClient {
     } catch {
       throw new Error('SQLite support requires "better-sqlite3". Run: pnpm add better-sqlite3');
     }
-  }
-
-  /** Configure SQLite PRAGMAs for optimal dev usage. */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private configureSqlitePragmas(db: any): void {
-    db.pragma('foreign_keys = ON');
-    db.pragma('journal_mode = WAL');
-    db.pragma('busy_timeout = 5000');
-    db.pragma('synchronous = NORMAL');
   }
 
   /** Pre-compute the mapping from qualified model names to SQL table names. */

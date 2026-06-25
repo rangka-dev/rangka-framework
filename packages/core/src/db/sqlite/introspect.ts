@@ -171,7 +171,7 @@ function parseCheckConstraints(createSql: string, tableName: string): ActualChec
 
 function normalizeType(rawType: string): string {
   const upper = rawType.toUpperCase().trim();
-  if (!upper || upper === '') return 'TEXT';
+  if (!upper) return 'TEXT';
   return upper;
 }
 

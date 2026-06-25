@@ -5,6 +5,7 @@ import * as path from 'node:path';
 import { createRequire } from 'node:module';
 import { Kysely, PostgresDialect, SqliteDialect } from 'kysely';
 import pg from 'pg';
+import { configurePragmas } from '@rangka/core';
 import type {
   ChildMessage,
   ParentMessage,
@@ -425,7 +426,7 @@ export class SubprocessManager extends EventEmitter {
       const require = createRequire(import.meta.url);
       const Database = require('better-sqlite3');
       const sqliteDb = new Database(config.path);
-      sqliteDb.pragma('foreign_keys = ON');
+      configurePragmas(sqliteDb);
       this.queryDb = new Kysely({ dialect: new SqliteDialect({ database: sqliteDb }) });
     } else {
       this.queryDb = new Kysely({
