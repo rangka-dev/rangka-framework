@@ -33,6 +33,94 @@ Design system package. All visual rendering lives here. The client package is he
 7. Run `pnpm test` to verify API surface test passes
 8. Verify in Storybook (`pnpm storybook`)
 
+## Component Code Style
+
+Every component file follows this exact structure:
+
+```tsx
+// 1. Imports
+import { cva, type VariantProps } from 'class-variance-authority';
+import { forwardRef, type ComponentProps } from 'react';
+import { cn } from '../lib/cn';
+
+// 2. Variants (CVA) — single source of truth for style values AND types
+const buttonVariants = cva('base-classes...', {
+  variants: {
+    variant: { primary: '...', secondary: '...' },
+    size: { sm: '...', md: '...' },
+  },
+  defaultVariants: { variant: 'primary', size: 'md' },
+});
+
+// 3. Props interface — exported, extends native HTML attrs, JSDoc on custom props
+export type ButtonProps = ComponentProps<'button'> &
+  VariantProps<typeof buttonVariants> & {
+    /** Show loading spinner and disable interaction */
+    loading?: boolean;
+  };
+
+// 4. Component — forwardRef, destructure custom props, spread ...props last
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant, size, loading, children, ...props }, ref) => {
+    return (
+      <button
+        className={cn(buttonVariants({ variant, size, className }))}
+        ref={ref}
+        disabled={loading || props.disabled}
+        {...props}
+      >
+        {children}
+      </button>
+    );
+  },
+);
+
+// 5. Display name + named exports
+Button.displayName = 'Button';
+export { buttonVariants };
+```
+
+### Rules
+
+- Props type is always `ComponentNameProps` (e.g., `ButtonProps`, `ModalProps`, `CardProps`)
+- Always extend the native HTML element: `ComponentProps<'button'>`, `ComponentProps<'div'>`, etc.
+- CVA `variants` object is the single source of truth for variant/size values. Never duplicate these as a separate type.
+- JSDoc on every custom prop (not HTML-inherited ones). These become IDE tooltips and Storybook autodocs.
+- No separate `.types.ts` or `.meta.ts` files. Types live in the component file.
+- `forwardRef` on every component. No exceptions.
+- Spread `...props` last so consumers can override defaults.
+- Export both the component and its props type from the barrel.
+
+### Composed Components
+
+Each sub-component gets its own exported props type:
+
+```tsx
+export type ModalProps = ComponentProps<'div'> & {
+  /** Whether the modal is open */
+  open: boolean;
+  /** Called when open state should change */
+  onOpenChange: (open: boolean) => void;
+};
+
+export type ModalHeaderProps = ComponentProps<'div'>;
+export type ModalTitleProps = ComponentProps<'h2'>;
+export type ModalBodyProps = ComponentProps<'div'>;
+export type ModalFooterProps = ComponentProps<'div'> & {
+  /** Align footer content */
+  align?: 'start' | 'end' | 'between';
+};
+```
+
+### Barrel Exports
+
+Every barrel (`src/<layer>/index.ts`) exports the component AND its props type:
+
+```tsx
+export { Button, buttonVariants, type ButtonProps } from './button';
+export { Modal, type ModalProps, type ModalHeaderProps } from './modal';
+```
+
 ## Composition Pattern
 
 Every component that renders more than a single DOM element MUST use the composition pattern. This is non-negotiable for maintainability.
