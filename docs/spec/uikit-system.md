@@ -425,6 +425,155 @@ export const defaultKit: UIKit = {
 };
 ```
 
+## Complex Widget Split Pattern
+
+Not all widgets are simple "props in, DOM out." Complex widgets need framework hooks (`useModelQuery`, `usePageState`, `WidgetContextProvider`) for data fetching, state management, and context injection. These widgets use a split pattern: orchestration stays in client, presentation is swappable via UIKit.
+
+### Widget Classification
+
+| Type                                                           | Count | Where logic lives | UIKit provides                                      |
+| -------------------------------------------------------------- | ----- | ----------------- | --------------------------------------------------- |
+| Simple (Button, Input, Badge, Text, etc.)                      | 20    | UIKit only        | Full component via `WidgetProps`                    |
+| Medium with local state (DatePicker, Link, Money, etc.)        | 11    | UIKit only        | Full component via `WidgetProps`                    |
+| Orchestrated (Table, Form, Data, Repeat, Modal, Drawer, Split) | 7     | Client            | Presentation shell via typed props                  |
+| Complex (Datagrid)                                             | 1     | Client            | Presentation shell via typed props (larger surface) |
+
+### How the Split Works
+
+For complex widgets, the client widget implementation:
+
+1. Calls framework hooks (data fetching, state management)
+2. Resolves a presentation component from the UIKit
+3. Passes resolved data + callbacks + render functions to the UI component
+
+The UI component:
+
+1. Receives pre-resolved data (rows, columns, loading state, sort, pagination)
+2. Receives callbacks (onSort, onPageChange, onRowClick)
+3. Receives `renderCell` / `renderChildren` for nested framework content
+4. Renders the visual structure using only what it received
+5. Never imports from `@rangka/client`
+
+### Example: Table Widget
+
+**Client (orchestration):**
+
+```typescript
+// packages/client/src/widgets/components/TableWidget.tsx
+
+export function TableWidget({ props, on }: WidgetProps) {
+  const ctx = useWidgetContext();
+  const store = usePageState();
+  const Table = useUIComponent('Table');
+
+  const source = useModelQuery({ model: ctx.model, pageSize: props.pageSize ?? 20 });
+  const records = source.data;
+
+  const handleSort = (field: string) => { store.set(`$sort.${model}`, ...); };
+  const handlePageChange = (page: number) => { store.set(`$page.${model}`, page); };
+
+  const renderCell = (row, col, rowIndex) => (
+    <WidgetContextProvider value={buildRowContext(row, rowIndex, ctx)}>
+      <CellRenderer col={col} row={row} />
+    </WidgetContextProvider>
+  );
+
+  return (
+    <Table
+      columns={tableColumns}
+      rows={records}
+      loading={source.isLoading}
+      sort={source.sort}
+      page={source.page}
+      total={source.total}
+      onSort={handleSort}
+      onPageChange={handlePageChange}
+      onRowClick={on.rowClick}
+      renderCell={renderCell}
+    />
+  );
+}
+```
+
+**UI (presentation):**
+
+```typescript
+// packages/ui/src/data/table.tsx
+
+export interface TableProps {
+  columns: { key: string; label: string; width?: string; align?: string; sortable?: boolean }[];
+  rows: Record<string, unknown>[];
+  loading?: boolean;
+  fetching?: boolean;
+  sort?: { field: string; direction: 'asc' | 'desc' } | null;
+  page?: number;
+  pageSize?: number;
+  total?: number;
+  variant?: 'card' | 'flat';
+  selectable?: boolean;
+  striped?: boolean;
+  emptyText?: string;
+  onSort?: (field: string) => void;
+  onPageChange?: (page: number) => void;
+  onRowClick?: (row: Record<string, unknown>) => void;
+  renderCell: (row: Record<string, unknown>, col: TableColumn, rowIndex: number) => ReactNode;
+  toolbar?: ReactNode;
+}
+
+export function Table({ columns, rows, loading, sort, renderCell, ... }: TableProps) {
+  // Pure visual rendering — headers, rows, skeleton, empty state, pagination
+  // Uses @rangka/ui primitives (Skeleton, Button, Icon)
+  // No imports from @rangka/client
+}
+```
+
+### The renderCell Bridge
+
+The `renderCell` callback bridges framework context into the UI component. The client provides it, the UI calls it for each cell:
+
+```
+Client builds renderCell:
+  - Wraps row in WidgetContextProvider (framework concern)
+  - Resolves expressions, renders child widgets
+  - Returns ReactNode
+
+UI's Table component:
+  - Iterates rows and columns
+  - Calls renderCell(row, col, index) for each cell
+  - Renders the returned ReactNode inside <td>
+  - Never knows about contexts or expressions
+```
+
+This means community kit authors implementing a custom Table only need to:
+
+- Render table structure (headers, rows, cells)
+- Call `renderCell` for each cell to get content
+- Handle sort indicators, pagination controls, loading states
+
+No framework knowledge required.
+
+### Testing
+
+The split enables independent testing:
+
+- **UI components** are tested in Storybook with plain props. No mocking needed.
+- **Client widgets** are tested by mocking the UI component and asserting on passed props. Logic-only tests.
+- `@rangka/client` exports a `TestProvider` for UI package tests that need realistic data contexts.
+
+### What Community Kit Authors Implement
+
+| Widget type                | Contract                                      | Effort                                 |
+| -------------------------- | --------------------------------------------- | -------------------------------------- |
+| Simple/Medium (31 widgets) | `WidgetProps → ReactNode`                     | Easy to medium                         |
+| Orchestrated (7 widgets)   | Typed presentation props (e.g., `TableProps`) | Medium                                 |
+| Complex (Datagrid)         | Same as orchestrated but larger props surface | Hard, or cherry-pick from `@rangka/ui` |
+
+For the Datagrid specifically, community kit authors can:
+
+1. Cherry-pick from `@rangka/ui` (reuse the default)
+2. Bring their own (e.g., AG Grid wrapper satisfying `DatagridProps`)
+3. Skip it (not all apps need inline grid editing)
+
 ## Layout Wrapper
 
 The `WidgetRenderer` currently wraps every widget in a `<div>` for layout props and data attributes. This wrapper stays in the client because:
