@@ -154,7 +154,8 @@ The only exception: single-element primitives (Button, Input, Badge) that are le
 
 - Run `pnpm test` for unit tests (Vitest)
 - Run `pnpm storybook` to visually verify components
-- Every component should have at least one story covering all variants
+- Every component MUST have a story at `stories/<layer>/<component>.stories.tsx` — a component is not complete without one
+- Stories must cover all variants and composition patterns
 
 ## API Surface Tests
 
