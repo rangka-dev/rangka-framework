@@ -93,6 +93,7 @@ export async function boot(options: BootOptions): Promise<BootResult> {
   const allPagesForValidation: Array<{
     module: string;
     page: import('@rangka/shared').PageDefinition;
+    file?: string;
   }> = [];
   for (const app of sortedApps) {
     if (app.pages) allPagesForValidation.push(...app.pages);
@@ -100,15 +101,18 @@ export async function boot(options: BootOptions): Promise<BootResult> {
   if (allPagesForValidation.length > 0) {
     const bindWarnings = validatePageBindings(allPagesForValidation, registry);
     for (const warning of bindWarnings) {
-      console.warn(`[rangka] ${warning.pageKey} (${warning.location}): ${warning.message}`);
+      const location = warning.file ?? warning.pageKey;
+      console.warn(
+        `[rangka] ${location} → ${warning.pageKey} (${warning.location}): ${warning.message}`,
+      );
     }
   }
 
   const registries = buildRegistries(sortedApps, registry, options);
 
   if (!options.database) {
-    await lifecycleManager.emit('afterBoot');
-    return { registry, ...registries, adapterRegistry, pluginLifecycle: lifecycleManager };
+    // Default to SQLite when no database config is provided
+    options.database = { dialect: 'sqlite' };
   }
 
   const { db, frameworkContext, jobWorker, scheduleManager } = await initDatabase(
@@ -384,6 +388,7 @@ async function initDatabase(
   serviceRegistry: ServiceRegistry,
 ) {
   const db = new DatabaseClient(options.database!, registry);
+  const dialect = db.dialect;
 
   try {
     await db.verifyConnection();
@@ -392,10 +397,11 @@ async function initDatabase(
     throw new Error(`Boot failed: ${message}`, { cause: err });
   }
 
+  eventBus.setDialect(dialect);
   eventBus.setDb(db.kysely);
 
   if (!options.skipAutoSync) {
-    await autoSync(registry, db.kysely);
+    await autoSync(registry, db.kysely, { dialect });
     await seedCoreData(db);
   }
 
@@ -410,7 +416,8 @@ async function initDatabase(
   let jobWorker: JobWorker | undefined;
   let scheduleManager: ScheduleManager | undefined;
 
-  if (options.worker?.enabled !== false) {
+  // Jobs require PostgreSQL (row-level locking for safe concurrent claiming)
+  if (dialect === 'postgres' && options.worker?.enabled !== false) {
     jobWorker = new JobWorker(db.kysely, jobRegistry, frameworkContext, options.worker);
     scheduleManager = new ScheduleManager(db.kysely, jobRegistry);
     await scheduleManager.syncSchedules();

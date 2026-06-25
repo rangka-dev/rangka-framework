@@ -37,7 +37,7 @@ export interface ChatMessage {
 }
 
 export interface RuntimeStatus {
-  status: 'booting' | 'ready' | 'error';
+  status: 'idle' | 'booting' | 'ready' | 'error';
   models: number;
   pages: number;
   services: number;
@@ -88,13 +88,14 @@ interface StudioContextValue {
   resumeSession: (path: string) => void;
   renameSession: (name: string) => void;
   applyChanges: () => void;
+  startRuntime: () => void;
   requestFileTree: () => void;
   readFile: (path: string) => void;
 }
 
 const StudioContext = createContext<StudioContextValue | null>(null);
 
-const WS_URL = `ws://${window.location.host}/ws`;
+const WS_URL = import.meta.env.VITE_WS_URL || `ws://${window.location.host}/ws`;
 
 export function StudioProvider({ children }: { children: ReactNode }) {
   const connRef = useRef<StudioConnection | null>(null);
@@ -115,7 +116,7 @@ export function StudioProvider({ children }: { children: ReactNode }) {
   const [fileContents, setFileContents] = useState<Record<string, string>>({});
   const [hasPendingChanges, setHasPendingChanges] = useState(false);
   const [runtimeStatus, setRuntimeStatus] = useState<RuntimeStatus>({
-    status: 'booting',
+    status: 'idle',
     models: 0,
     pages: 0,
     services: 0,
@@ -454,6 +455,10 @@ export function StudioProvider({ children }: { children: ReactNode }) {
     connRef.current?.send({ type: 'runtime.apply' });
   }, []);
 
+  const startRuntime = useCallback(() => {
+    connRef.current?.send({ type: 'runtime.start' });
+  }, []);
+
   const requestFileTree = useCallback(() => {
     connRef.current?.send({ type: 'files.list' });
   }, []);
@@ -495,6 +500,7 @@ export function StudioProvider({ children }: { children: ReactNode }) {
         resumeSession,
         renameSession,
         applyChanges,
+        startRuntime,
         requestFileTree,
         readFile,
       }}

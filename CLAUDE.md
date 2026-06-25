@@ -14,7 +14,7 @@ packages/
   studio-local/ — Local studio UI
   rangka/     — Distribution package (re-exports core + shared)
 tests/
-  integration/  — Integration tests (real PostgreSQL, run sequentially)
+  integration/  — Integration tests (PostgreSQL tests need real DB, SQLite tests use :memory:)
   fixtures/     — Test app fixtures (basic-app, erp-app)
 docs/           — VitePress documentation
 dev/            — Development playground app (gitignored)
@@ -121,7 +121,7 @@ If you find yourself writing logic that does the same thing as one of these, sto
 - **Language:** TypeScript (strict)
 - **Package Manager:** pnpm (always use `pnpm`, never npm/yarn)
 - **Monorepo:** Turborepo
-- **Database:** PostgreSQL, Kysely query builder
+- **Database:** PostgreSQL (production) or SQLite (dev/Studio default), Kysely query builder
 - **API:** Fastify
 - **Frontend:** React 19, TanStack Router, TanStack Query, Tailwind CSS v4
 - **Testing:** Vitest
@@ -165,9 +165,10 @@ pnpm tsc --build                   # Type check / compile
 
 - Models are defined declaratively in YAML fixtures, resolved at boot into `ResolvedModel`
 - `SchemaRegistry` holds all resolved models, relationships, and field metadata
-- `DatabaseClient` wraps Kysely and auto-resolves qualified model names (e.g., `sales.invoice`) to table names (`sales__invoice`)
-- `DiffEngine` compares desired schema vs actual DB state, produces DDL operations
-- `autoSync` applies DDL operations at boot (non-destructive by default)
+- `DatabaseClient` wraps Kysely and auto-resolves qualified model names (e.g., `sales.invoice`) to table names (`sales__invoice`). Supports PostgreSQL and SQLite dialects via `Dialect` type.
+- `DiffEngine` compares desired schema vs actual DB state, produces DDL operations. SQLite has its own `SqliteDiffEngine` with table recreation support.
+- `autoSync` applies DDL operations at boot (non-destructive by default). Routes to dialect-specific introspection and DDL generation.
+- SQLite mode disables background jobs, async events (dispatches sync), and generates UUIDs app-side. Uses LIKE instead of ILIKE.
 - Traits (`timestamped`, `soft_delete`) auto-add fields and behavior to models
 - Hooks (validate, beforeSave, afterSave, beforeDelete, afterDelete) run in a transactional pipeline
 - Auth: JWT sessions, permission registry, scoped queries, field-level permissions

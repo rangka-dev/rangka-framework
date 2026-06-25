@@ -7,13 +7,21 @@ export type ChildPhase =
   | 'stopped'
   | 'error';
 
-export interface DatabaseConfig {
+export interface PostgresDatabaseConfig {
+  dialect: 'postgres';
   host: string;
   port: number;
   database: string;
   user: string;
   password: string;
 }
+
+export interface SqliteDatabaseConfig {
+  dialect: 'sqlite';
+  path: string;
+}
+
+export type DatabaseConfig = PostgresDatabaseConfig | SqliteDatabaseConfig;
 
 export interface RuntimeStatus {
   models: number;

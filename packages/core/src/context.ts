@@ -42,8 +42,13 @@ export function createFrameworkContext(opts: FrameworkContextOptions): Framework
     await enqueue(db.kysely, job, data, opts);
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const models = createModelAccess({ db: db as any, registry: schema, adapterRegistry });
+  const models = createModelAccess({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    db: db as any,
+    registry: schema,
+    adapterRegistry,
+    dialect: db.dialect,
+  });
 
   const serviceContext = {
     db: db.kysely,
@@ -77,6 +82,7 @@ export interface RequestScopedContextOptions {
   roles?: string[];
   trx?: Kysely<unknown>;
   adapterRegistry?: AdapterRegistry;
+  dialect?: import('./db/client.js').Dialect;
 }
 
 /**
@@ -84,7 +90,7 @@ export interface RequestScopedContextOptions {
  * and an optional transaction on top of the base framework context.
  */
 export function createRequestContext(opts: RequestScopedContextOptions): FrameworkContext {
-  const { base, auth, roles = [], trx, adapterRegistry } = opts;
+  const { base, auth, roles = [], trx, adapterRegistry, dialect } = opts;
   const dbInstance = trx ?? (base.db as Kysely<unknown>);
   const models = createModelAccess({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -92,6 +98,7 @@ export function createRequestContext(opts: RequestScopedContextOptions): Framewo
     registry: base.schema as unknown as SchemaRegistry,
     auth,
     adapterRegistry,
+    dialect,
   });
   return {
     ...base,

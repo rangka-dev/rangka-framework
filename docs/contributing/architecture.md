@@ -77,7 +77,7 @@ After the schema is resolved, boot creates:
 
 ### 4. Database Initialization
 
-`DatabaseClient` wraps Kysely with the PostgreSQL dialect:
+`DatabaseClient` wraps Kysely with the configured dialect (PostgreSQL or SQLite):
 
 1. `SchemaToDesired()` builds target DDL from resolved models
 2. `introspect()` reads current database state

@@ -58,14 +58,6 @@ function rangkaConfig() {
   return `import { defineConfig } from 'rangka';
 
 export default defineConfig({
-  database: {
-    dialect: 'pg',
-    host: 'localhost',
-    port: 5432,
-    database: '${`rangka_dev`}',
-    user: 'rangka',
-    password: 'rangka',
-  },
   server: {
     port: 3000,
   },

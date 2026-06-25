@@ -6,6 +6,7 @@ import type { SchemaRegistry } from '../schema/registry.js';
 import type { RequestContext } from '../auth/types.js';
 import type { EventBus } from '../events/bus.js';
 import type { ServiceRegistry } from '../services/registry.js';
+import type { Dialect } from '../db/client.js';
 import { createHookContext } from './context.js';
 
 export type HookOperation = 'create' | 'update' | 'delete' | 'submit' | 'cancel';
@@ -21,6 +22,7 @@ export interface ExecutePipelineOptions {
   eventBus?: EventBus;
   serviceRegistry?: ServiceRegistry;
   config?: Record<string, unknown>;
+  dialect?: Dialect;
   execute: (doc: HookDocument, trx: Kysely<any>) => Promise<HookDocument>;
 }
 
@@ -30,7 +32,18 @@ export interface ExecutePipelineOptions {
  * afterSave runs AFTER the transaction commits (cannot roll back the write).
  */
 export async function executeHookPipeline(opts: ExecutePipelineOptions): Promise<HookDocument> {
-  const { chain, operation, db, schema, auth, eventBus, serviceRegistry, config, execute } = opts;
+  const {
+    chain,
+    operation,
+    db,
+    schema,
+    auth,
+    eventBus,
+    serviceRegistry,
+    config,
+    dialect,
+    execute,
+  } = opts;
   const doc = { ...opts.doc };
 
   const beforeHookKey = `before${capitalize(operation)}` as keyof HooksConfig;
@@ -44,6 +57,7 @@ export async function executeHookPipeline(opts: ExecutePipelineOptions): Promise
       eventBus,
       serviceRegistry,
       config,
+      dialect,
     });
 
     // Step 1: Run synchronous validators (skip for delete)
@@ -77,6 +91,7 @@ export async function executeHookPipeline(opts: ExecutePipelineOptions): Promise
       eventBus,
       serviceRegistry,
       config,
+      dialect,
     });
     await runHooksForKey(chain, 'afterSave', result, ctx);
   }

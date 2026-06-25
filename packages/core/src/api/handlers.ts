@@ -238,6 +238,7 @@ export function createHandler(ctx: WriteHandlerContext) {
         model: ctx.model,
         registry: ctx.registry,
         tableName: modelToTableName(ctx.model.qualifiedName),
+        dialect: ctx.modelAccessOpts.dialect,
       });
       const result = await executeHookPipeline({
         model: ctx.model.qualifiedName,
@@ -250,6 +251,7 @@ export function createHandler(ctx: WriteHandlerContext) {
         eventBus: ctx.eventBus,
         serviceRegistry: ctx.serviceRegistry,
         config: ctx.config,
+        dialect: ctx.modelAccessOpts.dialect,
         execute: async (doc, trx) => {
           const txOps = ops.withTransaction!(trx);
           return txOps.create(doc) as Promise<HookDocument>;
@@ -301,6 +303,7 @@ export function updateHandler(ctx: WriteHandlerContext) {
         model: ctx.model,
         registry: ctx.registry,
         tableName: modelToTableName(ctx.model.qualifiedName),
+        dialect: ctx.modelAccessOpts.dialect,
       });
       const result = await executeHookPipeline({
         model: ctx.model.qualifiedName,
@@ -313,6 +316,7 @@ export function updateHandler(ctx: WriteHandlerContext) {
         eventBus: ctx.eventBus,
         serviceRegistry: ctx.serviceRegistry,
         config: ctx.config,
+        dialect: ctx.modelAccessOpts.dialect,
         execute: async (doc, trx) => {
           const { id: docId, ...data } = doc;
           const txOps = ops.withTransaction!(trx);
@@ -354,6 +358,7 @@ export function deleteHandler(ctx: WriteHandlerContext) {
         model: ctx.model,
         registry: ctx.registry,
         tableName: modelToTableName(ctx.model.qualifiedName),
+        dialect: ctx.modelAccessOpts.dialect,
       });
       await executeHookPipeline({
         model: ctx.model.qualifiedName,
@@ -366,6 +371,7 @@ export function deleteHandler(ctx: WriteHandlerContext) {
         eventBus: ctx.eventBus,
         serviceRegistry: ctx.serviceRegistry,
         config: ctx.config,
+        dialect: ctx.modelAccessOpts.dialect,
         execute: async (doc, trx) => {
           const txOps = ops.withTransaction!(trx);
           await txOps.delete(doc.id as string);

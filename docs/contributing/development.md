@@ -13,7 +13,7 @@ How to set up your local environment for working on the Rangka framework.
 
 - **Node.js** >= 20.0.0
 - **pnpm** 9.15.4+ (corepack or standalone install)
-- **Docker** (for PostgreSQL)
+- **Docker** (for PostgreSQL, only needed for integration tests)
 - **Git**
 
 ## Initial Setup

@@ -2,8 +2,10 @@ import { fork, type ChildProcess } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 import { fileURLToPath } from 'node:url';
 import * as path from 'node:path';
-import { Kysely, PostgresDialect } from 'kysely';
+import { createRequire } from 'node:module';
+import { Kysely, PostgresDialect, SqliteDialect } from 'kysely';
 import pg from 'pg';
+import { configurePragmas } from '@rangka/core';
 import type {
   ChildMessage,
   ParentMessage,
@@ -420,18 +422,26 @@ export class SubprocessManager extends EventEmitter {
       this.queryDb.destroy().catch(() => {});
     }
 
-    this.queryDb = new Kysely({
-      dialect: new PostgresDialect({
-        pool: new pg.Pool({
-          host: config.host,
-          port: config.port,
-          database: config.database,
-          user: config.user,
-          password: config.password,
-          max: 1,
+    if (config.dialect === 'sqlite') {
+      const require = createRequire(import.meta.url);
+      const Database = require('better-sqlite3');
+      const sqliteDb = new Database(config.path);
+      configurePragmas(sqliteDb);
+      this.queryDb = new Kysely({ dialect: new SqliteDialect({ database: sqliteDb }) });
+    } else {
+      this.queryDb = new Kysely({
+        dialect: new PostgresDialect({
+          pool: new pg.Pool({
+            host: config.host,
+            port: config.port,
+            database: config.database,
+            user: config.user,
+            password: config.password,
+            max: 1,
+          }),
         }),
-      }),
-    });
+      });
+    }
   }
 
   async shutdown(): Promise<void> {

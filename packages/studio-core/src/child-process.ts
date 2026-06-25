@@ -5,6 +5,9 @@ import {
   DiffEngine,
   SchemaToDesired,
   introspect,
+  introspectSqlite,
+  SqliteDiffEngine,
+  buildSqliteDesiredState,
   seedCoreData,
   validatePageBindings,
 } from '@rangka/core';
@@ -364,27 +367,37 @@ async function main(): Promise<void> {
     hooks = (app.hooks ?? []).map((h) => ({ model: h.model }));
 
     const rawDbConfig = rangkaConfig.database;
-    if (!rawDbConfig) {
-      send({
-        type: 'child:boot_error',
-        error: 'No database config found in rangka.config.ts',
-        phase: 'resolving',
-      });
-      process.exit(1);
-    }
+    let bootDatabase: import('@rangka/core').DatabaseClientConfig;
 
-    dbConfig = {
-      host: rawDbConfig.host ?? 'localhost',
-      port: rawDbConfig.port ?? 5432,
-      database: rawDbConfig.database ?? 'rangka',
-      user: rawDbConfig.user ?? 'postgres',
-      password: rawDbConfig.password ?? '',
-    };
+    if (!rawDbConfig || rawDbConfig.dialect === 'sqlite') {
+      // Default to SQLite for zero-config dev/Studio usage
+      const sqlitePath = (rawDbConfig as { path?: string } | undefined)?.path ?? '.rangka/dev.db';
+      bootDatabase = { dialect: 'sqlite', path: sqlitePath };
+      dbConfig = { dialect: 'sqlite', path: sqlitePath };
+    } else {
+      // PostgreSQL config (dialect: 'pg' in rangka.config.ts)
+      const pgConfig = {
+        dialect: 'postgres' as const,
+        host: rawDbConfig.host ?? 'localhost',
+        port: rawDbConfig.port ?? 5432,
+        database: rawDbConfig.database ?? 'rangka',
+        user: rawDbConfig.user ?? 'postgres',
+        password: rawDbConfig.password ?? '',
+      };
+      bootDatabase = {
+        host: pgConfig.host,
+        port: pgConfig.port,
+        database: pgConfig.database,
+        user: pgConfig.user,
+        password: pgConfig.password,
+      };
+      dbConfig = pgConfig;
+    }
 
     bootResult = await boot({
       discoverySource: new MemoryDiscoverySource([]),
       apps: [app],
-      database: dbConfig,
+      database: bootDatabase,
       skipAutoSync: true,
       server: { port: frameworkPort },
     });
@@ -392,11 +405,19 @@ async function main(): Promise<void> {
     // Validate page bindings post-boot (requires registry)
     if (pages.length > 0) {
       const bindWarnings = validatePageBindings(
-        pages as Array<{ module: string; page: import('@rangka/shared').PageDefinition }>,
+        pages as Array<{
+          module: string;
+          page: import('@rangka/shared').PageDefinition;
+          file?: string;
+        }>,
         bootResult.registry,
       );
       for (const w of bindWarnings) {
-        scanWarnings.push({ file: `${w.pageKey} (${w.location})`, message: w.message });
+        const location = w.file ? `modules/${w.pageKey.split('.')[0]}/pages/${w.file}` : w.pageKey;
+        scanWarnings.push({
+          file: location,
+          message: `${w.pageKey} (${w.location}): ${w.message}`,
+        });
       }
     }
 
@@ -404,10 +425,15 @@ async function main(): Promise<void> {
     setPhase('introspecting');
     const registry = bootResult.registry;
     const db = bootResult.db!;
+    const isSqlite = dbConfig?.dialect === 'sqlite';
 
-    const desired = new SchemaToDesired().convert(registry);
-    const actual = await introspect(db.kysely);
-    const coreOps = new DiffEngine().diff(desired, actual);
+    const desired = isSqlite
+      ? buildSqliteDesiredState(registry)
+      : new SchemaToDesired().convert(registry);
+    const actual = isSqlite ? await introspectSqlite(db.kysely) : await introspect(db.kysely);
+    const coreOps = isSqlite
+      ? new SqliteDiffEngine().diff(desired, actual)
+      : new DiffEngine().diff(desired, actual);
 
     const safeOps: SerializedDdlOperation[] = coreOps
       .filter((op: CoreDdlOperation) => !op.destructive)

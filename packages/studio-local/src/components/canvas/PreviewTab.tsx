@@ -20,9 +20,11 @@ export function PreviewTab({ onSelectElement }: PreviewTabProps) {
   ]);
   const [historyIndex, setHistoryIndex] = useState(0);
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const { runtimeStatus, connectionStatus, previewReload } = useStudio();
+  const { runtimeStatus, connectionStatus, previewReload, isAgentWorking, startRuntime } =
+    useStudio();
 
   const isReady = connectionStatus === 'connected' && runtimeStatus.status === 'ready';
+  const isIdle = connectionStatus === 'connected' && runtimeStatus.status === 'idle';
   const canGoBack = historyIndex > 0;
   const canGoForward = historyIndex < history.length - 1;
 
@@ -208,16 +210,26 @@ export function PreviewTab({ onSelectElement }: PreviewTabProps) {
       <div className="flex-1 relative">
         {!started ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-muted/20">
-            <Button size="sm" className="gap-2" onClick={startPreview} disabled={!isReady}>
+            <Button
+              size="sm"
+              className="gap-2"
+              onClick={() => {
+                startRuntime();
+                startPreview();
+              }}
+              disabled={(!isIdle && !isReady) || isAgentWorking}
+            >
               <Play className="size-3.5" />
-              Start Preview
+              Run Preview
             </Button>
             <span className="text-xs text-muted-foreground">
-              {!isReady
-                ? connectionStatus !== 'connected'
-                  ? 'Connecting to studio...'
-                  : 'Framework is booting...'
-                : 'Preview the app in an embedded browser'}
+              {connectionStatus !== 'connected'
+                ? 'Connecting to studio...'
+                : runtimeStatus.status === 'booting'
+                  ? 'Framework is starting...'
+                  : isAgentWorking
+                    ? 'Agent is working...'
+                    : 'Run the app to preview it here'}
             </span>
           </div>
         ) : !isReady ? (
@@ -225,7 +237,7 @@ export function PreviewTab({ onSelectElement }: PreviewTabProps) {
             <span className="text-muted-foreground text-sm">
               {connectionStatus !== 'connected'
                 ? 'Connecting to studio...'
-                : 'Framework is booting...'}
+                : 'Framework is starting...'}
             </span>
           </div>
         ) : (

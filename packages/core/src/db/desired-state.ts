@@ -3,13 +3,14 @@ import type { ResolvedModel } from '../schema/types.js';
 import type { DesiredState, TableDefinition, IndexDefinition } from './types.js';
 import { mapFieldsToColumns, modelToTableName } from './field-mapper.js';
 import { getJobTables } from '../jobs/tables.js';
+import type { Dialect } from './client.js';
 
 /**
  * Converts the in-memory schema registry into the desired database state
  * (list of table definitions) used by the diff engine for migrations.
  */
 export class SchemaToDesired {
-  convert(registry: SchemaRegistry): DesiredState {
+  convert(registry: SchemaRegistry, dialect: Dialect = 'postgres'): DesiredState {
     const tables: TableDefinition[] = [];
     const models = registry.getAllModels();
     let hasSequenceField = false;
@@ -29,8 +30,10 @@ export class SchemaToDesired {
       tables.push(this.buildNamingSequenceTable());
     }
 
-    // Always include the internal job queue tables
-    tables.push(...getJobTables());
+    // Job tables are only relevant for PostgreSQL (requires row-level locking)
+    if (dialect === 'postgres') {
+      tables.push(...getJobTables());
+    }
 
     return { tables };
   }

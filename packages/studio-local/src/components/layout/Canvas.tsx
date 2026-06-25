@@ -20,7 +20,7 @@ interface CanvasProps {
 
 export function Canvas({ tabs, activeTabId, onActiveTabChange, onCloseTab }: CanvasProps) {
   const activeTab = tabs.find((t) => t.id === activeTabId);
-  const { applyChanges, runtimeStatus, hasPendingChanges } = useStudio();
+  const { applyChanges, runtimeStatus, hasPendingChanges, isAgentWorking } = useStudio();
 
   return (
     <div className="flex h-full flex-col">
@@ -65,6 +65,7 @@ export function Canvas({ tabs, activeTabId, onActiveTabChange, onCloseTab }: Can
                   'before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent',
               )}
               onClick={applyChanges}
+              disabled={isAgentWorking}
             >
               <RefreshCw className="size-3.5" />
               Apply

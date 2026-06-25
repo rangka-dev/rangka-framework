@@ -28,7 +28,7 @@ export async function seedCoreData(db: DatabaseClient): Promise<void> {
       email: 'system@rangka.local',
       password_hash: hashPassword('admin'),
       full_name: 'System Administrator',
-      enabled: true,
+      enabled: db.dialect === 'sqlite' ? 1 : true,
     })
     .returningAll()
     .executeTakeFirstOrThrow();

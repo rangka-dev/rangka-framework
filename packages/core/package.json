@@ -29,7 +29,11 @@
     "pg": "^8.13.1",
     "qs": "^6.15.2"
   },
+  "optionalDependencies": {
+    "better-sqlite3": "^11.0.0"
+  },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.0",
     "@types/node": "^20.0.0",
     "@types/pg": "^8.11.6",
     "@types/qs": "^6.15.1",

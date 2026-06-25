@@ -3,7 +3,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
@@ -12,11 +12,9 @@ export default defineConfig({
   },
   server: {
     port: 4000,
-    proxy: {
-      '/ws': {
-        target: 'ws://localhost:4001',
-        ws: true,
-      },
-    },
   },
-});
+  define:
+    command === 'serve'
+      ? { 'import.meta.env.VITE_WS_URL': JSON.stringify('ws://localhost:4001/ws') }
+      : {},
+}));

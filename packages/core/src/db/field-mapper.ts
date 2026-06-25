@@ -39,12 +39,11 @@ export function mapFieldsToColumns(model: ResolvedModel): FieldMappingResult {
   const checkConstraints: CheckConstraintDefinition[] = [];
   const extraTables: TableDefinition[] = [];
 
-  // Every table gets a UUID primary key
+  // Every table gets a UUID primary key (app-side generation via crypto.randomUUID)
   columns.push({
     name: 'id',
     type: 'UUID',
     nullable: false,
-    defaultValue: 'gen_random_uuid()',
     primaryKey: true,
   });
 

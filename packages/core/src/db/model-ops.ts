@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { randomUUID } from 'node:crypto';
 import { sql, type Kysely } from 'kysely';
 import type { ResolvedModel } from '../schema/types.js';
 import type { SchemaRegistry } from '../schema/registry.js';
@@ -8,6 +9,7 @@ import type { AggregateSpec, AggregateResult, GroupedAggregateResult } from '@ra
 import { applyModelFilters, applySearchFilter } from './filter-applier.js';
 import { applyScopeEnforcement } from './scope-enforcer.js';
 import { modelToTableName } from './field-mapper.js';
+import type { Dialect } from './client.js';
 import { toCount } from '../helpers/coerce.js';
 import { NotFoundError } from '../errors.js';
 
@@ -55,6 +57,7 @@ export interface KyselyModelOpsConfig {
   registry: SchemaRegistry;
   auth?: RequestContext;
   tableName?: string;
+  dialect?: Dialect;
 }
 
 export class KyselyModelOps implements ModelOps {
@@ -63,6 +66,7 @@ export class KyselyModelOps implements ModelOps {
   private readonly registry: SchemaRegistry;
   private readonly defaultAuth?: RequestContext;
   private readonly tableName: string;
+  private readonly dialect: Dialect;
 
   constructor(config: KyselyModelOpsConfig) {
     this.db = config.db as DbLike;
@@ -70,6 +74,7 @@ export class KyselyModelOps implements ModelOps {
     this.registry = config.registry;
     this.defaultAuth = config.auth;
     this.tableName = config.tableName ?? config.model.qualifiedName;
+    this.dialect = config.dialect ?? 'postgres';
   }
 
   async find(state: QueryState): Promise<QueryResult> {
@@ -133,6 +138,7 @@ export class KyselyModelOps implements ModelOps {
     data: Record<string, unknown>,
     _auth?: RequestContext,
   ): Promise<Record<string, unknown>> {
+    data.id ??= randomUUID();
     await this.assignSequenceValues(data);
 
     const record = await this.db
@@ -186,6 +192,7 @@ export class KyselyModelOps implements ModelOps {
     if (data.length === 0) return [];
     const rows = [...data];
     for (const row of rows) {
+      row.id ??= randomUUID();
       await this.assignSequenceValues(row);
     }
     const records = await this.db.insertInto(this.tableName).values(rows).returningAll().execute();
@@ -238,9 +245,9 @@ export class KyselyModelOps implements ModelOps {
     if (this.model.traits.includes('soft_delete') && !state.includeArchivedFlag) {
       query = query.where('archived_at', 'is', null);
     }
-    query = applyModelFilters(query, state.filters);
+    query = applyModelFilters(query, state.filters, this.dialect);
     if (state.searchTerm && state.searchFields && state.searchFields.length > 0) {
-      query = applySearchFilter(query, state.searchTerm, state.searchFields);
+      query = applySearchFilter(query, state.searchTerm, state.searchFields, this.dialect);
     }
     if (!state.unscopedFlag && state.auth) {
       query = applyScopeEnforcement(query, state.auth, { model: this.model, checkOwnership: true });
@@ -256,9 +263,9 @@ export class KyselyModelOps implements ModelOps {
     }
 
     let query: any = this.db.deleteFrom(this.tableName);
-    query = applyModelFilters(query, state.filters);
+    query = applyModelFilters(query, state.filters, this.dialect);
     if (state.searchTerm && state.searchFields && state.searchFields.length > 0) {
-      query = applySearchFilter(query, state.searchTerm, state.searchFields);
+      query = applySearchFilter(query, state.searchTerm, state.searchFields, this.dialect);
     }
     if (!state.unscopedFlag && state.auth) {
       query = applyScopeEnforcement(query, state.auth, { model: this.model, checkOwnership: true });
@@ -275,6 +282,7 @@ export class KyselyModelOps implements ModelOps {
       registry: this.registry,
       auth: this.defaultAuth,
       tableName: modelToTableName(this.model.qualifiedName),
+      dialect: this.dialect,
     });
   }
 
@@ -299,10 +307,10 @@ export class KyselyModelOps implements ModelOps {
       query = query.where('archived_at', 'is', null);
     }
 
-    query = applyModelFilters(query, state.filters);
+    query = applyModelFilters(query, state.filters, this.dialect);
 
     if (state.searchTerm && state.searchFields && state.searchFields.length > 0) {
-      query = applySearchFilter(query, state.searchTerm, state.searchFields);
+      query = applySearchFilter(query, state.searchTerm, state.searchFields, this.dialect);
     }
 
     if (!state.unscopedFlag && state.auth) {

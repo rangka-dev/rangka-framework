@@ -39,7 +39,7 @@ export type ServerMessage =
   | { type: 'runtime.error'; message: string; file?: string; line?: number }
   | {
       type: 'runtime.status';
-      status: 'booting' | 'ready' | 'error';
+      status: 'idle' | 'booting' | 'ready' | 'error';
       models?: number;
       pages?: number;
       services?: number;
@@ -92,6 +92,7 @@ export type ClientMessage =
   | { type: 'session.rename'; name: string }
   | { type: 'resources.list' }
   | { type: 'runtime.apply' }
+  | { type: 'runtime.start' }
   | { type: 'files.list' }
   | { type: 'file.read'; path: string };
 

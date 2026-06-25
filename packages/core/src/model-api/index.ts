@@ -64,7 +64,7 @@ export function createModelAccess(opts: ModelAccessOptions): ModelAccess {
     const tableName = isDatabaseClient
       ? model.qualifiedName
       : modelToTableName(model.qualifiedName);
-    return new KyselyModelOps({ db, model, registry, auth, tableName });
+    return new KyselyModelOps({ db, model, registry, auth, tableName, dialect: opts.dialect });
   }
 
   return {

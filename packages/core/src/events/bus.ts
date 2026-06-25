@@ -1,15 +1,28 @@
 import type { Kysely } from 'kysely';
 import { enqueue } from '../jobs/enqueue.js';
 import type { EventListener } from './types.js';
+import type { Dialect } from '../db/client.js';
 
 /**
  * Simple pub/sub event bus that supports two dispatch modes:
  * - sync: invoke listeners directly in sequence
  * - async (default): enqueue the event as a background job via the database
+ *
+ * When dialect is 'sqlite', all events dispatch synchronously (no job queue).
  */
 export class EventBus {
   private readonly listeners: Map<string, EventListener[]> = new Map();
   private db: Kysely<unknown> | null = null;
+  private _dialect: Dialect = 'postgres';
+
+  /** Set the dialect to control dispatch behavior. */
+  setDialect(dialect: Dialect): void {
+    this._dialect = dialect;
+  }
+
+  get dialect(): Dialect {
+    return this._dialect;
+  }
 
   /** Provide the database connection used for async event dispatch. */
   setDb(db: Kysely<unknown>): void {
@@ -27,9 +40,10 @@ export class EventBus {
   /**
    * Emit an event. By default, the event is enqueued as a background job.
    * Pass { sync: true } to invoke listeners immediately in sequence.
+   * On SQLite, all events always dispatch synchronously.
    */
   async emit(event: string, payload: unknown, options?: { sync?: boolean }): Promise<void> {
-    if (options?.sync) {
+    if (options?.sync || this._dialect === 'sqlite') {
       await this.dispatchSync(event, payload);
     } else {
       await this.dispatchAsync(event, payload);
@@ -39,6 +53,7 @@ export class EventBus {
   /**
    * Emit an event within an existing database transaction.
    * Sync mode invokes listeners directly; async mode enqueues via the transaction.
+   * On SQLite, always dispatches synchronously.
    */
   async emitWithTrx(
     event: string,
@@ -46,7 +61,7 @@ export class EventBus {
     trx: Kysely<unknown>,
     options?: { sync?: boolean },
   ): Promise<void> {
-    if (options?.sync) {
+    if (options?.sync || this._dialect === 'sqlite') {
       await this.dispatchSync(event, payload);
     } else {
       await enqueue(trx, `__event:${event}`, payload);

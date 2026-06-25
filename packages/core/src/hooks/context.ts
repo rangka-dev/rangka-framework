@@ -5,6 +5,7 @@ import type { RequestContext } from '../auth/types.js';
 import type { EventBus } from '../events/bus.js';
 import type { ServiceRegistry } from '../services/registry.js';
 import type { AdapterRegistry } from '../plugins/adapter-registry.js';
+import type { Dialect } from '../db/client.js';
 import { enqueue } from '../jobs/enqueue.js';
 import { createModelAccess } from '../model-api/index.js';
 
@@ -16,13 +17,23 @@ export interface HookContextOptions {
   serviceRegistry?: ServiceRegistry;
   config?: Record<string, unknown>;
   adapterRegistry?: AdapterRegistry;
+  dialect?: Dialect;
 }
 
 /**
  * Build a full FrameworkContext for hooks, scoped to the current transaction and auth.
  */
 export function createHookContext(opts: HookContextOptions): FrameworkContext {
-  const { trx, schema, auth, eventBus, serviceRegistry, config = {}, adapterRegistry } = opts;
+  const {
+    trx,
+    schema,
+    auth,
+    eventBus,
+    serviceRegistry,
+    config = {},
+    adapterRegistry,
+    dialect,
+  } = opts;
 
   const transaction = trx as Kysely<unknown>;
 
@@ -51,6 +62,7 @@ export function createHookContext(opts: HookContextOptions): FrameworkContext {
     registry: schema,
     auth,
     adapterRegistry,
+    dialect,
   });
   /* eslint-enable @typescript-eslint/no-explicit-any */
 

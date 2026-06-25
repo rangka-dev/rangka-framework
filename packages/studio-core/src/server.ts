@@ -24,7 +24,7 @@ export class StudioServer {
   private fileWatcher: FileWatcher | null = null;
   private agentEngine: AgentEngine | null = null;
   private config: StudioServerConfig;
-  private runtimeStatus: 'booting' | 'ready' | 'error' = 'booting';
+  private runtimeStatus: 'idle' | 'booting' | 'ready' | 'error' = 'idle';
   private activeClient: WebSocket | null = null;
   private isAgentBusy = false;
 
@@ -54,6 +54,21 @@ export class StudioServer {
         pages: status.pages,
         services: status.services,
         sessionToken: sessionToken ?? undefined,
+      });
+    });
+
+    this.subprocess.on('sync_pending', (operations) => {
+      console.log(`[studio] Schema sync pending: ${operations.length} operation(s)`);
+      this.broadcast({
+        type: 'schema.diff',
+        operations: operations.map((op: import('./ipc-protocol.js').SerializedDdlOperation) => ({
+          id: op.id,
+          type: op.type,
+          table: op.table,
+          ddl: op.ddl,
+          destructive: op.destructive,
+          detail: op.detail,
+        })),
       });
     });
 
@@ -102,16 +117,8 @@ export class StudioServer {
     await this.uiApp.listen({ port: this.config.wsPort, host: '0.0.0.0' });
     console.log(`[studio] Studio UI + WebSocket on http://localhost:${this.config.wsPort}`);
 
-    try {
-      await this.subprocess.start();
-      this.startFileWatcher();
-      await this.initializeAgent();
-    } catch (err) {
-      this.runtimeStatus = 'error';
-      const message = err instanceof Error ? err.message : String(err);
-      console.error(`[studio] Framework boot failed: ${message}`);
-      this.broadcast({ type: 'runtime.error', message });
-    }
+    this.startFileWatcher();
+    await this.initializeAgent();
   }
 
   private async initializeAgent(): Promise<void> {
@@ -159,10 +166,31 @@ export class StudioServer {
     this.fileWatcher.start();
   }
 
+  private async handleStart(): Promise<void> {
+    if (this.runtimeStatus === 'booting' || this.subprocess.getPhase() !== 'stopped') {
+      return;
+    }
+
+    try {
+      this.runtimeStatus = 'booting';
+      this.broadcast({ type: 'runtime.status', status: 'booting' });
+      await this.subprocess.start();
+    } catch (err) {
+      this.runtimeStatus = 'error';
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(`[studio] Framework boot failed: ${message}`);
+      this.broadcast({ type: 'runtime.error', message });
+    }
+  }
+
   private async handleApply(ws: WebSocket): Promise<void> {
     try {
       this.broadcast({ type: 'runtime.status', status: 'booting' });
       await this.subprocess.restart();
+
+      if (this.subprocess.isWaitingForSync()) {
+        return;
+      }
 
       const status = this.subprocess.getLastStatus();
       if (status) {
@@ -199,6 +227,21 @@ export class StudioServer {
 
     if (this.runtimeStatus === 'ready') {
       this.handleFilesList(ws);
+    }
+
+    const pendingOps = this.subprocess.getPendingOps();
+    if (pendingOps.length > 0) {
+      this.send(ws, {
+        type: 'schema.diff',
+        operations: pendingOps.map((op) => ({
+          id: op.id,
+          type: op.type,
+          table: op.table,
+          ddl: op.ddl,
+          destructive: op.destructive,
+          detail: op.detail,
+        })),
+      });
     }
 
     this.sendSessionCurrent(ws);
@@ -287,6 +330,9 @@ export class StudioServer {
         break;
       case 'runtime.apply':
         this.handleApply(ws);
+        break;
+      case 'runtime.start':
+        this.handleStart();
         break;
       case 'files.list':
         this.handleFilesList(ws);

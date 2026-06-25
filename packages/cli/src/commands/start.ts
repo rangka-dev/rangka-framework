@@ -2,7 +2,7 @@ import { defineCommand } from 'citty';
 import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
 import fastifyStatic from '@fastify/static';
-import { ProjectScanner, MemoryDiscoverySource, boot } from '@rangka/core';
+import { ProjectScanner, MemoryDiscoverySource, boot, resolveDatabaseConfig } from '@rangka/core';
 import type { BootResult } from '@rangka/core';
 import { resolveShellDir } from '../resolve-client.js';
 
@@ -37,22 +37,13 @@ export const startCommand = defineCommand({
       console.log(`[rangka] Discovered app with ${app.schemas.length} models`);
 
       const dbConfig = rangkaConfig.database;
-      if (!dbConfig) {
-        console.error(
-          `[rangka] No database config found. Add database settings to rangka.config.ts`,
-        );
-        process.exit(1);
+      const databaseConfig = resolveDatabaseConfig(dbConfig);
+
+      if (databaseConfig.dialect === 'sqlite') {
+        console.log(`[rangka] Using SQLite at ${databaseConfig.path}`);
+      } else {
+        console.log(`[rangka] Connecting to PostgreSQL...`);
       }
-
-      const databaseConfig = {
-        host: dbConfig.host ?? 'localhost',
-        port: dbConfig.port ?? 5432,
-        database: dbConfig.database ?? 'rangka',
-        user: dbConfig.user ?? 'postgres',
-        password: dbConfig.password ?? '',
-      };
-
-      console.log(`[rangka] Connecting to database...`);
 
       const serverPort = rangkaConfig.server?.port ?? 3000;
 

@@ -9,7 +9,8 @@ The Rangka server runtime. Handles boot, schema resolution, database sync, API r
 - Node.js >= 20, TypeScript 5
 - Fastify (HTTP server, routing, plugins)
 - Kysely (query builder, migrations, transactions)
-- PostgreSQL (only supported database)
+- PostgreSQL (production) or SQLite (dev/Studio default, zero-config)
+- better-sqlite3 (optional peer dependency for SQLite support)
 
 ## Project structure
 
@@ -20,6 +21,7 @@ src/
 ├── auth/           — JWT sessions, permissions, scopes, field-level access, seed
 ├── boot/           — Boot sequence: discovery, schema loading, merging, registry init
 ├── db/             — DatabaseClient, auto-sync (DiffEngine), model-ops (Kysely CRUD)
+│   └── sqlite/     — SQLite-specific: introspect, diff-engine, field-mapper, desired-state, pragmas
 ├── events/         — EventBus (in-process pub/sub with transaction support)
 ├── external-model/ — Adapter-based external data sources
 ├── fixtures/       — Seed data loading

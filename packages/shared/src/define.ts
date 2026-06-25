@@ -213,14 +213,19 @@ export function defineRoles<T extends RolesConfig>(config: T): T {
  * Framework configuration for database connection and server settings.
  */
 export interface RangkaConfig {
-  database: {
-    dialect: 'pg';
-    host?: string;
-    port?: number;
-    database?: string;
-    user?: string;
-    password?: string;
-  };
+  database?:
+    | {
+        dialect: 'pg';
+        host?: string;
+        port?: number;
+        database?: string;
+        user?: string;
+        password?: string;
+      }
+    | {
+        dialect: 'sqlite';
+        path?: string;
+      };
   server?: {
     port?: number;
     host?: string;
@@ -229,9 +234,14 @@ export interface RangkaConfig {
 
 /**
  * Declares the framework configuration including database and server settings.
+ * When database is omitted, SQLite at `.rangka/dev.db` is used by default.
  *
  * @example
  * ```ts
+ * // SQLite (default, zero-config)
+ * export default defineConfig({});
+ *
+ * // PostgreSQL
  * export default defineConfig({
  *   database: { dialect: 'pg', host: 'localhost', database: 'myapp' },
  *   server: { port: 3000 },
