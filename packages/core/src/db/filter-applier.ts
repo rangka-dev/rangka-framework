@@ -11,11 +11,12 @@ function likeOp(dialect?: Dialect): 'ilike' | 'like' {
   return dialect === 'sqlite' ? 'like' : 'ilike';
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function buildWhereClause(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   eb: any,
   { field, operator, value }: TranslatedFilter,
   dialect?: Dialect,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any {
   const like = likeOp(dialect);
   switch (operator) {

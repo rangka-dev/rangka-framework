@@ -42,8 +42,8 @@ export function createFrameworkContext(opts: FrameworkContextOptions): Framework
     await enqueue(db.kysely, job, data, opts);
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const models = createModelAccess({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     db: db as any,
     registry: schema,
     adapterRegistry,
