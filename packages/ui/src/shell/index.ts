@@ -38,3 +38,12 @@ export {
 } from './breadcrumb';
 
 export { useIsMobile } from './use-mobile';
+
+export {
+  ShellContent,
+  type ShellContentProps,
+  type ShellContentHeaderProps,
+  type ShellContentMainProps,
+} from './shell-content';
+
+export { PageContainer, pageContainerVariants, type PageContainerProps } from './page-container';
