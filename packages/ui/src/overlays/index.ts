@@ -60,3 +60,12 @@ export {
   type ContextMenuSeparatorProps,
   type ContextMenuGroupProps,
 } from './context-menu';
+export {
+  Drawer,
+  type DrawerProps,
+  type DrawerContentProps,
+  type DrawerHeaderProps,
+  type DrawerTitleProps,
+  type DrawerBodyProps,
+  type DrawerFooterProps,
+} from './drawer';
