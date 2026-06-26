@@ -11,7 +11,7 @@ import {
 } from '../../src/widgets/layout';
 
 const meta: Meta = {
-  title: 'Pages/Settings',
+  title: 'Widget Compose/Settings',
   parameters: { layout: 'fullscreen' },
 };
 

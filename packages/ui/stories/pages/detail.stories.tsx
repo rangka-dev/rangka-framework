@@ -12,7 +12,7 @@ import {
 } from '../../src/widgets/layout';
 
 const meta: Meta = {
-  title: 'Pages/Detail',
+  title: 'Widget Compose/Detail',
   parameters: { layout: 'fullscreen' },
 };
 

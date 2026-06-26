@@ -24,7 +24,7 @@ import {
 } from '../../src/widgets/layout';
 
 const meta: Meta = {
-  title: 'Pages/Forms',
+  title: 'Widget Compose/Forms',
   parameters: { layout: 'fullscreen' },
 };
 

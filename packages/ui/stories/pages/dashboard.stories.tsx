@@ -8,7 +8,7 @@ import { ButtonWidget } from '../../src/widgets/action';
 import { GridWidget, CardWidget, StackWidget, GroupWidget } from '../../src/widgets/layout';
 
 const meta: Meta = {
-  title: 'Pages/Dashboard',
+  title: 'Widget Compose/Dashboard',
   parameters: { layout: 'fullscreen' },
 };
 
