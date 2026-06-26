@@ -16,3 +16,17 @@ export {
 } from './table';
 
 export { TablePagination, type TablePaginationProps } from './table-pagination';
+
+export {
+  FilterBar,
+  type FilterBarProps,
+  type FilterBarTriggerProps,
+  type FilterBarContentProps,
+  type FilterBarBadgeProps,
+  type FilterBarAddButtonProps,
+  type FilterBarPopoverProps,
+  type FilterBarFieldListProps,
+  type FilterBarFieldItemProps,
+  type FilterBarOperatorFormProps,
+  type OperatorOption,
+} from './filter-bar';

@@ -15,6 +15,7 @@ const preview: Preview = {
           'Primitives',
           'Layout',
           'Form',
+          'Data',
           'Overlays',
           'Feedback',
           'Widgets',
