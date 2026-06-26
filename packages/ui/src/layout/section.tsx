@@ -18,7 +18,7 @@ const sectionVariants = cva('flex flex-col', {
     },
   },
   defaultVariants: {
-    padding: 'md',
+    padding: 'none',
   },
 });
 
@@ -39,7 +39,7 @@ export const Section = forwardRef<HTMLDivElement, SectionProps>(
     const [open, setOpen] = useState(!defaultCollapsed);
 
     const header = (
-      <div className="flex items-center gap-2 border-b border-border pb-2 mb-3">
+      <div className="flex items-center gap-2 mb-3">
         {collapsible && (
           <Icon
             icon={ChevronRight}

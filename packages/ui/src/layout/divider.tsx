@@ -15,6 +15,12 @@ const dividerVariants = cva('shrink-0 bg-border', {
       lg: '',
       xl: '',
     },
+    bleed: {
+      none: '',
+      sm: '',
+      md: '',
+      lg: '',
+    },
   },
   compoundVariants: [
     { orientation: 'horizontal', margin: 'sm', className: 'my-2' },
@@ -25,10 +31,14 @@ const dividerVariants = cva('shrink-0 bg-border', {
     { orientation: 'vertical', margin: 'md', className: 'mx-4' },
     { orientation: 'vertical', margin: 'lg', className: 'mx-6' },
     { orientation: 'vertical', margin: 'xl', className: 'mx-8' },
+    { orientation: 'horizontal', bleed: 'sm', className: '-mx-3 w-auto' },
+    { orientation: 'horizontal', bleed: 'md', className: '-mx-5 w-auto' },
+    { orientation: 'horizontal', bleed: 'lg', className: '-mx-6 w-auto' },
   ],
   defaultVariants: {
     orientation: 'horizontal',
     margin: 'md',
+    bleed: 'none',
   },
 });
 
@@ -36,13 +46,13 @@ export type DividerProps = Omit<ComponentProps<'div'>, 'children'> &
   VariantProps<typeof dividerVariants>;
 
 export const Divider = forwardRef<HTMLDivElement, DividerProps>(
-  ({ className, orientation, margin, ...props }, ref) => {
+  ({ className, orientation, margin, bleed, ...props }, ref) => {
     return (
       <div
         ref={ref}
         role="separator"
         aria-orientation={orientation ?? 'horizontal'}
-        className={cn(dividerVariants({ orientation, margin, className }))}
+        className={cn(dividerVariants({ orientation, margin, bleed, className }))}
         {...props}
       />
     );
