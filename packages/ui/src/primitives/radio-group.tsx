@@ -50,8 +50,8 @@ function Item({ className, value, children, ...props }: RadioGroupItemProps) {
       value={value}
       className={(state) =>
         cn(
-          'aspect-square h-4 w-4 rounded-full border border-[var(--color-border)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]',
-          state.checked && 'border-[var(--color-primary)] text-[var(--color-primary)]',
+          'aspect-square h-4 w-4 rounded-full border border-border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          state.checked && 'border-primary text-primary',
           state.disabled && 'cursor-not-allowed opacity-50',
           typeof className === 'string' ? className : undefined,
         )

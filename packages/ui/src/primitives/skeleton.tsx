@@ -2,7 +2,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { forwardRef, type ComponentProps } from 'react';
 import { cn } from '../lib/cn';
 
-const skeletonVariants = cva('animate-pulse rounded-md bg-[var(--color-muted)]');
+const skeletonVariants = cva('animate-pulse rounded-md bg-muted');
 
 export type SkeletonProps = ComponentProps<'div'> &
   VariantProps<typeof skeletonVariants> & {

@@ -46,11 +46,7 @@ const ConfirmDialogDescription = forwardRef<HTMLParagraphElement, ConfirmDialogD
   ({ className, ...props }, ref) => {
     return (
       <div className="px-6 py-3">
-        <p
-          ref={ref}
-          className={cn('text-sm text-[var(--color-muted-foreground)]', className)}
-          {...props}
-        />
+        <p ref={ref} className={cn('text-sm text-muted-foreground', className)} {...props} />
       </div>
     );
   },
@@ -70,7 +66,7 @@ const ConfirmDialogCancel = forwardRef<HTMLButtonElement, ConfirmDialogCancelPro
       <Dialog.Close
         ref={ref}
         className={cn(
-          'inline-flex h-9 items-center justify-center rounded-md border border-[var(--color-border)] bg-transparent px-4 text-sm font-medium hover:bg-[var(--color-accent)] hover:text-[var(--color-accent-foreground)]',
+          'inline-flex h-9 items-center justify-center rounded-md border border-border bg-transparent px-4 text-sm font-medium hover:bg-accent hover:text-accent-foreground',
           className,
         )}
         {...props}
@@ -88,10 +84,10 @@ const ConfirmDialogConfirm = forwardRef<HTMLButtonElement, ConfirmDialogConfirmP
       <button
         ref={ref}
         className={cn(
-          'inline-flex h-9 items-center justify-center rounded-md px-4 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+          'inline-flex h-9 items-center justify-center rounded-md px-4 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
           destructive
-            ? 'bg-[var(--color-destructive)] text-[var(--color-destructive-foreground)] hover:bg-[var(--color-destructive)]/90'
-            : 'bg-[var(--color-primary)] text-[var(--color-primary-foreground)] hover:bg-[var(--color-primary)]/90',
+            ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
+            : 'bg-primary text-primary-foreground hover:bg-primary/90',
           className,
         )}
         {...props}

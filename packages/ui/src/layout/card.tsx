@@ -19,10 +19,7 @@ const CardRoot = forwardRef<HTMLDivElement, CardProps>(({ className, ...props },
   return (
     <div
       ref={ref}
-      className={cn(
-        'rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] text-[var(--color-card-foreground)]',
-        className,
-      )}
+      className={cn('rounded-lg border border-border bg-card text-card-foreground', className)}
       {...props}
     />
   );
@@ -47,13 +44,7 @@ CardTitle.displayName = 'Card.Title';
 
 const CardDescription = forwardRef<HTMLParagraphElement, CardDescriptionProps>(
   ({ className, ...props }, ref) => {
-    return (
-      <p
-        ref={ref}
-        className={cn('text-sm text-[var(--color-muted-foreground)]', className)}
-        {...props}
-      />
-    );
+    return <p ref={ref} className={cn('text-sm text-muted-foreground', className)} {...props} />;
   },
 );
 CardDescription.displayName = 'Card.Description';
@@ -72,7 +63,7 @@ const CardFooter = forwardRef<HTMLDivElement, CardFooterProps>(({ className, ...
   return (
     <div
       ref={ref}
-      className={cn('flex items-center gap-2 border-t border-[var(--color-border)] p-4', className)}
+      className={cn('flex items-center gap-2 border-t border-border p-4', className)}
       {...props}
     />
   );

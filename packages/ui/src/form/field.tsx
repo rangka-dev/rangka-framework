@@ -57,18 +57,15 @@ FieldGroup.displayName = 'Field.Group';
 
 // --- Field (Root) ---
 
-const fieldVariants = cva(
-  'group/field flex w-full gap-2 data-[invalid=true]:text-[var(--color-destructive)]',
-  {
-    variants: {
-      orientation: {
-        vertical: 'flex-col *:w-full',
-        horizontal: 'flex-row items-center',
-      },
+const fieldVariants = cva('group/field flex w-full gap-2 data-[invalid=true]:text-destructive', {
+  variants: {
+    orientation: {
+      vertical: 'flex-col *:w-full',
+      horizontal: 'flex-row items-center',
     },
-    defaultVariants: { orientation: 'vertical' },
   },
-);
+  defaultVariants: { orientation: 'vertical' },
+});
 
 export type FieldProps = ComponentProps<'div'> & VariantProps<typeof fieldVariants>;
 
@@ -146,7 +143,7 @@ const FieldDescription = forwardRef<HTMLParagraphElement, FieldDescriptionProps>
       ref={ref}
       data-slot="field-description"
       className={cn(
-        'text-left text-xs/relaxed leading-normal font-normal text-[var(--color-muted-foreground)]',
+        'text-left text-xs/relaxed leading-normal font-normal text-muted-foreground',
         className,
       )}
       {...props}
@@ -170,7 +167,7 @@ const FieldSeparator = forwardRef<HTMLDivElement, FieldSeparatorProps>(
     >
       <Separator className="absolute inset-0 top-1/2" />
       {children && (
-        <span className="relative mx-auto block w-fit bg-[var(--color-background)] px-2 text-[var(--color-muted-foreground)]">
+        <span className="relative mx-auto block w-fit bg-background px-2 text-muted-foreground">
           {children}
         </span>
       )}
@@ -211,7 +208,7 @@ const FieldError = forwardRef<HTMLDivElement, FieldErrorProps>(
         ref={ref}
         role="alert"
         data-slot="field-error"
-        className={cn('text-xs font-normal text-[var(--color-destructive)]', className)}
+        className={cn('text-xs font-normal text-destructive', className)}
         {...props}
       >
         {content}

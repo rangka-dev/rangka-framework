@@ -7,9 +7,9 @@ const textVariants = cva('', {
     variant: {
       heading: 'text-lg font-semibold',
       body: 'text-sm',
-      caption: 'text-xs text-[var(--color-muted-foreground)]',
+      caption: 'text-xs text-muted-foreground',
       bold: 'text-sm font-medium',
-      muted: 'text-sm text-[var(--color-muted-foreground)]',
+      muted: 'text-sm text-muted-foreground',
       mono: 'font-mono text-sm',
     },
     align: {

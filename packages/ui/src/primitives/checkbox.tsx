@@ -25,9 +25,8 @@ const Root = forwardRef<HTMLElement, CheckboxProps>(
       indeterminate={indeterminate}
       className={(state) =>
         cn(
-          'h-4 w-4 shrink-0 rounded-sm border border-[var(--color-border)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]',
-          state.checked &&
-            'bg-[var(--color-primary)] border-[var(--color-primary)] text-[var(--color-primary-foreground)]',
+          'h-4 w-4 shrink-0 rounded-sm border border-border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          state.checked && 'bg-primary border-primary text-primary-foreground',
           state.disabled && 'cursor-not-allowed opacity-50',
           typeof className === 'string' ? className : undefined,
         )

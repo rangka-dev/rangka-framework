@@ -93,7 +93,7 @@ const CommandRoot = forwardRef<HTMLDivElement, CommandProps>(
         <div
           ref={ref}
           className={cn(
-            'flex flex-col overflow-hidden rounded-md bg-[var(--color-popover)] text-[var(--color-popover-foreground)]',
+            'flex flex-col overflow-hidden rounded-md bg-popover text-popover-foreground',
             className,
           )}
           onKeyDown={handleKeyDown}
@@ -122,7 +122,7 @@ const CommandInput = forwardRef<HTMLInputElement, CommandInputProps>(
         }}
         placeholder={placeholder}
         className={cn(
-          'flex h-10 w-full border-b border-[var(--color-border)] bg-transparent px-3 text-sm outline-none placeholder:text-[var(--color-muted-foreground)]',
+          'flex h-10 w-full border-b border-border bg-transparent px-3 text-sm outline-none placeholder:text-muted-foreground',
           className,
         )}
         {...props}
@@ -148,9 +148,7 @@ const CommandGroup = forwardRef<HTMLDivElement, CommandGroupProps>(
     return (
       <div ref={ref} className={cn('overflow-hidden', className)} {...props}>
         {heading && (
-          <div className="px-2 py-1.5 text-xs font-medium text-[var(--color-muted-foreground)]">
-            {heading}
-          </div>
+          <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">{heading}</div>
         )}
         {children}
       </div>
@@ -202,8 +200,8 @@ const CommandItem = forwardRef<HTMLDivElement, CommandItemProps>(
           else if (ref) ref.current = node;
         }}
         className={cn(
-          'relative flex cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-[var(--color-accent)]',
-          isActive && 'bg-[var(--color-accent)]',
+          'relative flex cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent',
+          isActive && 'bg-accent',
           disabled && 'pointer-events-none opacity-50',
           className,
         )}
@@ -228,7 +226,7 @@ const CommandEmpty = forwardRef<HTMLDivElement, CommandEmptyProps>(
     return (
       <div
         ref={ref}
-        className={cn('py-6 text-center text-sm text-[var(--color-muted-foreground)]', className)}
+        className={cn('py-6 text-center text-sm text-muted-foreground', className)}
         {...props}
       >
         {children}

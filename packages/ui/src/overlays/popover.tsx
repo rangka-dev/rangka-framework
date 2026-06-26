@@ -60,7 +60,7 @@ const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
           <BasePopover.Popup
             ref={ref}
             className={cn(
-              'z-50 w-72 rounded-md border border-[var(--color-border)] bg-[var(--color-popover)] p-4 text-[var(--color-popover-foreground)] shadow-md outline-none',
+              'z-50 w-72 rounded-md border border-border bg-popover p-4 text-popover-foreground shadow-md outline-none',
               className,
             )}
             {...props}
@@ -79,10 +79,7 @@ const PopoverArrow = forwardRef<HTMLDivElement, PopoverArrowProps>(
     return (
       <BasePopover.Arrow
         ref={ref}
-        className={cn(
-          'h-2 w-4 fill-[var(--color-popover)] stroke-[var(--color-border)]',
-          className,
-        )}
+        className={cn('h-2 w-4 fill-popover stroke-border', className)}
         {...props}
       />
     );
@@ -119,7 +116,7 @@ const PopoverDescription = forwardRef<HTMLParagraphElement, PopoverDescriptionPr
     return (
       <BasePopover.Description
         ref={ref}
-        className={cn('text-sm text-[var(--color-muted-foreground)]', className)}
+        className={cn('text-sm text-muted-foreground', className)}
         {...props}
       />
     );

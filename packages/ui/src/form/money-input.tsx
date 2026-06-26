@@ -3,7 +3,7 @@ import { forwardRef, type ComponentProps } from 'react';
 import { cn } from '../lib/cn';
 
 const moneyInputVariants = cva(
-  'flex items-center rounded-md border border-[var(--color-border)] transition-colors focus-within:ring-2 focus-within:ring-[var(--color-ring)] focus-within:ring-offset-2',
+  'flex items-center rounded-md border border-border transition-colors focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2',
   {
     variants: {
       size: {
@@ -51,7 +51,7 @@ const MoneyInputRoot = forwardRef<HTMLInputElement, MoneyInputProps>(
           disabled && 'opacity-50 pointer-events-none',
         )}
       >
-        <span className="flex items-center border-r border-[var(--color-border)] bg-[var(--color-muted)] px-2 text-[var(--color-muted-foreground)] h-full rounded-l-md">
+        <span className="flex items-center border-r border-border bg-muted px-2 text-muted-foreground h-full rounded-l-md">
           {currency}
         </span>
         <input
@@ -61,7 +61,7 @@ const MoneyInputRoot = forwardRef<HTMLInputElement, MoneyInputProps>(
           value={displayValue}
           onChange={handleChange}
           disabled={disabled}
-          className="h-full w-full bg-transparent px-3 outline-none placeholder:text-[var(--color-muted-foreground)] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+          className="h-full w-full bg-transparent px-3 outline-none placeholder:text-muted-foreground [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           {...props}
         />
       </div>

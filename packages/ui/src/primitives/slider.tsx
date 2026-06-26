@@ -71,11 +71,7 @@ Root.displayName = 'Slider';
 const SliderTrack = forwardRef<HTMLDivElement, SliderTrackProps>(({ className, ...props }, ref) => (
   <BaseSlider.Track
     ref={ref}
-    className={cn(
-      'relative w-full grow overflow-hidden rounded-full bg-[var(--color-muted)]',
-      'h-1.5',
-      className,
-    )}
+    className={cn('relative w-full grow overflow-hidden rounded-full bg-muted', 'h-1.5', className)}
     {...props}
   />
 ));
@@ -85,7 +81,7 @@ const SliderIndicator = forwardRef<HTMLDivElement, SliderIndicatorProps>(
   ({ className, ...props }, ref) => (
     <BaseSlider.Indicator
       ref={ref}
-      className={cn('absolute h-full bg-[var(--color-primary)]', className)}
+      className={cn('absolute h-full bg-primary', className)}
       {...props}
     />
   ),
@@ -96,7 +92,7 @@ const Thumb = forwardRef<HTMLDivElement, SliderThumbProps>(({ className, ...prop
   <BaseSlider.Thumb
     ref={ref}
     className={cn(
-      'block h-4 w-4 rounded-full border-2 border-[var(--color-primary)] bg-[var(--color-background)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+      'block h-4 w-4 rounded-full border-2 border-primary bg-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
       className,
     )}
     {...props}

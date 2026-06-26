@@ -89,24 +89,24 @@ const DateTimePickerRoot = forwardRef<HTMLDivElement, DateTimePickerProps>(
           <Popover.Trigger
             disabled={disabled}
             className={cn(
-              'flex h-9 w-full items-center gap-2 rounded-md border border-[var(--color-border)] bg-transparent px-3 text-sm transition-colors hover:bg-[var(--color-accent)] disabled:pointer-events-none disabled:opacity-50',
+              'flex h-9 w-full items-center gap-2 rounded-md border border-border bg-transparent px-3 text-sm transition-colors hover:bg-accent disabled:pointer-events-none disabled:opacity-50',
             )}
           >
-            <CalendarIcon className="size-4 text-[var(--color-muted-foreground)]" />
+            <CalendarIcon className="size-4 text-muted-foreground" />
             {dateValue ? (
               <span>{format(dateValue, 'PPP h:mm a')}</span>
             ) : (
-              <span className="text-[var(--color-muted-foreground)]">{placeholder}</span>
+              <span className="text-muted-foreground">{placeholder}</span>
             )}
           </Popover.Trigger>
           <Popover.Portal>
             <Popover.Positioner sideOffset={4}>
-              <Popover.Popup className="z-50 rounded-md border border-[var(--color-border)] bg-[var(--color-card)] p-3 shadow-md">
+              <Popover.Popup className="z-50 rounded-md border border-border bg-card p-3 shadow-md">
                 <div className="flex items-center justify-between mb-2">
                   <button
                     type="button"
                     onClick={() => setViewMonth(subMonths(viewMonth, 1))}
-                    className="rounded-sm p-1 hover:bg-[var(--color-accent)]"
+                    className="rounded-sm p-1 hover:bg-accent"
                   >
                     <ChevronLeft />
                   </button>
@@ -114,7 +114,7 @@ const DateTimePickerRoot = forwardRef<HTMLDivElement, DateTimePickerProps>(
                   <button
                     type="button"
                     onClick={() => setViewMonth(addMonths(viewMonth, 1))}
-                    className="rounded-sm p-1 hover:bg-[var(--color-accent)]"
+                    className="rounded-sm p-1 hover:bg-accent"
                   >
                     <ChevronRight />
                   </button>
@@ -123,7 +123,7 @@ const DateTimePickerRoot = forwardRef<HTMLDivElement, DateTimePickerProps>(
                   {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d) => (
                     <div
                       key={d}
-                      className="flex h-8 w-8 items-center justify-center text-xs text-[var(--color-muted-foreground)]"
+                      className="flex h-8 w-8 items-center justify-center text-xs text-muted-foreground"
                     >
                       {d}
                     </div>
@@ -140,11 +140,10 @@ const DateTimePickerRoot = forwardRef<HTMLDivElement, DateTimePickerProps>(
                         type="button"
                         onClick={() => handleDaySelect(day)}
                         className={cn(
-                          'flex h-8 w-8 items-center justify-center rounded-sm text-sm transition-colors hover:bg-[var(--color-accent)]',
-                          isSelected &&
-                            'bg-[var(--color-primary)] text-[var(--color-primary-foreground)] hover:bg-[var(--color-primary)]',
-                          isToday && !isSelected && 'border border-[var(--color-primary)]',
-                          !isSameMonth(day, viewMonth) && 'text-[var(--color-muted-foreground)]',
+                          'flex h-8 w-8 items-center justify-center rounded-sm text-sm transition-colors hover:bg-accent',
+                          isSelected && 'bg-primary text-primary-foreground hover:bg-primary',
+                          isToday && !isSelected && 'border border-primary',
+                          !isSameMonth(day, viewMonth) && 'text-muted-foreground',
                         )}
                       >
                         {format(day, 'd')}
@@ -152,11 +151,11 @@ const DateTimePickerRoot = forwardRef<HTMLDivElement, DateTimePickerProps>(
                     );
                   })}
                 </div>
-                <div className="mt-3 flex items-center gap-2 border-t border-[var(--color-border)] pt-3">
+                <div className="mt-3 flex items-center gap-2 border-t border-border pt-3">
                   <select
                     value={displayHour}
                     onChange={(e) => handleHourChange(parseInt(e.target.value))}
-                    className="h-8 rounded-md border border-[var(--color-border)] bg-transparent px-2 text-sm"
+                    className="h-8 rounded-md border border-border bg-transparent px-2 text-sm"
                   >
                     {HOURS.map((h) => (
                       <option key={h} value={h}>
@@ -168,7 +167,7 @@ const DateTimePickerRoot = forwardRef<HTMLDivElement, DateTimePickerProps>(
                   <select
                     value={currentMinutes}
                     onChange={(e) => handleMinuteChange(parseInt(e.target.value))}
-                    className="h-8 rounded-md border border-[var(--color-border)] bg-transparent px-2 text-sm"
+                    className="h-8 rounded-md border border-border bg-transparent px-2 text-sm"
                   >
                     {MINUTES.map((m) => (
                       <option key={m} value={m}>
@@ -179,7 +178,7 @@ const DateTimePickerRoot = forwardRef<HTMLDivElement, DateTimePickerProps>(
                   <select
                     value={currentPeriod}
                     onChange={(e) => handlePeriodChange(e.target.value as 'AM' | 'PM')}
-                    className="h-8 rounded-md border border-[var(--color-border)] bg-transparent px-2 text-sm"
+                    className="h-8 rounded-md border border-border bg-transparent px-2 text-sm"
                   >
                     {PERIODS.map((p) => (
                       <option key={p} value={p}>

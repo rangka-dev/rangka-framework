@@ -52,8 +52,8 @@ const Slot = forwardRef<HTMLInputElement, InputOTPSlotProps>(({ className, ...pr
     ref={ref}
     className={(state) =>
       cn(
-        'h-10 w-10 rounded-md border border-[var(--color-border)] bg-transparent text-center text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]',
-        state.filled && 'border-[var(--color-primary)]',
+        'h-10 w-10 rounded-md border border-border bg-transparent text-center text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        state.filled && 'border-primary',
         state.disabled && 'cursor-not-allowed opacity-50',
         typeof className === 'string' ? className : undefined,
       )

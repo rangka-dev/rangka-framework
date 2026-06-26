@@ -71,19 +71,19 @@ const SplitHandle = forwardRef<HTMLDivElement, SplitHandleProps>(
       <Separator
         elementRef={ref as React.RefObject<HTMLDivElement | null>}
         className={cn(
-          'relative flex w-px items-center justify-center bg-[var(--color-border)] after:absolute after:inset-y-0 after:-left-1 after:-right-1 after:content-[""] data-[orientation=vertical]:h-px data-[orientation=vertical]:w-full data-[orientation=vertical]:after:inset-x-0 data-[orientation=vertical]:after:-top-1 data-[orientation=vertical]:after:-bottom-1',
+          'relative flex w-px items-center justify-center bg-border after:absolute after:inset-y-0 after:-left-1 after:-right-1 after:content-[""] data-[orientation=vertical]:h-px data-[orientation=vertical]:w-full data-[orientation=vertical]:after:inset-x-0 data-[orientation=vertical]:after:-top-1 data-[orientation=vertical]:after:-bottom-1',
           className,
         )}
         {...props}
       >
         {withHandle && (
-          <div className="z-10 flex h-4 w-3 items-center justify-center rounded-sm border border-[var(--color-border)] bg-[var(--color-border)]">
+          <div className="z-10 flex h-4 w-3 items-center justify-center rounded-sm border border-border bg-border">
             <svg
               width="6"
               height="10"
               viewBox="0 0 6 10"
               fill="none"
-              className="text-[var(--color-muted-foreground)]"
+              className="text-muted-foreground"
             >
               <circle cx="1" cy="1" r="0.75" fill="currentColor" />
               <circle cx="1" cy="5" r="0.75" fill="currentColor" />

@@ -4,14 +4,12 @@ import { type ComponentProps } from 'react';
 import { cn } from '../lib/cn';
 
 const toggleVariants = cva(
-  'inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[pressed]:bg-[var(--color-accent)] data-[pressed]:text-[var(--color-accent-foreground)]',
+  'inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[pressed]:bg-accent data-[pressed]:text-accent-foreground',
   {
     variants: {
       variant: {
-        default:
-          'bg-transparent hover:bg-[var(--color-muted)] hover:text-[var(--color-muted-foreground)]',
-        outline:
-          'border border-[var(--color-border)] bg-transparent hover:bg-[var(--color-accent)] hover:text-[var(--color-accent-foreground)]',
+        default: 'bg-transparent hover:bg-muted hover:text-muted-foreground',
+        outline: 'border border-border bg-transparent hover:bg-accent hover:text-accent-foreground',
       },
       size: {
         sm: 'h-8 px-2',

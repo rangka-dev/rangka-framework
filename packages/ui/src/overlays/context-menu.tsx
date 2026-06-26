@@ -44,7 +44,7 @@ const ContextMenuContent = forwardRef<HTMLDivElement, ContextMenuContentProps>(
           <BaseContextMenu.Popup
             ref={ref}
             className={cn(
-              'z-50 min-w-[8rem] rounded-md border border-[var(--color-border)] bg-[var(--color-popover)] p-1 shadow-md',
+              'z-50 min-w-[8rem] rounded-md border border-border bg-popover p-1 shadow-md',
               className,
             )}
             {...props}
@@ -64,7 +64,7 @@ const ContextMenuItem = forwardRef<HTMLDivElement, ContextMenuItemProps>(
       <BaseContextMenu.Item
         ref={ref}
         className={cn(
-          'relative flex cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm outline-none data-[highlighted]:bg-[var(--color-accent)] data-[highlighted]:text-[var(--color-accent-foreground)]',
+          'relative flex cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground',
           disabled && 'pointer-events-none opacity-50',
           className,
         )}
@@ -83,10 +83,7 @@ const ContextMenuLabel = forwardRef<HTMLDivElement, ContextMenuLabelProps>(
     return (
       <BaseContextMenu.GroupLabel
         ref={ref}
-        className={cn(
-          'px-2 py-1.5 text-xs font-semibold text-[var(--color-muted-foreground)]',
-          className,
-        )}
+        className={cn('px-2 py-1.5 text-xs font-semibold text-muted-foreground', className)}
         {...props}
       />
     );
@@ -99,7 +96,7 @@ const ContextMenuSeparator = forwardRef<HTMLDivElement, ContextMenuSeparatorProp
     return (
       <BaseContextMenu.Separator
         ref={ref}
-        className={cn('-mx-1 my-1 h-px bg-[var(--color-border)]', className)}
+        className={cn('-mx-1 my-1 h-px bg-border', className)}
         {...props}
       />
     );

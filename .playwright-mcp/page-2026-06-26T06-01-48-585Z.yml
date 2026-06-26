@@ -1,0 +1,455 @@
+- generic [ref=e1]:
+  - main [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - button "Open workspace switcher" [ref=e9] [cursor=pointer]:
+          - generic [ref=e10]:
+            - generic [ref=e11]: r
+            - heading "rangka" [level=4] [ref=e12]
+          - img [ref=e13]
+        - generic [ref=e17]:
+          - button [ref=e20] [cursor=pointer]:
+            - img [ref=e21]
+            - textbox "Search" [ref=e23]
+          - generic [ref=e24]:
+            - generic:
+              - img [ref=e26]
+              - generic [ref=e29]:
+                - generic [ref=e30]: Search your workspace
+                - generic [ref=e31]: Start typing to search across work items, projects, cycles, modules and more
+        - generic [ref=e32]:
+          - button "Get Started" [ref=e33] [cursor=pointer]
+          - button [ref=e34] [cursor=pointer]:
+            - button [ref=e35]:
+              - img [ref=e38]
+          - button [ref=e42] [cursor=pointer]:
+            - button [ref=e43]:
+              - img [ref=e45]
+          - button [ref=e49] [cursor=pointer]:
+            - button [ref=e50]
+      - generic [ref=e54]:
+        - generic [ref=e58]:
+          - link "Projects" [ref=e59] [cursor=pointer]:
+            - /url: /rangka/
+            - img [ref=e61]
+            - generic [ref=e64]: Projects
+          - link "Wiki" [ref=e65] [cursor=pointer]:
+            - /url: /rangka/wiki/
+            - img [ref=e67]
+            - generic [ref=e69]: Wiki
+          - link "AI" [ref=e70] [cursor=pointer]:
+            - /url: /rangka/ai-chat/
+            - img [ref=e72]
+            - generic [ref=e75]: AI
+          - link "Settings" [ref=e77] [cursor=pointer]:
+            - /url: /rangka/settings/
+            - img [ref=e79]
+            - generic [ref=e82]: Settings
+        - generic [ref=e83]:
+          - generic [ref=e86]:
+            - complementary "Main sidebar" [ref=e87]:
+              - complementary [ref=e88]:
+                - generic [ref=e89]:
+                  - generic [ref=e90]:
+                    - generic [ref=e91]:
+                      - generic [ref=e92]: Projects
+                      - generic [ref=e93]:
+                        - button [ref=e94] [cursor=pointer]:
+                          - img [ref=e95]
+                        - button [ref=e97] [cursor=pointer]:
+                          - img [ref=e98]
+                    - button "New work item" [ref=e101] [cursor=pointer]:
+                      - img [ref=e102]
+                      - generic [ref=e104]: New work item
+                  - generic [ref=e105]:
+                    - link "Home" [ref=e106] [cursor=pointer]:
+                      - /url: /rangka/
+                      - generic [ref=e108]:
+                        - img [ref=e109]
+                        - paragraph [ref=e111]: Home
+                    - link "Drafts" [ref=e112] [cursor=pointer]:
+                      - /url: /rangka/drafts/
+                      - generic [ref=e114]:
+                        - img [ref=e115]
+                        - paragraph [ref=e117]: Drafts
+                    - link "Your work" [ref=e118] [cursor=pointer]:
+                      - /url: /rangka/profile/d22ef766-8494-4c2e-a782-d770efac7fc6/
+                      - generic [ref=e120]:
+                        - img [ref=e121]
+                        - paragraph [ref=e124]: Your work
+                    - link "Stickies" [ref=e125] [cursor=pointer]:
+                      - /url: /rangka/stickies/
+                      - generic [ref=e127]:
+                        - img [ref=e128]
+                        - paragraph [ref=e130]: Stickies
+                  - generic [ref=e131]:
+                    - generic [ref=e132]:
+                      - button "aria_labels.app_sidebar.close_workspace_menu" [expanded] [ref=e133] [cursor=pointer]:
+                        - generic [ref=e134]: Workspace
+                      - button "aria_labels.app_sidebar.close_workspace_menu" [ref=e136] [cursor=pointer]:
+                        - img [ref=e137]
+                    - generic [ref=e141]:
+                      - link "Projects" [ref=e142] [cursor=pointer]:
+                        - /url: /rangka/projects/
+                        - generic [ref=e144]:
+                          - img [ref=e145]
+                          - paragraph [ref=e147]: Projects
+                      - button "aria_labels.app_sidebar.open_extended_sidebar" [ref=e149] [cursor=pointer]:
+                        - img [ref=e150]
+                        - generic [ref=e154]: More
+                  - generic [ref=e156]:
+                    - generic [ref=e157]:
+                      - button "Close projects menu" [expanded] [ref=e158] [cursor=pointer]:
+                        - generic [ref=e159]: Projects
+                      - button "Close projects menu" [ref=e161] [cursor=pointer]:
+                        - img [ref=e162]
+                    - generic [ref=e167]:
+                      - generic [ref=e169]:
+                        - button [ref=e409]:
+                          - button [ref=e410]:
+                            - img [ref=e411]
+                        - link "Close project menu" [ref=e413] [cursor=pointer]:
+                          - /url: /rangka/projects/69ad45a1-2aca-40f8-8bd6-41846c9634b0/issues
+                          - button "Close project menu" [expanded] [active] [ref=e414]:
+                            - generic [ref=e173]: 👇
+                            - paragraph [ref=e174]: rangka
+                        - generic [ref=e175]:
+                          - button "Toggle quick actions menu" [ref=e416] [cursor=pointer]:
+                            - button [ref=e417]:
+                              - img [ref=e418]
+                          - button "Close project menu" [ref=e422] [cursor=pointer]:
+                            - img [ref=e423]
+                      - generic [ref=e426]:
+                        - link "Overview" [ref=e428] [cursor=pointer]:
+                          - /url: /rangka/projects/69ad45a1-2aca-40f8-8bd6-41846c9634b0/overview/
+                          - generic [ref=e431]:
+                            - img [ref=e432]
+                            - generic [ref=e434]: Overview
+                        - link "Work items" [ref=e435] [cursor=pointer]:
+                          - /url: /rangka/projects/69ad45a1-2aca-40f8-8bd6-41846c9634b0/issues/
+                          - generic [ref=e438]:
+                            - img [ref=e439]
+                            - generic [ref=e441]: Work items
+                        - link "Cycles" [ref=e442] [cursor=pointer]:
+                          - /url: /rangka/projects/69ad45a1-2aca-40f8-8bd6-41846c9634b0/cycles/
+                          - generic [ref=e445]:
+                            - img [ref=e446]
+                            - generic [ref=e450]: Cycles
+                        - link "Modules" [ref=e451] [cursor=pointer]:
+                          - /url: /rangka/projects/69ad45a1-2aca-40f8-8bd6-41846c9634b0/modules/
+                          - generic [ref=e454]:
+                            - img [ref=e455]
+                            - generic [ref=e461]: Modules
+                        - link "Views" [ref=e462] [cursor=pointer]:
+                          - /url: /rangka/projects/69ad45a1-2aca-40f8-8bd6-41846c9634b0/views/
+                          - generic [ref=e465]:
+                            - img [ref=e466]
+                            - generic [ref=e469]: Views
+                        - link "Pages" [ref=e470] [cursor=pointer]:
+                          - /url: /rangka/projects/69ad45a1-2aca-40f8-8bd6-41846c9634b0/pages/
+                          - generic [ref=e473]:
+                            - img [ref=e474]
+                            - generic [ref=e476]: Pages
+                  - generic [ref=e177]:
+                    - generic [ref=e178]:
+                      - button "Try" [expanded] [ref=e179] [cursor=pointer]:
+                        - generic [ref=e180]: Try
+                        - img [ref=e181]
+                      - generic [ref=e185]:
+                        - link "Connect to GitHub" [ref=e187] [cursor=pointer]:
+                          - /url: /rangka/settings/integrations/
+                          - img [ref=e188]
+                          - generic [ref=e191]: Connect to GitHub
+                        - link "Connect to Slack" [ref=e193] [cursor=pointer]:
+                          - /url: /rangka/settings/integrations/
+                          - img [ref=e194]
+                          - generic [ref=e200]: Connect to Slack
+                        - link "Try Plane AI" [ref=e202] [cursor=pointer]:
+                          - /url: /rangka/ai-chat/
+                          - img [ref=e203]
+                          - generic [ref=e206]: Try Plane AI
+                    - generic [ref=e208]:
+                      - button "Dismiss tip" [ref=e211] [cursor=pointer]:
+                        - img [ref=e212]
+                      - generic [ref=e215]:
+                        - generic [ref=e216]: Download Plane for mobile
+                        - paragraph [ref=e217]: Manage your work on the go. Download Plane on Play Store and App Store.
+                  - button "Business trial ends in 13d" [ref=e221] [cursor=pointer]:
+                    - generic [ref=e222]: Business trial ends in 13d
+                - slider "Resize sidebar" [ref=e223]
+            - complementary "Sidebar peek view":
+              - complementary:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: Projects
+                      - generic:
+                        - button:
+                          - img
+                        - button:
+                          - img
+                    - generic:
+                      - button "New work item":
+                        - img
+                        - generic: New work item
+                  - generic:
+                    - link "Home":
+                      - /url: /rangka/
+                      - generic:
+                        - generic:
+                          - img
+                          - paragraph: Home
+                    - link "Drafts":
+                      - /url: /rangka/drafts/
+                      - generic:
+                        - generic:
+                          - img
+                          - paragraph: Drafts
+                    - link "Your work":
+                      - /url: /rangka/profile/d22ef766-8494-4c2e-a782-d770efac7fc6/
+                      - generic:
+                        - generic:
+                          - img
+                          - paragraph: Your work
+                    - link "Stickies":
+                      - /url: /rangka/stickies/
+                      - generic:
+                        - generic:
+                          - img
+                          - paragraph: Stickies
+                  - generic:
+                    - generic:
+                      - button "aria_labels.app_sidebar.close_workspace_menu" [expanded]:
+                        - generic: Workspace
+                      - generic:
+                        - button "aria_labels.app_sidebar.close_workspace_menu":
+                          - img
+                    - generic:
+                      - generic:
+                        - link "Projects":
+                          - /url: /rangka/projects/
+                          - generic:
+                            - generic:
+                              - img
+                              - paragraph: Projects
+                        - generic:
+                          - button "aria_labels.app_sidebar.open_extended_sidebar":
+                            - img
+                            - generic: More
+                  - generic:
+                    - generic:
+                      - generic:
+                        - button "Close projects menu" [expanded]:
+                          - generic: Projects
+                        - generic:
+                          - button "Close projects menu":
+                            - img
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - link "Close project menu":
+                                - /url: /rangka/projects/69ad45a1-2aca-40f8-8bd6-41846c9634b0/issues
+                                - button "Close project menu" [expanded]:
+                                  - generic:
+                                    - generic: 👇
+                                  - paragraph: rangka
+                              - generic:
+                                - generic:
+                                  - button "Toggle quick actions menu":
+                                    - button:
+                                      - img
+                            - generic:
+                              - link "Overview":
+                                - /url: /rangka/projects/69ad45a1-2aca-40f8-8bd6-41846c9634b0/overview/
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - img
+                                      - generic: Overview
+                              - link "Work items":
+                                - /url: /rangka/projects/69ad45a1-2aca-40f8-8bd6-41846c9634b0/issues/
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - img
+                                      - generic: Work items
+                              - link "Cycles":
+                                - /url: /rangka/projects/69ad45a1-2aca-40f8-8bd6-41846c9634b0/cycles/
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - img
+                                      - generic: Cycles
+                              - link "Modules":
+                                - /url: /rangka/projects/69ad45a1-2aca-40f8-8bd6-41846c9634b0/modules/
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - img
+                                      - generic: Modules
+                              - link "Views":
+                                - /url: /rangka/projects/69ad45a1-2aca-40f8-8bd6-41846c9634b0/views/
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - img
+                                      - generic: Views
+                              - link "Pages":
+                                - /url: /rangka/projects/69ad45a1-2aca-40f8-8bd6-41846c9634b0/pages/
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - img
+                                      - generic: Pages
+                  - generic:
+                    - generic:
+                      - button "Try" [expanded]:
+                        - generic: Try
+                        - img
+                      - generic:
+                        - generic:
+                          - generic:
+                            - link "Connect to GitHub":
+                              - /url: /rangka/settings/integrations/
+                              - img
+                              - generic: Connect to GitHub
+                          - generic:
+                            - link "Connect to Slack":
+                              - /url: /rangka/settings/integrations/
+                              - img
+                              - generic: Connect to Slack
+                          - generic:
+                            - link "Try Plane AI":
+                              - /url: /rangka/ai-chat/
+                              - img
+                              - generic: Try Plane AI
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - button "Dismiss tip":
+                              - img
+                        - generic:
+                          - generic: Download Plane for mobile
+                          - paragraph: Manage your work on the go. Download Plane on Play Store and App Store.
+                  - generic:
+                    - generic:
+                      - generic:
+                        - button "Business trial ends in 13d":
+                          - generic: Business trial ends in 13d
+                - slider "Resize sidebar"
+            - main [ref=e224]:
+              - generic [ref=e229]:
+                - generic [ref=e234]:
+                  - img [ref=e236]
+                  - generic [ref=e238]: Home
+                - button "Manage widgets" [ref=e240] [cursor=pointer]:
+                  - img [ref=e241]
+                  - generic [ref=e245]: Manage widgets
+              - generic [ref=e249]:
+                - generic [ref=e250]:
+                  - heading "Good morning, Irfan Marzuki" [level=2] [ref=e251]
+                  - heading "🌤️ Friday, Jun 26 06:00" [level=5] [ref=e252]:
+                    - generic [ref=e253]: 🌤️
+                    - generic [ref=e254]: Friday, Jun 26 06:00
+                - generic [ref=e255]:
+                  - generic [ref=e256]:
+                    - generic [ref=e257]:
+                      - generic [ref=e259]: Ask Plane AI
+                      - link [ref=e260] [cursor=pointer]:
+                        - /url: /rangka/projects/ai-chat/
+                        - img [ref=e261]
+                    - generic [ref=e267]:
+                      - img "Unauthorized" [ref=e269]
+                      - generic [ref=e270]:
+                        - generic [ref=e271]:
+                          - generic [ref=e272]: Plane AI can now take actions for you.
+                          - generic [ref=e273]: Use Build mode to create work items, cycles and more. Activate now to start Plane AI actions.
+                        - link "Activate Build mode" [ref=e274] [cursor=pointer]:
+                          - /url: https://pi.plane.so/api/v1/oauth/authorize/Z0FBQUFBQnFQaFZYbnVLLWJlR3B0UWI4WjZ1bnJ6Qy1SMkRHVk4zOVZvTC1rald3b3F6OTd2UEVVc25JNVZxQVZibll3Y1pEYTZ6MTJjR0lfbzM5WkRYS2VVbXU3MjhORFlFV0xnZU5ZVUwzMFFEN25FMkIxdVRWdWJzS0JzZE1JdVRjTFZleFY3UHJlWnFoSElxcVpkVVppbHlzcGliSXByZmM5RW10NVJRVGIwM2dnNm15YnR1TDVraWZ4eURtam9uYTVtdjZwcDBmRGxNSXFka3hEV3hKaXBLckIxRlpVQT09?sidebar_open_url=/rangka/
+                  - generic [ref=e275]:
+                    - generic [ref=e277]:
+                      - generic [ref=e278]:
+                        - generic [ref=e279]: Quicklinks
+                        - button "Add quick Link" [ref=e280] [cursor=pointer]:
+                          - img [ref=e281]
+                          - generic [ref=e283]: Add quick Link
+                      - generic [ref=e288]:
+                        - button "Plane Changelog about 2 hours ago" [ref=e289] [cursor=pointer]:
+                          - img [ref=e291]
+                          - generic [ref=e296]:
+                            - generic [ref=e297]: Plane Changelog
+                            - generic [ref=e298]: about 2 hours ago
+                        - button "Plane Docs about 2 hours ago" [ref=e299] [cursor=pointer]:
+                          - img [ref=e301]
+                          - generic [ref=e304]:
+                            - generic [ref=e305]: Plane Docs
+                            - generic [ref=e306]: about 2 hours ago
+                        - button "Plane Blogs about 2 hours ago" [ref=e307] [cursor=pointer]:
+                          - img [ref=e309]
+                          - generic [ref=e314]:
+                            - generic [ref=e315]: Plane Blogs
+                            - generic [ref=e316]: about 2 hours ago
+                    - generic [ref=e319]:
+                      - generic [ref=e320]:
+                        - generic [ref=e321]: Recents
+                        - button "All" [ref=e323] [cursor=pointer]:
+                          - button "All" [ref=e324]:
+                            - generic [ref=e325]: All
+                            - img [ref=e326]
+                      - generic [ref=e329]:
+                        - generic [ref=e333]:
+                          - link "RANGK Project Design Spec less than a minute ago" [ref=e334] [cursor=pointer]:
+                            - /url: /rangka/projects/69ad45a1-2aca-40f8-8bd6-41846c9634b0/pages/9fe53560-f6f4-4529-8951-64a7a3ca47c1
+                            - generic [ref=e335]:
+                              - generic [ref=e337]:
+                                - img [ref=e339]
+                                - generic [ref=e341]: RANGK
+                              - generic [ref=e342]: Project Design Spec
+                            - generic [ref=e344]: less than a minute ago
+                          - generic [ref=e348]: P
+                        - generic [ref=e352]:
+                          - link "👇 RANGK rangka 26 minutes ago" [ref=e353] [cursor=pointer]:
+                            - /url: /rangka/projects/69ad45a1-2aca-40f8-8bd6-41846c9634b0/issues
+                            - generic [ref=e354]:
+                              - generic [ref=e356]:
+                                - generic [ref=e358]: 👇
+                                - generic [ref=e359]: RANGK
+                              - generic [ref=e360]: rangka
+                            - generic [ref=e362]: 26 minutes ago
+                          - button [disabled] [ref=e366]:
+                            - button [disabled]
+                    - generic [ref=e368]:
+                      - generic [ref=e369]:
+                        - generic [ref=e370]: Your stickies
+                        - generic [ref=e371]:
+                          - generic [ref=e372]:
+                            - button [ref=e373] [cursor=pointer]:
+                              - img [ref=e374]
+                            - generic [ref=e376]:
+                              - img [ref=e377]
+                              - textbox "Search by title"
+                          - button "Add sticky" [ref=e379] [cursor=pointer]:
+                            - img [ref=e380]
+                            - generic [ref=e382]: Add sticky
+                      - generic [ref=e389]:
+                        - img [ref=e391]
+                        - paragraph [ref=e402]: Jot down an idea, capture an aha, or record a brainwave. Add a sticky to get started.
+          - generic [ref=e404]:
+            - generic:
+              - button:
+                - img
+              - button:
+                - img
+            - button [ref=e405] [cursor=pointer]:
+              - img [ref=e406]
+  - generic:
+    - region "Notifications"
+  - iframe
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - iframe

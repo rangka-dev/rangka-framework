@@ -68,7 +68,7 @@ const SheetOverlay = forwardRef<HTMLDivElement, SheetOverlayProps>(
     return (
       <BaseDrawer.Backdrop
         ref={ref}
-        className={cn('fixed inset-0 z-50 bg-black/50', className)}
+        className={cn('fixed inset-0 z-50 bg-backdrop', className)}
         {...props}
       />
     );
@@ -80,14 +80,10 @@ const SheetContent = forwardRef<HTMLDivElement, SheetContentProps>(
   ({ className, side = 'right', children, ...props }, ref) => {
     return (
       <BaseDrawer.Portal>
-        <BaseDrawer.Backdrop className="fixed inset-0 z-50 bg-black/50" />
+        <BaseDrawer.Backdrop className="fixed inset-0 z-50 bg-backdrop" />
         <BaseDrawer.Popup
           ref={ref}
-          className={cn(
-            'z-50 border-[var(--color-border)] bg-[var(--color-card)] p-6 shadow-lg',
-            sideStyles[side],
-            className,
-          )}
+          className={cn('z-50 border-border bg-card p-6 shadow-lg', sideStyles[side], className)}
           {...props}
         >
           {children}
@@ -121,7 +117,7 @@ const SheetDescription = forwardRef<HTMLParagraphElement, SheetDescriptionProps>
     return (
       <BaseDrawer.Description
         ref={ref}
-        className={cn('text-sm text-[var(--color-muted-foreground)]', className)}
+        className={cn('text-sm text-muted-foreground', className)}
         {...props}
       />
     );

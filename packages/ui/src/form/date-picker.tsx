@@ -53,24 +53,24 @@ const DatePickerRoot = forwardRef<HTMLDivElement, DatePickerProps>(
           <Popover.Trigger
             disabled={disabled}
             className={cn(
-              'flex h-9 w-full items-center gap-2 rounded-md border border-[var(--color-border)] bg-transparent px-3 text-sm transition-colors hover:bg-[var(--color-accent)] disabled:pointer-events-none disabled:opacity-50',
+              'flex h-9 w-full items-center gap-2 rounded-md border border-border bg-transparent px-3 text-sm transition-colors hover:bg-accent disabled:pointer-events-none disabled:opacity-50',
             )}
           >
-            <CalendarIcon className="size-4 text-[var(--color-muted-foreground)]" />
+            <CalendarIcon className="size-4 text-muted-foreground" />
             {dateValue ? (
               <span>{format(dateValue, 'PPP')}</span>
             ) : (
-              <span className="text-[var(--color-muted-foreground)]">{placeholder}</span>
+              <span className="text-muted-foreground">{placeholder}</span>
             )}
           </Popover.Trigger>
           <Popover.Portal>
             <Popover.Positioner sideOffset={4}>
-              <Popover.Popup className="z-50 rounded-md border border-[var(--color-border)] bg-[var(--color-card)] p-3 shadow-md">
+              <Popover.Popup className="z-50 rounded-md border border-border bg-card p-3 shadow-md">
                 <div className="flex items-center justify-between mb-2">
                   <button
                     type="button"
                     onClick={() => setViewMonth(subMonths(viewMonth, 1))}
-                    className="rounded-sm p-1 hover:bg-[var(--color-accent)]"
+                    className="rounded-sm p-1 hover:bg-accent"
                   >
                     <ChevronLeft />
                   </button>
@@ -78,7 +78,7 @@ const DatePickerRoot = forwardRef<HTMLDivElement, DatePickerProps>(
                   <button
                     type="button"
                     onClick={() => setViewMonth(addMonths(viewMonth, 1))}
-                    className="rounded-sm p-1 hover:bg-[var(--color-accent)]"
+                    className="rounded-sm p-1 hover:bg-accent"
                   >
                     <ChevronRight />
                   </button>
@@ -87,7 +87,7 @@ const DatePickerRoot = forwardRef<HTMLDivElement, DatePickerProps>(
                   {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d) => (
                     <div
                       key={d}
-                      className="flex h-8 w-8 items-center justify-center text-xs text-[var(--color-muted-foreground)]"
+                      className="flex h-8 w-8 items-center justify-center text-xs text-muted-foreground"
                     >
                       {d}
                     </div>
@@ -104,11 +104,10 @@ const DatePickerRoot = forwardRef<HTMLDivElement, DatePickerProps>(
                         type="button"
                         onClick={() => handleSelect(day)}
                         className={cn(
-                          'flex h-8 w-8 items-center justify-center rounded-sm text-sm transition-colors hover:bg-[var(--color-accent)]',
-                          isSelected &&
-                            'bg-[var(--color-primary)] text-[var(--color-primary-foreground)] hover:bg-[var(--color-primary)]',
-                          isToday && !isSelected && 'border border-[var(--color-primary)]',
-                          !isSameMonth(day, viewMonth) && 'text-[var(--color-muted-foreground)]',
+                          'flex h-8 w-8 items-center justify-center rounded-sm text-sm transition-colors hover:bg-accent',
+                          isSelected && 'bg-primary text-primary-foreground hover:bg-primary',
+                          isToday && !isSelected && 'border border-primary',
+                          !isSameMonth(day, viewMonth) && 'text-muted-foreground',
                         )}
                       >
                         {format(day, 'd')}

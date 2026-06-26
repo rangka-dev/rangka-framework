@@ -6,13 +6,10 @@ import { cn } from '../lib/cn';
 const alertVariants = cva('relative flex items-start gap-3 rounded-md border px-4 py-3 text-sm', {
   variants: {
     variant: {
-      info: 'border-[var(--color-info-border)] bg-[var(--color-info-bg)] text-[var(--color-info-foreground)]',
-      success:
-        'border-[var(--color-success-border)] bg-[var(--color-success-bg)] text-[var(--color-success-foreground)]',
-      warning:
-        'border-[var(--color-warning-border)] bg-[var(--color-warning-bg)] text-[var(--color-warning-foreground)]',
-      error:
-        'border-[var(--color-error-border)] bg-[var(--color-error-bg)] text-[var(--color-error-foreground)]',
+      info: 'border-info-border bg-info-bg text-info-foreground',
+      success: 'border-success-border bg-success-bg text-success-foreground',
+      warning: 'border-warning-border bg-warning-bg text-warning-foreground',
+      error: 'border-error-border bg-error-bg text-error-foreground',
     },
   },
   defaultVariants: {

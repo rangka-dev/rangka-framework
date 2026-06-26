@@ -38,16 +38,16 @@ export const Section = forwardRef<HTMLDivElement, SectionProps>(
     const [open, setOpen] = useState(!defaultCollapsed);
 
     const header = (
-      <div className="flex items-center gap-2 border-b border-[var(--color-border)] pb-2 mb-3">
+      <div className="flex items-center gap-2 border-b border-border pb-2 mb-3">
         {collapsible && (
           <ChevronRight
             className={cn(
-              'h-4 w-4 text-[var(--color-muted-foreground)] transition-transform duration-150',
+              'h-4 w-4 text-muted-foreground transition-transform duration-150',
               open && 'rotate-90',
             )}
           />
         )}
-        {icon && <span className="text-[var(--color-muted-foreground)]">{icon}</span>}
+        {icon && <span className="text-muted-foreground">{icon}</span>}
         <h3 className="text-sm font-medium">{label}</h3>
       </div>
     );

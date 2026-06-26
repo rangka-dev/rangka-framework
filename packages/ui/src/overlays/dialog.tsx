@@ -63,7 +63,7 @@ const DialogOverlay = forwardRef<HTMLDivElement, DialogOverlayProps>(
     return (
       <BaseDialog.Backdrop
         ref={ref}
-        className={cn('fixed inset-0 z-50 bg-black/50', className)}
+        className={cn('fixed inset-0 z-50 bg-backdrop', className)}
         {...props}
       />
     );
@@ -75,11 +75,11 @@ const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
   ({ className, children, ...props }, ref) => {
     return (
       <BaseDialog.Portal>
-        <BaseDialog.Backdrop className="fixed inset-0 z-50 bg-black/50" />
+        <BaseDialog.Backdrop className="fixed inset-0 z-50 bg-backdrop" />
         <BaseDialog.Popup
           ref={ref}
           className={cn(
-            'fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] p-0 shadow-lg',
+            'fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border bg-card p-0 shadow-lg',
             className,
           )}
           {...props}
@@ -117,7 +117,7 @@ const DialogDescription = forwardRef<HTMLParagraphElement, DialogDescriptionProp
     return (
       <BaseDialog.Description
         ref={ref}
-        className={cn('text-sm text-[var(--color-muted-foreground)]', className)}
+        className={cn('text-sm text-muted-foreground', className)}
         {...props}
       />
     );

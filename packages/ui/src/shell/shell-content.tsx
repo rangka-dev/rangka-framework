@@ -25,7 +25,7 @@ const ShellContentHeader = forwardRef<HTMLElement, ShellContentHeaderProps>(
       ref={ref}
       data-slot="shell-content-header"
       className={cn(
-        'flex h-12 shrink-0 items-center gap-2 border-b border-[var(--color-border)] bg-[var(--color-background)] px-4',
+        'flex h-12 shrink-0 items-center gap-2 border-b border-border bg-background px-4',
         className,
       )}
       {...props}
@@ -41,7 +41,7 @@ const ShellContentMain = forwardRef<HTMLElement, ShellContentMainProps>(
     <main
       ref={ref}
       data-slot="shell-content-main"
-      className={cn('flex-1 overflow-auto bg-[var(--color-muted)]', className)}
+      className={cn('flex-1 overflow-auto bg-muted', className)}
       {...props}
     />
   ),

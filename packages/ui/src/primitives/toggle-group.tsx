@@ -45,7 +45,7 @@ function Root({
       multiple={multiple}
       className={(state) =>
         cn(
-          'inline-flex items-center rounded-md border border-[var(--color-border)]',
+          'inline-flex items-center rounded-md border border-border',
           state.disabled && 'opacity-50',
           typeof className === 'string' ? className : undefined,
         )
@@ -63,8 +63,8 @@ function Item({ className, value, children, ref, ...props }: ToggleGroupItemProp
       value={value}
       className={(state) =>
         cn(
-          'inline-flex items-center justify-center px-3 py-2 text-sm font-medium transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-accent-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]',
-          state.pressed && 'bg-[var(--color-accent)] text-[var(--color-accent-foreground)]',
+          'inline-flex items-center justify-center px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          state.pressed && 'bg-accent text-accent-foreground',
           state.disabled && 'pointer-events-none opacity-50',
           typeof className === 'string' ? className : undefined,
         )

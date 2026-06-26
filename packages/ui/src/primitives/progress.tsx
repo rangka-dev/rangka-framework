@@ -29,10 +29,7 @@ Root.displayName = 'Progress';
 const Track = forwardRef<HTMLDivElement, ProgressTrackProps>(({ className, ...props }, ref) => (
   <BaseProgress.Track
     ref={ref}
-    className={cn(
-      'relative h-2 w-full overflow-hidden rounded-full bg-[var(--color-muted)]',
-      className,
-    )}
+    className={cn('relative h-2 w-full overflow-hidden rounded-full bg-muted', className)}
     {...props}
   />
 ));
@@ -42,7 +39,7 @@ const Indicator = forwardRef<HTMLDivElement, ProgressIndicatorProps>(
   ({ className, ...props }, ref) => (
     <BaseProgress.Indicator
       ref={ref}
-      className={cn('h-full bg-[var(--color-primary)] transition-all', className)}
+      className={cn('h-full bg-primary transition-all', className)}
       {...props}
     />
   ),

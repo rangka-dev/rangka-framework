@@ -54,7 +54,7 @@ const Fallback = forwardRef<HTMLSpanElement, AvatarFallbackProps>(
       ref={ref}
       delay={delay}
       className={cn(
-        'flex h-full w-full items-center justify-center rounded-full bg-[var(--color-muted)] text-[var(--color-muted-foreground)]',
+        'flex h-full w-full items-center justify-center rounded-full bg-muted text-muted-foreground',
         typeof className === 'string' ? className : undefined,
       )}
       {...props}

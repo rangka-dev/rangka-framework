@@ -5,7 +5,7 @@ import { cn } from '../lib/cn';
 export type InputGroupProps = ComponentProps<'div'>;
 
 const inputGroupAddonVariants = cva(
-  "flex h-auto cursor-text items-center justify-center gap-2 py-1.5 text-xs font-medium text-[var(--color-muted-foreground)] select-none [&_svg:not([class*='size-'])]:size-4",
+  "flex h-auto cursor-text items-center justify-center gap-2 py-1.5 text-xs font-medium text-muted-foreground select-none [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       align: {
@@ -33,7 +33,7 @@ const InputGroupRoot = forwardRef<HTMLDivElement, InputGroupProps>(
         ref={ref}
         role="group"
         className={cn(
-          'flex h-9 w-full items-center rounded-md border border-[var(--color-border)] bg-transparent transition-colors focus-within:border-[var(--color-ring)] focus-within:ring-1 focus-within:ring-[var(--color-ring)]',
+          'flex h-9 w-full items-center rounded-md border border-border bg-transparent transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring',
           className,
         )}
         {...props}
@@ -67,7 +67,7 @@ const InputGroupText = forwardRef<HTMLSpanElement, InputGroupTextProps>(
       <span
         ref={ref}
         className={cn(
-          "flex items-center text-xs text-[var(--color-muted-foreground)] [&_svg:not([class*='size-'])]:size-4",
+          "flex items-center text-xs text-muted-foreground [&_svg:not([class*='size-'])]:size-4",
           className,
         )}
         {...props}
@@ -83,7 +83,7 @@ const InputGroupInput = forwardRef<HTMLInputElement, InputGroupInputProps>(
       <input
         ref={ref}
         className={cn(
-          'flex-1 bg-transparent px-3 py-1 text-sm outline-none placeholder:text-[var(--color-muted-foreground)] disabled:cursor-not-allowed disabled:opacity-50',
+          'flex-1 bg-transparent px-3 py-1 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50',
           className,
         )}
         {...props}
