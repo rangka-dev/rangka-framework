@@ -28,3 +28,10 @@ export {
   type ScrollAreaScrollbarProps,
   type ScrollAreaThumbProps,
 } from './scroll-area';
+export { Stack, stackVariants, type StackProps } from './stack';
+export { Grid, gridVariants, type GridProps } from './grid';
+export { Group, groupVariants, type GroupProps } from './group';
+export { Split, type SplitProps, type SplitPanelProps, type SplitHandleProps } from './split';
+export { Section, sectionVariants, type SectionProps } from './section';
+export { Divider, dividerVariants, type DividerProps } from './divider';
+export { Spacer, spacerVariants, type SpacerProps } from './spacer';
