@@ -77,3 +77,5 @@ export {
   type TooltipContentProps,
   type TooltipArrowProps,
 } from './tooltip';
+export { Text, textVariants, type TextProps } from './text';
+export { Image, imageVariants, type ImageProps } from './image';

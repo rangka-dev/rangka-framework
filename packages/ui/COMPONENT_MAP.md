@@ -112,24 +112,24 @@ Status: Done / Pending / Skipped (with reason)
 
 ## Feedback
 
-| Component     | Source file                 | Status  | Notes                             |
-| ------------- | --------------------------- | ------- | --------------------------------- |
-| Alert         | `components/ui/alert.tsx`   | Done    | `src/feedback/alert.tsx`          |
-| Toast         | `shell/Toast.tsx`           | Done    | `src/feedback/toast.tsx`          |
-| ConfirmDialog | `shell/ConfirmDialog.tsx`   | Done    | `src/feedback/confirm-dialog.tsx` |
-| Spinner       | `components/ui/spinner.tsx` | Pending | CSS animation                     |
-| Empty         | `components/ui/empty.tsx`   | Pending | Empty state composition           |
+| Component     | Source file                 | Status | Notes                             |
+| ------------- | --------------------------- | ------ | --------------------------------- |
+| Alert         | `components/ui/alert.tsx`   | Done   | `src/feedback/alert.tsx`          |
+| Toast         | `shell/Toast.tsx`           | Done   | `src/feedback/toast.tsx`          |
+| ConfirmDialog | `shell/ConfirmDialog.tsx`   | Done   | `src/feedback/confirm-dialog.tsx` |
+| Spinner       | `components/ui/spinner.tsx` | Done   | `src/feedback/spinner.tsx`        |
+| Empty         | `components/ui/empty.tsx`   | Done   | `src/feedback/empty.tsx`          |
 
 ## Form
 
-| Component      | Source file                     | Status  | Notes                                                |
-| -------------- | ------------------------------- | ------- | ---------------------------------------------------- |
-| Field          | `components/ui/field.tsx`       | Done    | `src/form/field.tsx` — label, description, error     |
-| DatePicker     | —                               | Done    | `src/form/date-picker.tsx`                           |
-| DateTimePicker | —                               | Done    | `src/form/date-time-picker.tsx`                      |
-| MoneyInput     | —                               | Done    | `src/form/money-input.tsx`                           |
-| InputGroup     | `components/ui/input-group.tsx` | Pending | Input with addons (prefix/suffix)                    |
-| FormField      | —                               | Pending | Composition wrapper per spec (FormField.Label, etc.) |
+| Component      | Source file                     | Status  | Notes                                                                    |
+| -------------- | ------------------------------- | ------- | ------------------------------------------------------------------------ |
+| Field          | `components/ui/field.tsx`       | Done    | `src/form/field.tsx` — label, description, error                         |
+| DatePicker     | —                               | Done    | `src/form/date-picker.tsx`                                               |
+| DateTimePicker | —                               | Done    | `src/form/date-time-picker.tsx`                                          |
+| MoneyInput     | —                               | Done    | `src/form/money-input.tsx`                                               |
+| InputGroup     | `components/ui/input-group.tsx` | Done    | `src/form/input-group.tsx` — Addon/Text/Input                            |
+| FormField      | —                               | Skipped | Already covered by `Field` (Field.Label, Field.Description, Field.Error) |
 
 ## Tokens
 
