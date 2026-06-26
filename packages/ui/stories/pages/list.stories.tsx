@@ -100,7 +100,7 @@ export const OrderList: Story = {
         </Button>
       }
     >
-      <table className="w-full text-body">
+      <table className="w-full text-2xs">
         <thead>
           <tr className="border-b border-border-subtle text-left text-foreground/50">
             <th className="px-6 py-2.5 font-medium">Order</th>
@@ -177,7 +177,7 @@ export const CustomerList: Story = {
         </Button>
       }
     >
-      <table className="w-full text-body">
+      <table className="w-full text-2xs">
         <thead>
           <tr className="border-b border-border-subtle text-left text-foreground/50">
             <th className="px-6 py-2.5 font-medium">Company</th>

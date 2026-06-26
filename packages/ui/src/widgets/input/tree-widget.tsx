@@ -35,7 +35,7 @@ export function TreeWidget({ props, bind, on }: WidgetComponentProps) {
           onClick={() => !disabled && setOpen(!open)}
           disabled={disabled}
           className={cn(
-            'flex h-9 w-full items-center rounded-md border border-border bg-transparent px-3 text-body',
+            'flex h-9 w-full items-center rounded-md border border-border bg-transparent px-3 text-2xs',
             'focus-visible:outline-none',
             disabled && 'cursor-not-allowed opacity-50',
             !selected && 'text-muted-foreground',
@@ -67,7 +67,7 @@ export function TreeWidget({ props, bind, on }: WidgetComponentProps) {
                   type="button"
                   onClick={() => handleSelect(opt.value)}
                   className={cn(
-                    'flex w-full items-center gap-1 rounded-sm px-3 py-1.5 text-body cursor-pointer',
+                    'flex w-full items-center gap-1 rounded-sm px-3 py-1.5 text-2xs cursor-pointer',
                     'hover:bg-foreground/6',
                     opt.value === bind.value && 'bg-foreground/6 font-medium',
                   )}

@@ -47,7 +47,7 @@ export function JsonWidget({ props, bind, on }: WidgetComponentProps) {
         readOnly={bind.meta?.readOnly}
         rows={rows}
         spellCheck={false}
-        className="font-mono text-body"
+        className="font-mono text-2xs"
       />
       {(bind.error || parseError) && <Field.Error>{bind.error || parseError}</Field.Error>}
     </Field>

@@ -224,7 +224,7 @@ const ShellSidebarGroupLabel = forwardRef<HTMLDivElement, ShellSidebarGroupLabel
     <div
       ref={ref}
       data-slot="shell-sidebar-group-label"
-      className={cn('flex h-7 items-center text-body font-semibold text-foreground/50', className)}
+      className={cn('flex h-5 items-center text-2xs font-semibold text-foreground/50', className)}
       {...props}
     />
   ),
@@ -253,7 +253,7 @@ const ShellSidebarCollapsibleGroup = forwardRef<HTMLDivElement, ShellSidebarColl
       {...props}
     >
       <Collapsible open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange}>
-        <Collapsible.Trigger className="flex h-9 w-full cursor-pointer items-center justify-between rounded-sm px-1.5 py-2 text-body font-semibold text-foreground/50 transition-colors hover:bg-foreground/6 hover:text-foreground">
+        <Collapsible.Trigger className="flex h-7 w-full cursor-pointer items-center justify-between rounded-sm px-1.5 py-1 text-2xs font-semibold text-foreground/50 transition-colors hover:bg-foreground/6 hover:text-foreground">
           <span>{label}</span>
           <div className="flex size-5 items-center justify-center">
             <Icon icon={ChevronDown} size="sm" />
@@ -312,7 +312,7 @@ const ShellSidebarMenuButton = forwardRef<HTMLButtonElement, ShellSidebarMenuBut
       data-slot="shell-sidebar-menu-button"
       data-active={active}
       className={cn(
-        'flex h-[30px] w-full items-center gap-1.5 rounded-md px-2 text-body font-medium text-foreground/80 transition-colors',
+        'flex h-[30px] w-full items-center gap-1.5 rounded-md px-2 text-sm font-normal text-foreground/80 transition-colors',
         'hover:bg-foreground/6 hover:text-foreground',
         'data-[active=true]:bg-foreground/6 data-[active=true]:text-foreground',
         '[&>svg]:size-4 [&>svg]:shrink-0',
@@ -339,7 +339,7 @@ const ShellSidebarMenuLink = forwardRef<HTMLAnchorElement, ShellSidebarMenuLinkP
       data-slot="shell-sidebar-menu-link"
       data-active={active}
       className={cn(
-        'flex h-[30px] w-full items-center gap-1.5 rounded-md px-2 text-body font-medium text-foreground/80 transition-colors',
+        'flex h-[30px] w-full items-center gap-1.5 rounded-md px-2 text-sm font-normal text-foreground/80 transition-colors',
         'hover:bg-foreground/6 hover:text-foreground',
         'data-[active=true]:bg-foreground/6 data-[active=true]:text-foreground',
         '[&>svg]:size-4 [&>svg]:shrink-0',
@@ -419,7 +419,7 @@ const ShellSidebarMenuSubButton = forwardRef<HTMLButtonElement, ShellSidebarMenu
       data-slot="shell-sidebar-menu-sub-button"
       data-active={active}
       className={cn(
-        'flex h-7 w-full items-center gap-1.5 rounded-md px-2 text-body text-foreground/80 transition-colors',
+        'flex h-7 w-full items-center gap-1.5 rounded-md px-2 text-2xs font-normal text-foreground/80 transition-colors',
         'hover:bg-foreground/6 hover:text-foreground',
         'data-[active=true]:bg-foreground/6 data-[active=true]:font-medium data-[active=true]:text-foreground',
         className,

@@ -67,7 +67,7 @@ export function ManyToManyWidget({ props, bind, on }: WidgetComponentProps) {
             <button
               type="button"
               onClick={() => setOpen(!open)}
-              className="flex h-7 flex-1 items-center gap-1 px-1 text-body text-muted-foreground"
+              className="flex h-7 flex-1 items-center gap-1 px-1 text-2xs text-muted-foreground"
             >
               {selectedItems.length === 0 && <span>{placeholder}</span>}
               <Icon icon={Search} size="sm" className="ml-auto" />
@@ -94,7 +94,7 @@ export function ManyToManyWidget({ props, bind, on }: WidgetComponentProps) {
                   key={opt.value}
                   type="button"
                   onClick={() => handleToggle(opt.value)}
-                  className="flex w-full items-center rounded-sm px-3 py-1.5 text-body cursor-pointer hover:bg-foreground/6"
+                  className="flex w-full items-center rounded-sm px-3 py-1.5 text-2xs cursor-pointer hover:bg-foreground/6"
                 >
                   {opt.label}
                 </button>

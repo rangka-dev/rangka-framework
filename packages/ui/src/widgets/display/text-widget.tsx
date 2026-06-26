@@ -7,10 +7,10 @@ export function TextWidget({ props, bind }: WidgetComponentProps) {
 
   const variantClasses: Record<string, string> = {
     heading: 'text-lg font-semibold text-foreground',
-    body: 'text-body text-foreground/80',
+    body: 'text-2xs text-foreground/80',
     caption: 'text-xs text-foreground/50',
-    bold: 'text-body font-semibold text-foreground',
-    muted: 'text-body text-foreground/50',
+    bold: 'text-2xs font-semibold text-foreground',
+    muted: 'text-2xs text-foreground/50',
   };
 
   return <p className={cn(variantClasses[variant] ?? variantClasses.body)}>{value}</p>;

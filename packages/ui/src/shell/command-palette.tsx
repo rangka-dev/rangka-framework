@@ -94,7 +94,7 @@ const CommandPaletteTrigger = forwardRef<HTMLButtonElement, CommandPaletteTrigge
         type="button"
         onClick={() => setOpen(true)}
         className={cn(
-          'flex h-7 cursor-pointer items-center gap-2 rounded-lg border border-border-subtle bg-surface p-2 text-body text-muted-foreground transition-colors hover:bg-foreground/4',
+          'flex h-7 cursor-pointer items-center gap-2 rounded-lg border border-border-subtle bg-surface p-2 text-2xs text-muted-foreground transition-colors hover:bg-foreground/4',
           className,
         )}
         {...props}
@@ -158,7 +158,7 @@ const CommandPaletteContent = forwardRef<HTMLDivElement, CommandPaletteContentPr
               />
             </div>
             <Command.List className="max-h-72 overflow-y-auto p-2">
-              <Command.Empty className="px-3 py-6 text-center text-body text-muted-foreground">
+              <Command.Empty className="px-3 py-6 text-center text-2xs text-muted-foreground">
                 No results found.
               </Command.Empty>
               {children}
@@ -202,7 +202,7 @@ const CommandPaletteItem = forwardRef<HTMLDivElement, CommandPaletteItemProps>(
       ref={ref}
       data-slot="command-palette-item"
       className={cn(
-        'flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-body text-foreground/80 outline-none transition-colors',
+        'flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-2xs text-foreground/80 outline-none transition-colors',
         'data-[selected=true]:bg-foreground/6 data-[selected=true]:text-foreground',
         '[&>svg]:size-4 [&>svg]:shrink-0',
         className,

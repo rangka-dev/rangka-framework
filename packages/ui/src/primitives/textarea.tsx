@@ -3,7 +3,7 @@ import { forwardRef, type ComponentProps } from 'react';
 import { cn } from '../lib/cn';
 
 const textareaVariants = cva(
-  'flex min-h-[80px] w-full rounded-md border border-border bg-background px-3 py-2 text-body text-foreground placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 aria-[invalid=true]:border-destructive',
+  'flex min-h-[80px] w-full rounded-md border border-border bg-background px-3 py-2 text-2xs text-foreground placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 aria-[invalid=true]:border-destructive',
 );
 
 export type TextareaProps = ComponentProps<'textarea'> & VariantProps<typeof textareaVariants>;

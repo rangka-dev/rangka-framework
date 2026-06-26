@@ -235,7 +235,7 @@ export const ListPage: Story = {
             <Card.Description>Manage your sales orders.</Card.Description>
           </Card.Header>
           <Card.Content>
-            <table className="w-full text-body">
+            <table className="w-full text-2xs">
               <thead>
                 <tr className="border-b border-border-subtle text-left text-muted-foreground">
                   <th className="px-3 py-2 font-medium">Order</th>
@@ -337,8 +337,8 @@ export const DashboardPage: Story = {
                 className="items-center justify-between rounded-md px-3 py-2 hover:bg-foreground/4"
               >
                 <Group gap="sm" className="items-center">
-                  <span className="text-body font-medium">ORD-001</span>
-                  <span className="text-body text-muted-foreground">Acme Corp</span>
+                  <span className="text-2xs font-medium">ORD-001</span>
+                  <span className="text-2xs text-muted-foreground">Acme Corp</span>
                 </Group>
                 <Badge>Confirmed</Badge>
               </Group>
@@ -347,8 +347,8 @@ export const DashboardPage: Story = {
                 className="items-center justify-between rounded-md px-3 py-2 hover:bg-foreground/4"
               >
                 <Group gap="sm" className="items-center">
-                  <span className="text-body font-medium">ORD-002</span>
-                  <span className="text-body text-muted-foreground">Globex Inc</span>
+                  <span className="text-2xs font-medium">ORD-002</span>
+                  <span className="text-2xs text-muted-foreground">Globex Inc</span>
                 </Group>
                 <Badge variant="outline">Draft</Badge>
               </Group>
@@ -357,8 +357,8 @@ export const DashboardPage: Story = {
                 className="items-center justify-between rounded-md px-3 py-2 hover:bg-foreground/4"
               >
                 <Group gap="sm" className="items-center">
-                  <span className="text-body font-medium">ORD-003</span>
-                  <span className="text-body text-muted-foreground">Wayne Enterprises</span>
+                  <span className="text-2xs font-medium">ORD-003</span>
+                  <span className="text-2xs text-muted-foreground">Wayne Enterprises</span>
                 </Group>
                 <Badge variant="destructive">Overdue</Badge>
               </Group>
@@ -378,7 +378,7 @@ export const DetailPage: Story = {
         <Group gap="md" className="items-start justify-between">
           <Stack gap="xs">
             <h1 className="text-lg font-semibold">ORD-001</h1>
-            <span className="text-body text-muted-foreground">Acme Corp · June 20, 2026</span>
+            <span className="text-2xs text-muted-foreground">Acme Corp · June 20, 2026</span>
           </Stack>
           <Group gap="sm">
             <Badge>Confirmed</Badge>

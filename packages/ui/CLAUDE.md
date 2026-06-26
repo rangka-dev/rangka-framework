@@ -262,12 +262,12 @@ Widgets live in `src/widgets/` organized by category: `input`, `display`, `actio
 
 ### Widget Rules
 
-- All text uses `text-body` token (13px, defined in `src/tokens/typography.css`)
+- All text uses `text-2xs` token (13px, defined in `src/tokens/typography.css`)
 - Labels use `text-foreground/80` via the Label primitive
 - No focus ring on inputs — `focus-visible:outline-none` only
 - Number inputs hide stepper: `[appearance:textfield]`
 - Select/Link/Tree use custom dropdown (not Base UI Select) with `bg-surface`, `border-border`, `shadow-md`
-- Dropdown items: `text-body hover:bg-foreground/6`, active: `bg-foreground/6 font-medium`
+- Dropdown items: `text-2xs hover:bg-foreground/6`, active: `bg-foreground/6 font-medium`
 - Checkbox label goes to the right (use `Field orientation="horizontal"`)
 
 ### Widget Props Contract
