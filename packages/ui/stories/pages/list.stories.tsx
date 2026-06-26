@@ -6,6 +6,11 @@ import { Icon } from '../../src/primitives/icon';
 import { FilterBar } from '../../src/data/filter-bar';
 import { PageShell } from './page-shell';
 import { TableWidget } from '../../src/widgets/data/table-widget';
+import { DrawerWidget } from '../../src/widgets/overlay/drawer-widget';
+import { InputWidget, SelectWidget } from '../../src/widgets/input';
+import { TextWidget, BadgeWidget } from '../../src/widgets/display';
+import { ButtonWidget } from '../../src/widgets/action';
+import { StackWidget, GroupWidget, GridWidget } from '../../src/widgets/layout';
 
 const meta: Meta = {
   title: 'Widget Compose/List',
@@ -435,6 +440,174 @@ export const WithFilter: Story = {
           on={{ rowClick: () => {} }}
           context={ctx}
         />
+      </PageShell>
+    );
+  },
+};
+
+export const WithPeekDrawer: Story = {
+  name: 'With Peek Drawer',
+  render: function PeekDemo() {
+    const [selected, setSelected] = useState<(typeof orders)[0] | null>(null);
+    const on = {};
+    const viewCtx = { record: {}, model: 'sales.order', mode: 'view' as const };
+
+    return (
+      <PageShell
+        module="Sales"
+        page="Orders"
+        layout="full"
+        action={
+          <Button variant="primary" size="xs">
+            <Icon icon={Plus} size="sm" />
+            <span>New Order</span>
+          </Button>
+        }
+      >
+        <TableWidget
+          props={{
+            variant: 'flat',
+            columns: [
+              { field: 'id', label: 'Order', sortable: true },
+              { field: 'customer', label: 'Customer', sortable: true },
+              { field: 'date', label: 'Date', sortable: true },
+              { field: 'status', label: 'Status' },
+              { field: 'total', label: 'Total', align: 'right', sortable: true },
+            ],
+            page: 1,
+            pageSize: 20,
+            total: 142,
+          }}
+          bind={{ value: orders }}
+          on={{ rowClick: (row: unknown) => setSelected(row as (typeof orders)[0]) }}
+          context={ctx}
+        />
+        <DrawerWidget
+          props={{ title: selected ? `Order ${selected.id}` : 'Order Details', width: 'md' }}
+          bind={{
+            value: !!selected,
+            setValue: (v) => {
+              if (!v) setSelected(null);
+            },
+          }}
+          on={{ close: () => setSelected(null) }}
+          context={viewCtx}
+        >
+          {selected && (
+            <StackWidget props={{ gap: 'lg' }} bind={{ value: null }} on={on} context={viewCtx}>
+              <GroupWidget
+                props={{ direction: 'row', gap: 'sm', align: 'center' }}
+                bind={{ value: null }}
+                on={on}
+                context={viewCtx}
+              >
+                <TextWidget
+                  props={{ variant: 'heading' }}
+                  bind={{ value: selected.customer }}
+                  on={on}
+                  context={viewCtx}
+                />
+                <BadgeWidget
+                  props={{
+                    variant:
+                      selected.status === 'Confirmed'
+                        ? 'default'
+                        : selected.status === 'Overdue'
+                          ? 'destructive'
+                          : 'secondary',
+                    label: selected.status,
+                  }}
+                  bind={{ value: null }}
+                  on={on}
+                  context={viewCtx}
+                />
+              </GroupWidget>
+
+              <GridWidget
+                props={{ columns: 2, gap: 'md' }}
+                bind={{ value: null }}
+                on={on}
+                context={viewCtx}
+              >
+                <InputWidget
+                  props={{ label: 'Order ID' }}
+                  bind={{
+                    value: selected.id,
+                    meta: { type: 'string', label: 'ID', required: false, readOnly: true },
+                  }}
+                  on={on}
+                  context={viewCtx}
+                />
+                <InputWidget
+                  props={{ label: 'Date' }}
+                  bind={{
+                    value: selected.date,
+                    meta: { type: 'string', label: 'Date', required: false, readOnly: true },
+                  }}
+                  on={on}
+                  context={viewCtx}
+                />
+                <InputWidget
+                  props={{ label: 'Customer' }}
+                  bind={{
+                    value: selected.customer,
+                    meta: { type: 'string', label: 'Customer', required: false, readOnly: true },
+                  }}
+                  on={on}
+                  context={viewCtx}
+                />
+                <InputWidget
+                  props={{ label: 'Total' }}
+                  bind={{
+                    value: selected.total,
+                    meta: { type: 'string', label: 'Total', required: false, readOnly: true },
+                  }}
+                  on={on}
+                  context={viewCtx}
+                />
+              </GridWidget>
+
+              <SelectWidget
+                props={{
+                  label: 'Status',
+                  options: [
+                    { value: 'Confirmed', label: 'Confirmed' },
+                    { value: 'Draft', label: 'Draft' },
+                    { value: 'Pending', label: 'Pending' },
+                    { value: 'Overdue', label: 'Overdue' },
+                    { value: 'Shipped', label: 'Shipped' },
+                  ],
+                }}
+                bind={{
+                  value: selected.status,
+                  meta: { type: 'enum', label: 'Status', required: false, readOnly: true },
+                }}
+                on={on}
+                context={viewCtx}
+              />
+
+              <GroupWidget
+                props={{ direction: 'row', gap: 'sm', justify: 'end' }}
+                bind={{ value: null }}
+                on={on}
+                context={viewCtx}
+              >
+                <ButtonWidget
+                  props={{ label: 'Edit Order', variant: 'secondary', size: 'sm' }}
+                  bind={{ value: null }}
+                  on={on}
+                  context={viewCtx}
+                />
+                <ButtonWidget
+                  props={{ label: 'View Full', variant: 'primary', size: 'sm' }}
+                  bind={{ value: null }}
+                  on={on}
+                  context={viewCtx}
+                />
+              </GroupWidget>
+            </StackWidget>
+          )}
+        </DrawerWidget>
       </PageShell>
     );
   },
