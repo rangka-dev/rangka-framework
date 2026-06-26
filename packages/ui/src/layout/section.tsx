@@ -64,10 +64,8 @@ export const Section = forwardRef<HTMLDivElement, SectionProps>(
     return (
       <Collapsible open={open} onOpenChange={setOpen}>
         <div ref={ref} className={cn(sectionVariants({ padding, className }))} {...props}>
-          <Collapsible.Trigger asChild>
-            <button type="button" className="cursor-pointer text-left hover:opacity-80">
-              {header}
-            </button>
+          <Collapsible.Trigger className="cursor-pointer text-left hover:opacity-80 w-full">
+            {header}
           </Collapsible.Trigger>
           <Collapsible.Content>
             <div data-section-content="">{children}</div>

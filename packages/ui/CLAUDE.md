@@ -9,6 +9,12 @@ Design system package. All visual rendering lives here. The client package is he
 - Owns Base UI as headless accessibility layer
 - Exports components consumed by `@rangka/client`
 
+## Reference Documents
+
+- `COMPONENT_MAP.md` — Full inventory of every component with build status (Done/Pending/Skipped). Check this before building anything new.
+- `BASE_UI_MAP.md` — Maps each component to its Base UI primitive or marks it as custom. Use this to find the correct `@base-ui/react/*` import.
+- `README.md` — Public-facing package overview and quick start.
+
 ## Import Rules
 
 - `@rangka/ui` imports from `@rangka/shared` (types only, if needed)

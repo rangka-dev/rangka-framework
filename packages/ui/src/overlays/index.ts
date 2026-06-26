@@ -40,3 +40,23 @@ export {
   type CommandItemProps,
   type CommandEmptyProps,
 } from './command';
+export {
+  Popover,
+  type PopoverProps,
+  type PopoverTriggerProps,
+  type PopoverContentProps,
+  type PopoverArrowProps,
+  type PopoverCloseProps,
+  type PopoverTitleProps,
+  type PopoverDescriptionProps,
+} from './popover';
+export {
+  ContextMenu,
+  type ContextMenuProps,
+  type ContextMenuTriggerProps,
+  type ContextMenuContentProps,
+  type ContextMenuItemProps,
+  type ContextMenuLabelProps,
+  type ContextMenuSeparatorProps,
+  type ContextMenuGroupProps,
+} from './context-menu';

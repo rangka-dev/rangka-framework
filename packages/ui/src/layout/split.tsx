@@ -1,4 +1,4 @@
-import * as ResizablePrimitive from 'react-resizable-panels';
+import { Group, Panel, Separator, type GroupImperativeHandle } from 'react-resizable-panels';
 import { forwardRef, type ComponentProps, type ReactNode } from 'react';
 import { cn } from '../lib/cn';
 
@@ -30,14 +30,14 @@ export type SplitHandleProps = Omit<ComponentProps<'div'>, 'children'> & {
 const SplitRoot = forwardRef<HTMLDivElement, SplitProps>(
   ({ className, direction = 'horizontal', children, ...props }, ref) => {
     return (
-      <ResizablePrimitive.PanelGroup
-        ref={ref as React.Ref<ResizablePrimitive.ImperativePanelGroupHandle>}
-        direction={direction}
+      <Group
+        groupRef={ref as React.RefObject<GroupImperativeHandle | null>}
+        orientation={direction}
         className={cn('flex h-full w-full', className)}
         {...props}
       >
         {children}
-      </ResizablePrimitive.PanelGroup>
+      </Group>
     );
   },
 );
@@ -52,7 +52,7 @@ const SplitPanel = ({
   className,
 }: SplitPanelProps) => {
   return (
-    <ResizablePrimitive.Panel
+    <Panel
       defaultSize={defaultSize}
       minSize={minSize}
       maxSize={maxSize}
@@ -60,7 +60,7 @@ const SplitPanel = ({
       className={className}
     >
       {children}
-    </ResizablePrimitive.Panel>
+    </Panel>
   );
 };
 SplitPanel.displayName = 'Split.Panel';
@@ -68,7 +68,8 @@ SplitPanel.displayName = 'Split.Panel';
 const SplitHandle = forwardRef<HTMLDivElement, SplitHandleProps>(
   ({ className, withHandle, ...props }, ref) => {
     return (
-      <ResizablePrimitive.PanelResizeHandle
+      <Separator
+        elementRef={ref as React.RefObject<HTMLDivElement | null>}
         className={cn(
           'relative flex w-px items-center justify-center bg-[var(--color-border)] after:absolute after:inset-y-0 after:-left-1 after:-right-1 after:content-[""] data-[orientation=vertical]:h-px data-[orientation=vertical]:w-full data-[orientation=vertical]:after:inset-x-0 data-[orientation=vertical]:after:-top-1 data-[orientation=vertical]:after:-bottom-1',
           className,
@@ -93,7 +94,7 @@ const SplitHandle = forwardRef<HTMLDivElement, SplitHandleProps>(
             </svg>
           </div>
         )}
-      </ResizablePrimitive.PanelResizeHandle>
+      </Separator>
     );
   },
 );

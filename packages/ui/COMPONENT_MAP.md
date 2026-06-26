@@ -2,183 +2,169 @@
 
 Complete inventory of visual components to recreate in `@rangka/ui`, mapped from `packages/client/src/`.
 
+Status: Done / Pending / Skipped (with reason)
+
 ## Primitives
 
-| Component     | Source file                       | Description                                                                                       |
-| ------------- | --------------------------------- | ------------------------------------------------------------------------------------------------- |
-| Button        | `components/ui/button.tsx`        | Variants: default, outline, secondary, ghost, destructive, link. Sizes: xs, sm, default, lg, icon |
-| Badge         | `components/ui/badge.tsx`         | Inline label. Variants: default, secondary, destructive, outline, ghost, link                     |
-| Input         | `components/ui/input.tsx`         | Text input with file upload support, disabled/error states                                        |
-| Textarea      | `components/ui/textarea.tsx`      | Multi-line text input                                                                             |
-| Checkbox      | `components/ui/checkbox.tsx`      | Checkbox control                                                                                  |
-| Radio Group   | `components/ui/radio-group.tsx`   | Radio button group                                                                                |
-| Switch        | `components/ui/switch.tsx`        | Toggle switch                                                                                     |
-| Select        | `components/ui/select.tsx`        | Dropdown select with Trigger, Content, Item, Group                                                |
-| Combobox      | `components/ui/combobox.tsx`      | Searchable select                                                                                 |
-| Native Select | `components/ui/native-select.tsx` | HTML native select fallback                                                                       |
-| Toggle        | `components/ui/toggle.tsx`        | Toggle button with variants                                                                       |
-| Toggle Group  | `components/ui/toggle-group.tsx`  | Grouped toggle buttons                                                                            |
-| Button Group  | `components/ui/button-group.tsx`  | Grouped buttons with shared styling                                                               |
-| Label         | `components/ui/label.tsx`         | Form label with disabled state                                                                    |
-| Input OTP     | `components/ui/input-otp.tsx`     | One-time-password input                                                                           |
-| Calendar      | `components/ui/calendar.tsx`      | Date picker calendar                                                                              |
-| Slider        | `components/ui/slider.tsx`        | Range slider                                                                                      |
-| Progress      | `components/ui/progress.tsx`      | Progress bar                                                                                      |
-| Kbd           | `components/ui/kbd.tsx`           | Keyboard key display                                                                              |
-| Skeleton      | `components/ui/skeleton.tsx`      | Loading skeleton placeholder                                                                      |
-| Avatar        | `components/ui/avatar.tsx`        | User avatar with fallback                                                                         |
-| Separator     | `components/ui/separator.tsx`     | Horizontal/vertical divider                                                                       |
-| Icon          | `components/Icon.tsx`             | Lucide icon wrapper                                                                               |
+| Component     | Source file                       | Status  | Notes                                     |
+| ------------- | --------------------------------- | ------- | ----------------------------------------- |
+| Button        | `components/ui/button.tsx`        | Done    | `src/primitives/button.tsx`               |
+| Badge         | `components/ui/badge.tsx`         | Done    | `src/primitives/badge.tsx`                |
+| Input         | `components/ui/input.tsx`         | Done    | `src/primitives/input.tsx`                |
+| Textarea      | `components/ui/textarea.tsx`      | Done    | `src/primitives/textarea.tsx`             |
+| Checkbox      | `components/ui/checkbox.tsx`      | Done    | `src/primitives/checkbox.tsx`             |
+| Radio Group   | `components/ui/radio-group.tsx`   | Done    | `src/primitives/radio-group.tsx`          |
+| Switch        | `components/ui/switch.tsx`        | Done    | `src/primitives/switch.tsx`               |
+| Select        | `components/ui/select.tsx`        | Done    | `src/primitives/select.tsx`               |
+| Combobox      | `components/ui/combobox.tsx`      | Done    | `src/primitives/combobox.tsx`             |
+| Native Select | `components/ui/native-select.tsx` | Skipped | Covered by Select primitive               |
+| Toggle        | `components/ui/toggle.tsx`        | Done    | `src/primitives/toggle.tsx`               |
+| Toggle Group  | `components/ui/toggle-group.tsx`  | Done    | `src/primitives/toggle-group.tsx`         |
+| Button Group  | `components/ui/button-group.tsx`  | Skipped | Compose with Group layout + Button        |
+| Label         | `components/ui/label.tsx`         | Done    | `src/primitives/label.tsx`                |
+| Input OTP     | `components/ui/input-otp.tsx`     | Done    | `src/primitives/input-otp.tsx`            |
+| Number Input  | —                                 | Done    | `src/primitives/number-input.tsx`         |
+| Calendar      | `components/ui/calendar.tsx`      | Skipped | Integrated into DatePicker form component |
+| Slider        | `components/ui/slider.tsx`        | Done    | `src/primitives/slider.tsx`               |
+| Progress      | `components/ui/progress.tsx`      | Done    | `src/primitives/progress.tsx`             |
+| Kbd           | `components/ui/kbd.tsx`           | Done    | `src/primitives/kbd.tsx`                  |
+| Skeleton      | `components/ui/skeleton.tsx`      | Done    | `src/primitives/skeleton.tsx`             |
+| Avatar        | `components/ui/avatar.tsx`        | Done    | `src/primitives/avatar.tsx`               |
+| Separator     | `components/ui/separator.tsx`     | Done    | `src/primitives/separator.tsx`            |
+| Icon          | `components/Icon.tsx`             | Done    | `src/primitives/icon.tsx`                 |
+| Tooltip       | `components/ui/tooltip.tsx`       | Done    | `src/primitives/tooltip.tsx`              |
 
 ## Layout
 
-| Component    | Source file                            | Description                                                   |
-| ------------ | -------------------------------------- | ------------------------------------------------------------- |
-| Card         | `components/ui/card.tsx`               | Card with Header, Title, Description, Action, Content, Footer |
-| Stack        | `widgets/components/StackWidget.tsx`   | Vertical stack container with padding                         |
-| Group        | `widgets/components/GroupWidget.tsx`   | Flex container with gap/padding/alignment                     |
-| Grid         | `widgets/components/GridWidget.tsx`    | CSS grid layout                                               |
-| Section      | `widgets/components/SectionWidget.tsx` | Collapsible section with border/title                         |
-| Split        | `widgets/components/SplitWidget.tsx`   | Resizable split panels                                        |
-| Scroll Area  | `components/ui/scroll-area.tsx`        | Scrollable area with custom scrollbar                         |
-| Resizable    | `components/ui/resizable.tsx`          | Resizable panel group/panel/handle                            |
-| Collapsible  | `components/ui/collapsible.tsx`        | Collapsible trigger/content                                   |
-| Tabs         | `components/ui/tabs.tsx`               | Tab navigation with list and content                          |
-| Accordion    | `components/ui/accordion.tsx`          | Expandable accordion panels                                   |
-| Carousel     | `components/ui/carousel.tsx`           | Image/content carousel                                        |
-| Aspect Ratio | `components/ui/aspect-ratio.tsx`       | Fixed aspect ratio container                                  |
-| Table (HTML) | `components/ui/table.tsx`              | Semantic HTML table with styling                              |
+| Component    | Source file                            | Status  | Notes                                           |
+| ------------ | -------------------------------------- | ------- | ----------------------------------------------- |
+| Card         | `components/ui/card.tsx`               | Done    | `src/layout/card.tsx` — composition pattern     |
+| Stack        | `widgets/components/StackWidget.tsx`   | Done    | `src/layout/stack.tsx`                          |
+| Group        | `widgets/components/GroupWidget.tsx`   | Done    | `src/layout/group.tsx`                          |
+| Grid         | `widgets/components/GridWidget.tsx`    | Done    | `src/layout/grid.tsx`                           |
+| Section      | `widgets/components/SectionWidget.tsx` | Done    | `src/layout/section.tsx` — collapsible variant  |
+| Split        | `widgets/components/SplitWidget.tsx`   | Done    | `src/layout/split.tsx` — react-resizable-panels |
+| Scroll Area  | `components/ui/scroll-area.tsx`        | Done    | `src/layout/scroll-area.tsx`                    |
+| Collapsible  | `components/ui/collapsible.tsx`        | Done    | `src/layout/collapsible.tsx`                    |
+| Tabs         | `components/ui/tabs.tsx`               | Done    | `src/layout/tabs.tsx`                           |
+| Divider      | `widgets/components/DividerWidget.tsx` | Done    | `src/layout/divider.tsx`                        |
+| Spacer       | `widgets/components/SpacerWidget.tsx`  | Done    | `src/layout/spacer.tsx`                         |
+| Resizable    | `components/ui/resizable.tsx`          | Skipped | Covered by Split component                      |
+| Accordion    | `components/ui/accordion.tsx`          | Pending | Base UI accordion                               |
+| Carousel     | `components/ui/carousel.tsx`           | Pending | embla-carousel                                  |
+| Aspect Ratio | `components/ui/aspect-ratio.tsx`       | Pending | Pure CSS                                        |
+| Table (HTML) | `components/ui/table.tsx`              | Pending | Styled HTML table                               |
 
 ## Shell
 
-| Component       | Source file                            | Description                                                       |
-| --------------- | -------------------------------------- | ----------------------------------------------------------------- |
-| Sidebar         | `components/ui/sidebar.tsx`            | Provider, Header, Content, Footer, Group, Menu, MenuItem, Trigger |
-| ShellLayout     | `shell/ShellLayout.tsx`                | Main app shell with sidebar, header, breadcrumbs, drawer          |
-| AppSidebar      | `shell/app-sidebar/AppSidebar.tsx`     | App-specific sidebar wrapper                                      |
-| ModuleSwitcher  | `shell/app-sidebar/ModuleSwitcher.tsx` | Module/workspace switcher                                         |
-| NavMain         | `shell/app-sidebar/NavMain.tsx`        | Main navigation with collapsible sections                         |
-| NavUser         | `shell/app-sidebar/NavUser.tsx`        | User menu in sidebar                                              |
-| SearchMenu      | `shell/app-sidebar/SearchMenu.tsx`     | Search trigger in sidebar                                         |
-| HeaderActions   | `shell/HeaderActions.tsx`              | Action buttons in header                                          |
-| CommandPalette  | `shell/CommandPalette.tsx`             | Cmd+K search palette                                              |
-| Breadcrumb      | `components/ui/breadcrumb.tsx`         | Breadcrumb nav with list, item, link, separator                   |
-| Navigation Menu | `components/ui/navigation-menu.tsx`    | Horizontal navigation menu                                        |
-| Menubar         | `components/ui/menubar.tsx`            | Menu bar with menus and items                                     |
-| Pagination      | `components/ui/pagination.tsx`         | Pagination controls                                               |
+| Component       | Source file                            | Status  | Notes                                                     |
+| --------------- | -------------------------------------- | ------- | --------------------------------------------------------- |
+| Sidebar         | `components/ui/sidebar.tsx`            | Done    | `src/shell/sidebar.tsx` — full composition with Provider  |
+| ShellContent    | `shell/ShellLayout.tsx`                | Done    | `src/shell/shell-content.tsx` — Header + Main             |
+| PageContainer   | —                                      | Done    | `src/shell/page-container.tsx`                            |
+| Breadcrumb      | `components/ui/breadcrumb.tsx`         | Done    | `src/shell/breadcrumb.tsx`                                |
+| Topbar          | `shell/ShellLayout.tsx`                | Done    | Implemented as `ShellContent.Header`                      |
+| Navigation      | `shell/app-sidebar/NavMain.tsx`        | Done    | Handled by `Sidebar.Menu` + `Sidebar.MenuButton` + Groups |
+| Command Palette | `shell/CommandPalette.tsx`             | Done    | Covered by `Command` overlay + `Dialog` wrapper           |
+| ModuleSwitcher  | `shell/app-sidebar/ModuleSwitcher.tsx` | Skipped | App-level composition (DropdownMenu + Sidebar.MenuButton) |
+| NavUser         | `shell/app-sidebar/NavUser.tsx`        | Skipped | App-level composition (DropdownMenu + Avatar)             |
+| Navigation Menu | `components/ui/navigation-menu.tsx`    | Pending | Base UI navigation-menu                                   |
+| Menubar         | `components/ui/menubar.tsx`            | Pending | Base UI menubar                                           |
+| Pagination      | `components/ui/pagination.tsx`         | Pending | Button + nav composition                                  |
 
 ## Data
 
-| Component              | Source file                                                      | Description                                        |
-| ---------------------- | ---------------------------------------------------------------- | -------------------------------------------------- |
-| DataTable              | `widgets/components/TableWidget.tsx`                             | Table with pagination, sorting, filtering, toolbar |
-| TableToolbar           | `widgets/components/table/TableToolbar.tsx`                      | Table search/filter bar                            |
-| TablePagination        | `widgets/components/table/TablePagination.tsx`                   | Pagination controls                                |
-| CellRenderers          | `widgets/components/table/CellRenderers.tsx`                     | Cell rendering for different field types           |
-| Datagrid               | `widgets/components/datagrid/DatagridWidget.tsx`                 | Virtual scrolling grid with inline editing         |
-| DatagridToolbar        | `widgets/components/datagrid/grid/DatagridToolbar.tsx`           | Grid toolbar                                       |
-| DatagridHeader         | `widgets/components/datagrid/grid/DatagridHeader.tsx`            | Column headers with sorting/resizing               |
-| DatagridBody           | `widgets/components/datagrid/grid/DatagridBody.tsx`              | Grid rows and cells                                |
-| DatagridCell           | `widgets/components/datagrid/grid/DatagridCell.tsx`              | Individual cell                                    |
-| DatagridRow            | `widgets/components/datagrid/grid/DatagridRow.tsx`               | Grid row                                           |
-| ColumnResizeHandle     | `widgets/components/datagrid/columns/ColumnResizeHandle.tsx`     | Draggable resize handle                            |
-| ColumnVisibilityToggle | `widgets/components/datagrid/columns/ColumnVisibilityToggle.tsx` | Column visibility menu                             |
-
-### Cell Editors (inline editing in datagrid)
-
-| Component      | Source file                                              |
-| -------------- | -------------------------------------------------------- |
-| TextEditor     | `widgets/components/datagrid/editors/TextEditor.tsx`     |
-| NumberEditor   | `widgets/components/datagrid/editors/NumberEditor.tsx`   |
-| CheckboxEditor | `widgets/components/datagrid/editors/CheckboxEditor.tsx` |
-| DateEditor     | `widgets/components/datagrid/editors/DateEditor.tsx`     |
-| DatetimeEditor | `widgets/components/datagrid/editors/DatetimeEditor.tsx` |
-| ComboboxEditor | `widgets/components/datagrid/editors/ComboboxEditor.tsx` |
-| EnumEditor     | `widgets/components/datagrid/editors/EnumEditor.tsx`     |
-| MoneyEditor    | `widgets/components/datagrid/editors/MoneyEditor.tsx`    |
+| Component              | Source file                                                      | Status  | Notes                         |
+| ---------------------- | ---------------------------------------------------------------- | ------- | ----------------------------- |
+| DataTable              | `widgets/components/TableWidget.tsx`                             | Pending | TanStack Table                |
+| Datagrid               | `widgets/components/datagrid/DatagridWidget.tsx`                 | Pending | TanStack Table + Virtual      |
+| TableToolbar           | `widgets/components/table/TableToolbar.tsx`                      | Pending | Part of DataTable composition |
+| TablePagination        | `widgets/components/table/TablePagination.tsx`                   | Pending | Part of DataTable composition |
+| CellRenderers          | `widgets/components/table/CellRenderers.tsx`                     | Pending | Part of DataTable             |
+| DatagridToolbar        | `widgets/components/datagrid/grid/DatagridToolbar.tsx`           | Pending | Part of Datagrid composition  |
+| DatagridHeader         | `widgets/components/datagrid/grid/DatagridHeader.tsx`            | Pending | Part of Datagrid composition  |
+| DatagridBody           | `widgets/components/datagrid/grid/DatagridBody.tsx`              | Pending | Part of Datagrid composition  |
+| ColumnResizeHandle     | `widgets/components/datagrid/columns/ColumnResizeHandle.tsx`     | Pending | Part of Datagrid              |
+| ColumnVisibilityToggle | `widgets/components/datagrid/columns/ColumnVisibilityToggle.tsx` | Pending | Part of Datagrid              |
+| TextEditor             | `widgets/components/datagrid/editors/TextEditor.tsx`             | Pending | Cell editor                   |
+| NumberEditor           | `widgets/components/datagrid/editors/NumberEditor.tsx`           | Pending | Cell editor                   |
+| CheckboxEditor         | `widgets/components/datagrid/editors/CheckboxEditor.tsx`         | Pending | Cell editor                   |
+| DateEditor             | `widgets/components/datagrid/editors/DateEditor.tsx`             | Pending | Cell editor                   |
+| DatetimeEditor         | `widgets/components/datagrid/editors/DatetimeEditor.tsx`         | Pending | Cell editor                   |
+| ComboboxEditor         | `widgets/components/datagrid/editors/ComboboxEditor.tsx`         | Pending | Cell editor                   |
+| EnumEditor             | `widgets/components/datagrid/editors/EnumEditor.tsx`             | Pending | Cell editor                   |
+| MoneyEditor            | `widgets/components/datagrid/editors/MoneyEditor.tsx`            | Pending | Cell editor                   |
 
 ## Overlays
 
-| Component      | Source file                                           | Description                                        |
-| -------------- | ----------------------------------------------------- | -------------------------------------------------- |
-| Dialog         | `components/ui/dialog.tsx`                            | Modal dialog with overlay, content, header, footer |
-| Alert Dialog   | `components/ui/alert-dialog.tsx`                      | Confirmation dialog                                |
-| Drawer / Sheet | `components/ui/drawer.tsx`, `components/ui/sheet.tsx` | Side drawer/sheet panel                            |
-| Popover        | `components/ui/popover.tsx`                           | Floating popover with trigger and content          |
-| Dropdown Menu  | `components/ui/dropdown-menu.tsx`                     | Dropdown menu with items and groups                |
-| Context Menu   | `components/ui/context-menu.tsx`                      | Right-click context menu                           |
-| Hover Card     | `components/ui/hover-card.tsx`                        | Card on hover                                      |
-| Tooltip        | `components/ui/tooltip.tsx`                           | Tooltip with trigger and content                   |
-| Command        | `components/ui/command.tsx`                           | Command palette (cmdk)                             |
-| ConfirmDialog  | `shell/ConfirmDialog.tsx`                             | App-level confirm modal                            |
+| Component     | Source file                                           | Status  | Notes                                              |
+| ------------- | ----------------------------------------------------- | ------- | -------------------------------------------------- |
+| Dialog        | `components/ui/dialog.tsx`                            | Done    | `src/overlays/dialog.tsx`                          |
+| Sheet         | `components/ui/drawer.tsx`, `components/ui/sheet.tsx` | Done    | `src/overlays/sheet.tsx` — Base UI Drawer          |
+| Popover       | `components/ui/popover.tsx`                           | Done    | `src/overlays/popover.tsx`                         |
+| Dropdown Menu | `components/ui/dropdown-menu.tsx`                     | Done    | `src/overlays/dropdown-menu.tsx`                   |
+| Context Menu  | `components/ui/context-menu.tsx`                      | Done    | `src/overlays/context-menu.tsx`                    |
+| Command       | `components/ui/command.tsx`                           | Done    | `src/overlays/command.tsx` — custom implementation |
+| Tooltip       | `components/ui/tooltip.tsx`                           | Done    | `src/primitives/tooltip.tsx` (in primitives layer) |
+| ConfirmDialog | `shell/ConfirmDialog.tsx`                             | Done    | `src/feedback/confirm-dialog.tsx`                  |
+| Alert Dialog  | `components/ui/alert-dialog.tsx`                      | Skipped | Covered by ConfirmDialog                           |
+| Hover Card    | `components/ui/hover-card.tsx`                        | Pending | Base UI preview-card                               |
 
 ## Feedback
 
-| Component | Source file                 | Description                                        |
-| --------- | --------------------------- | -------------------------------------------------- |
-| Alert     | `components/ui/alert.tsx`   | Alert box with variants (default, destructive)     |
-| Toast     | `shell/Toast.tsx`           | Notification toast (info, success, warning, error) |
-| Spinner   | `components/ui/spinner.tsx` | Animated loading spinner                           |
-| Empty     | `components/ui/empty.tsx`   | Empty state with icon/title/description            |
-| Sonner    | `components/ui/sonner.tsx`  | Toast library integration                          |
+| Component     | Source file                 | Status  | Notes                             |
+| ------------- | --------------------------- | ------- | --------------------------------- |
+| Alert         | `components/ui/alert.tsx`   | Done    | `src/feedback/alert.tsx`          |
+| Toast         | `shell/Toast.tsx`           | Done    | `src/feedback/toast.tsx`          |
+| ConfirmDialog | `shell/ConfirmDialog.tsx`   | Done    | `src/feedback/confirm-dialog.tsx` |
+| Spinner       | `components/ui/spinner.tsx` | Pending | CSS animation                     |
+| Empty         | `components/ui/empty.tsx`   | Pending | Empty state composition           |
 
 ## Form
 
-| Component        | Source file                               | Description                                              |
-| ---------------- | ----------------------------------------- | -------------------------------------------------------- |
-| Field            | `components/ui/field.tsx`                 | Fieldset with legend, label, content, description, error |
-| InputGroup       | `components/ui/input-group.tsx`           | Input with addons (buttons, text, icons)                 |
-| FormWidget       | `widgets/form/FormWidget.tsx`             | Form container with submission/validation                |
-| InputWidget      | `widgets/components/InputWidget.tsx`      | Input field with label and error                         |
-| TextareaWidget   | `widgets/components/TextareaWidget.tsx`   | Textarea with label and error                            |
-| SelectWidget     | `widgets/components/SelectWidget.tsx`     | Select with label and error                              |
-| CheckboxWidget   | `widgets/components/CheckboxWidget.tsx`   | Checkbox with label                                      |
-| DatePickerWidget | `widgets/components/DatePickerWidget.tsx` | Date picker with popover calendar                        |
-| DatetimeWidget   | `widgets/components/DatetimeWidget.tsx`   | DateTime picker                                          |
-| TreeWidget       | `widgets/components/TreeWidget.tsx`       | Hierarchical tree selector                               |
-| LinkWidget       | `widgets/components/LinkWidget.tsx`       | Relationship/link selector                               |
+| Component      | Source file                     | Status  | Notes                                                |
+| -------------- | ------------------------------- | ------- | ---------------------------------------------------- |
+| Field          | `components/ui/field.tsx`       | Done    | `src/form/field.tsx` — label, description, error     |
+| DatePicker     | —                               | Done    | `src/form/date-picker.tsx`                           |
+| DateTimePicker | —                               | Done    | `src/form/date-time-picker.tsx`                      |
+| MoneyInput     | —                               | Done    | `src/form/money-input.tsx`                           |
+| InputGroup     | `components/ui/input-group.tsx` | Pending | Input with addons (prefix/suffix)                    |
+| FormField      | —                               | Pending | Composition wrapper per spec (FormField.Label, etc.) |
 
-## Display
+## Tokens
 
-| Component | Source file                            | Description                                                    |
-| --------- | -------------------------------------- | -------------------------------------------------------------- |
-| Text      | `widgets/components/TextWidget.tsx`    | Text with style variants (heading, body, caption, bold, muted) |
-| Image     | `widgets/components/ImageWidget.tsx`   | Image display                                                  |
-| Code      | `widgets/components/CodeWidget.tsx`    | Code display                                                   |
-| Json      | `widgets/components/JsonWidget.tsx`    | JSON display                                                   |
-| Divider   | `widgets/components/DividerWidget.tsx` | Visual divider                                                 |
-| Spacer    | `widgets/components/SpacerWidget.tsx`  | Vertical spacer                                                |
-
-## Auth
-
-| Component          | Source file                    | Description                    |
-| ------------------ | ------------------------------ | ------------------------------ |
-| LoginForm          | `auth/LoginForm.tsx`           | Login form with email/password |
-| SetupForm          | `auth/SetupForm.tsx`           | Registration/setup form        |
-| SessionExpired     | `auth/SessionExpired.tsx`      | Session expired screen         |
-| ModuleSelectorPage | `shell/ModuleSelectorPage.tsx` | Module selection UI            |
+| File           | Status  | Notes                           |
+| -------------- | ------- | ------------------------------- |
+| index.css      | Pending | Imports all token files         |
+| colors.css     | Pending | Semantic color tokens (OKLch)   |
+| spacing.css    | Pending | Spacing scale (xs–2xl)          |
+| typography.css | Pending | Font family, sizes, weights     |
+| animations.css | Pending | Keyframes and transition tokens |
 
 ---
 
-## Migration Notes
+## Summary
 
-- **Headless base:** Replace Radix UI wrappers with Base UI (`@base-ui/react`)
-- **Styling:** All components use Tailwind v4 + CVA via `cn()` utility
-- **Dark mode:** Currently via `[data-theme="dark"]` attribute. Will use `.dark` class with OKLch tokens
-- **Spacing scale:** 7 tokens (none, xs, sm, md, lg, xl, 2xl)
-- **Data attributes:** Components use `data-slot="name"` for testing hooks
-- **Composition pattern:** Multi-section components use static sub-properties (e.g., `Card.Header`)
+| Layer      | Done   | Pending | Skipped |
+| ---------- | ------ | ------- | ------- |
+| Primitives | 21     | 0       | 4       |
+| Layout     | 11     | 4       | 1       |
+| Shell      | 7      | 3       | 2       |
+| Overlays   | 7      | 1       | 1       |
+| Feedback   | 3      | 2       | 0       |
+| Form       | 4      | 2       | 0       |
+| Data       | 0      | 18      | 0       |
+| Tokens     | 0      | 5       | 0       |
+| **Total**  | **53** | **35**  | **8**   |
 
-## Priority Order
+---
 
-Build in this order to unblock the client migration:
+## Priority for Remaining Work
 
-1. **Primitives** — Button, Input, Select, Checkbox, Badge, Label (everything else depends on these)
-2. **Layout** — Card, Stack, Group, Grid, Tabs, Scroll Area
-3. **Form** — Field, InputGroup (needed by form widgets)
-4. **Overlays** — Dialog, Popover, Dropdown Menu, Tooltip (used everywhere)
-5. **Feedback** — Toast, Spinner, Empty, Alert
-6. **Shell** — Sidebar, Breadcrumb, Shell Layout
-7. **Data** — DataTable, Datagrid, Cell Editors (most complex, do last)
-8. **Display** — Text, Icon, Image, Code (simple wrappers)
-9. **Auth** — LoginForm, SetupForm (last, simple composition of primitives)
+1. **Feedback** — Spinner, Empty (small, quick wins)
+2. **Form** — InputGroup, FormField (needed by widget migration)
+3. **Tokens** — colors.css, spacing.css, typography.css, animations.css (design pass)
+4. **Data** — DataTable, Datagrid, Cell Editors (most complex, do last)
+5. **Layout** — Accordion, Carousel, Aspect Ratio, Table (nice to have)
+6. **Shell** — Navigation Menu, Menubar, Pagination (low priority)
+7. **Overlays** — Hover Card (low priority)
