@@ -2,6 +2,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { forwardRef, type ComponentProps } from 'react';
 import { Loader2 } from 'lucide-react';
 import { cn } from '../lib/cn';
+import { Icon } from '../primitives/icon';
 
 const spinnerVariants = cva('animate-spin', {
   variants: {
@@ -24,7 +25,8 @@ export type SpinnerProps = Omit<ComponentProps<'svg'>, 'children'> &
 export const Spinner = forwardRef<SVGSVGElement, SpinnerProps>(
   ({ className, size, ...props }, ref) => {
     return (
-      <Loader2
+      <Icon
+        icon={Loader2}
         ref={ref}
         role="status"
         aria-label="Loading"

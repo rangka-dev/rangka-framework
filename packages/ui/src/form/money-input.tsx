@@ -3,7 +3,7 @@ import { forwardRef, type ComponentProps } from 'react';
 import { cn } from '../lib/cn';
 
 const moneyInputVariants = cva(
-  'flex items-center rounded-md border border-border transition-colors focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2',
+  'flex items-center rounded-md border border-border transition-colors',
   {
     variants: {
       size: {

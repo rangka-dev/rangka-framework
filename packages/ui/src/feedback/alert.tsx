@@ -2,6 +2,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { forwardRef, type ComponentProps, type ReactNode } from 'react';
 import { InfoIcon, CheckCircleIcon, AlertTriangleIcon, AlertCircleIcon, XIcon } from 'lucide-react';
 import { cn } from '../lib/cn';
+import { Icon } from '../primitives/icon';
 
 const alertVariants = cva('relative flex items-start gap-3 rounded-md border px-4 py-3 text-sm', {
   variants: {
@@ -71,7 +72,7 @@ const AlertIcon = forwardRef<HTMLSpanElement, AlertIconProps>(
 AlertIcon.displayName = 'Alert.Icon';
 
 function DefaultAlertIcon() {
-  return <InfoIcon className="size-4" />;
+  return <Icon icon={InfoIcon} size="sm" />;
 }
 
 const AlertTitle = forwardRef<HTMLHeadingElement, AlertTitleProps>(
@@ -100,7 +101,7 @@ const AlertDismiss = forwardRef<HTMLButtonElement, AlertDismissProps>(
         aria-label="Dismiss"
         {...props}
       >
-        {children ?? <XIcon className="size-3.5" />}
+        {children ?? <Icon icon={XIcon} size="sm" className="size-3.5" />}
       </button>
     );
   },

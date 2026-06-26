@@ -1,6 +1,11 @@
 import { forwardRef, useState, type ComponentProps } from 'react';
 import { Popover } from '@base-ui/react/popover';
-import { CalendarIcon } from 'lucide-react';
+import {
+  CalendarIcon,
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
+} from 'lucide-react';
+import { Icon } from '../primitives/icon';
 import {
   format,
   parseISO,
@@ -56,7 +61,7 @@ const DatePickerRoot = forwardRef<HTMLDivElement, DatePickerProps>(
               'flex h-9 w-full items-center gap-2 rounded-md border border-border bg-transparent px-3 text-sm transition-colors hover:bg-accent disabled:pointer-events-none disabled:opacity-50',
             )}
           >
-            <CalendarIcon className="size-4 text-muted-foreground" />
+            <Icon icon={CalendarIcon} size="sm" className="text-muted-foreground" />
             {dateValue ? (
               <span>{format(dateValue, 'PPP')}</span>
             ) : (
@@ -126,37 +131,11 @@ const DatePickerRoot = forwardRef<HTMLDivElement, DatePickerProps>(
 DatePickerRoot.displayName = 'DatePicker';
 
 function ChevronLeft() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M15 18l-6-6 6-6" />
-    </svg>
-  );
+  return <Icon icon={ChevronLeftIcon} size="sm" />;
 }
 
 function ChevronRight() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M9 18l6-6-6 6" />
-    </svg>
-  );
+  return <Icon icon={ChevronRightIcon} size="sm" />;
 }
 
 export const DatePicker = DatePickerRoot;

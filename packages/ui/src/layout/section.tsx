@@ -2,6 +2,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { forwardRef, useState, type ComponentProps } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { cn } from '../lib/cn';
+import { Icon } from '../primitives/icon';
 import { Collapsible } from './collapsible';
 
 const sectionVariants = cva('flex flex-col', {
@@ -40,9 +41,11 @@ export const Section = forwardRef<HTMLDivElement, SectionProps>(
     const header = (
       <div className="flex items-center gap-2 border-b border-border pb-2 mb-3">
         {collapsible && (
-          <ChevronRight
+          <Icon
+            icon={ChevronRight}
+            size="sm"
             className={cn(
-              'h-4 w-4 text-muted-foreground transition-transform duration-150',
+              'text-muted-foreground transition-transform duration-150',
               open && 'rotate-90',
             )}
           />

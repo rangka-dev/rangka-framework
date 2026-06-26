@@ -74,6 +74,9 @@
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
 
+  /* Type scale → generates text-* utilities */
+  --text-body: var(--text-body);
+
   /* Animation durations */
   --animate-duration-fast: var(--duration-fast);
   --animate-duration-normal: var(--duration-normal);

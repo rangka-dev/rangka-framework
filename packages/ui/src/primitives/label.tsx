@@ -3,7 +3,7 @@ import { forwardRef, type ComponentProps } from 'react';
 import { cn } from '../lib/cn';
 
 const labelVariants = cva(
-  'text-sm font-medium leading-none text-foreground peer-disabled:cursor-not-allowed peer-disabled:opacity-70',
+  'text-body font-medium leading-none text-foreground/80 peer-disabled:cursor-not-allowed peer-disabled:opacity-70',
 );
 
 export type LabelProps = ComponentProps<'label'> &

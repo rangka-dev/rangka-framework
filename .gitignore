@@ -28,6 +28,9 @@ docs/.vitepress/dist
 packages/studio-core/src/generated/
 packages/studio-core/ui/
 
+# Playwright MCP
+.playwright-mcp/
+
 # Local publish testing
 .local-registry/
 

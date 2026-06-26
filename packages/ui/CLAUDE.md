@@ -149,6 +149,14 @@ The only exception: single-element primitives (Button, Input, Badge) that are le
 - Never use inline styles except for truly dynamic values (e.g., computed widths)
 - Dark mode is handled via `.dark` class on a parent and CSS variable reassignment in `tokens/colors.css`
 
+## Icons
+
+- Never define inline SVGs in component files. No `<svg>`, `<path>`, `<circle>`, etc.
+- All icons come from `lucide-react`
+- All icon rendering MUST go through the internal `Icon` component (`src/primitives/icon.tsx`)
+- Usage: `<Icon icon={ChevronRight} size="sm" />`
+- Import lucide icons by name, then pass as the `icon` prop to `Icon`
+
 ## File Naming
 
 - Component files: `kebab-case.tsx` (e.g., `radio-group.tsx`, `data-table.tsx`)
@@ -237,3 +245,68 @@ pnpm build            # Production build
 pnpm test             # Unit tests
 pnpm storybook:build  # Static Storybook export
 ```
+
+## Widget System
+
+Widgets live in `src/widgets/` organized by category: `input`, `display`, `action`, `layout`, `data`, `overlay`.
+
+### Adding a New Widget
+
+1. Create `src/widgets/<category>/<name>-widget.tsx`
+2. Every widget accepts `WidgetComponentProps` from `../types` — never add custom prop interfaces
+3. Destructure only what you use: `{ props, bind, on, context, children }`
+4. Compose from existing primitives/form/layout components — widgets are composition, not new DOM
+5. Export from `src/widgets/<category>/index.ts`
+6. Register in `src/widgets/index.ts` → `widgetComponents` map with the widget type key
+7. Add a demo to `stories/widgets/<category>-widgets.stories.tsx`
+
+### Widget Rules
+
+- All text uses `text-body` token (13px, defined in `src/tokens/typography.css`)
+- Labels use `text-foreground/80` via the Label primitive
+- No focus ring on inputs — `focus-visible:outline-none` only
+- Number inputs hide stepper: `[appearance:textfield]`
+- Select/Link/Tree use custom dropdown (not Base UI Select) with `bg-surface`, `border-border`, `shadow-md`
+- Dropdown items: `text-body hover:bg-foreground/6`, active: `bg-foreground/6 font-medium`
+- Checkbox label goes to the right (use `Field orientation="horizontal"`)
+
+### Widget Props Contract
+
+```tsx
+interface WidgetComponentProps {
+  props: Record<string, unknown>; // widget-specific config from page definition
+  bind: WidgetBind; // value + setValue + meta + error
+  on: Record<string, (...args) => void>; // event handlers
+  context: WidgetContext; // record, model, mode
+  childNodes?: WidgetNode[]; // for data containers
+  children?: ReactNode; // for layout containers (pre-rendered)
+}
+```
+
+## Page Compositions
+
+Page stories live in `stories/pages/` and use the `PageShell` wrapper from `stories/pages/page-shell.tsx`.
+
+### Adding a New Page
+
+1. Create `stories/pages/<name>.stories.tsx`
+2. Import `PageShell` and wrap content with it
+3. Set `module`, `page`, and optionally `action` (header button) props
+4. Set `layout="default"` for padded content (forms, dashboards, detail) or `layout="full"` for bleed (tables, lists)
+5. Compose the page body ONLY from widget components — no raw HTML elements, no divs, no Tailwind in the story
+6. Use `title: 'Pages/<Category>'` for Storybook grouping
+
+### Layout Types
+
+- `layout="default"` — `px-6 py-4 gap-6` padding (forms, cards, dashboards)
+- `layout="full"` — edge-to-edge, no padding (tables, data grids, list views)
+
+### Page Composition Rules
+
+- Zero intermediate divs — all structure comes from widget components
+- Use `GroupWidget` for horizontal arrangements, `StackWidget` for vertical
+- Use `GridWidget` for column layouts
+- Use `CardWidget` to group related fields
+- Use `SectionWidget` for labeled collapsible sections
+- Use `DividerWidget` before action button rows
+- Footer actions: `GroupWidget direction="row" justify="end" gap="sm"`

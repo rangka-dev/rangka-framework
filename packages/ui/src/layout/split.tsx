@@ -1,6 +1,8 @@
 import { Group, Panel, Separator, type GroupImperativeHandle } from 'react-resizable-panels';
 import { forwardRef, type ComponentProps, type ReactNode } from 'react';
+import { GripVertical } from 'lucide-react';
 import { cn } from '../lib/cn';
+import { Icon } from '../primitives/icon';
 
 export type SplitProps = Omit<ComponentProps<'div'>, 'children'> & {
   /** Layout direction */
@@ -78,20 +80,7 @@ const SplitHandle = forwardRef<HTMLDivElement, SplitHandleProps>(
       >
         {withHandle && (
           <div className="z-10 flex h-4 w-3 items-center justify-center rounded-sm border border-border bg-border">
-            <svg
-              width="6"
-              height="10"
-              viewBox="0 0 6 10"
-              fill="none"
-              className="text-muted-foreground"
-            >
-              <circle cx="1" cy="1" r="0.75" fill="currentColor" />
-              <circle cx="1" cy="5" r="0.75" fill="currentColor" />
-              <circle cx="1" cy="9" r="0.75" fill="currentColor" />
-              <circle cx="5" cy="1" r="0.75" fill="currentColor" />
-              <circle cx="5" cy="5" r="0.75" fill="currentColor" />
-              <circle cx="5" cy="9" r="0.75" fill="currentColor" />
-            </svg>
+            <Icon icon={GripVertical} size="sm" className="size-2.5 text-muted-foreground" />
           </div>
         )}
       </Separator>

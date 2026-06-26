@@ -4,7 +4,7 @@ import { forwardRef, type ComponentProps } from 'react';
 import { cn } from '../lib/cn';
 
 const inputVariants = cva(
-  'flex w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+  'flex w-full rounded-md border border-border bg-transparent px-3 py-2 text-body text-foreground placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50',
   {
     variants: {
       size: {

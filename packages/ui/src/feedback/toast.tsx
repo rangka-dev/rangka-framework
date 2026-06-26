@@ -2,6 +2,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { forwardRef, type ComponentProps, type ReactNode } from 'react';
 import { InfoIcon, CheckCircleIcon, AlertTriangleIcon, AlertCircleIcon, XIcon } from 'lucide-react';
 import { cn } from '../lib/cn';
+import { Icon } from '../primitives/icon';
 
 const toastVariants = cva(
   'pointer-events-auto flex items-center gap-2 rounded-md border px-3 py-2 text-sm shadow-sm',
@@ -83,7 +84,7 @@ const ToastIcon = forwardRef<HTMLSpanElement, ToastIconProps>(
   ({ className, icon, ...props }, ref) => {
     return (
       <span ref={ref} className={cn('shrink-0', className)} {...props}>
-        {icon ?? <InfoIcon className="size-4" />}
+        {icon ?? <Icon icon={InfoIcon} size="sm" />}
       </span>
     );
   },
@@ -106,7 +107,7 @@ const ToastDismiss = forwardRef<HTMLButtonElement, ToastDismissProps>(
         aria-label="Dismiss"
         {...props}
       >
-        {children ?? <XIcon className="size-3.5" />}
+        {children ?? <Icon icon={XIcon} size="sm" className="size-3.5" />}
       </button>
     );
   },
