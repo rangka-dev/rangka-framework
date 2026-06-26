@@ -1,8 +1,9 @@
-import { useState, type ChangeEvent } from 'react';
+import { useState, useCallback, type ChangeEvent } from 'react';
 import { Search, ChevronRight } from 'lucide-react';
 import { Icon } from '../../primitives/icon';
 import { Field } from '../../form/field';
 import { cn } from '../../lib/cn';
+import { useClickOutside } from '../../lib/use-click-outside';
 import type { WidgetComponentProps } from '../types';
 
 export function TreeWidget({ props, bind, on }: WidgetComponentProps) {
@@ -14,6 +15,10 @@ export function TreeWidget({ props, bind, on }: WidgetComponentProps) {
 
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const containerRef = useClickOutside<HTMLDivElement>(
+    useCallback(() => setOpen(false), []),
+    open,
+  );
 
   const filtered = options.filter((opt) => opt.label.toLowerCase().includes(search.toLowerCase()));
 
@@ -29,7 +34,7 @@ export function TreeWidget({ props, bind, on }: WidgetComponentProps) {
   return (
     <Field data-invalid={!!bind.error || undefined}>
       {label && <Field.Label required={required}>{label}</Field.Label>}
-      <div className="relative">
+      <div className="relative" ref={containerRef}>
         <button
           type="button"
           onClick={() => !disabled && setOpen(!open)}

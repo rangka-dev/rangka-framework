@@ -1,8 +1,9 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { Icon } from '../../primitives/icon';
 import { Field } from '../../form/field';
 import { cn } from '../../lib/cn';
+import { useClickOutside } from '../../lib/use-click-outside';
 import type { WidgetComponentProps } from '../types';
 
 export function SelectWidget({ props, bind, on }: WidgetComponentProps) {
@@ -14,7 +15,10 @@ export function SelectWidget({ props, bind, on }: WidgetComponentProps) {
     (props.options as Array<{ value: string; label: string }>) ?? bind.meta?.options ?? [];
 
   const [open, setOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useClickOutside<HTMLDivElement>(
+    useCallback(() => setOpen(false), []),
+    open,
+  );
 
   const selected = options.find((opt) => opt.value === bind.value);
 
@@ -23,17 +27,6 @@ export function SelectWidget({ props, bind, on }: WidgetComponentProps) {
     on.change?.(value);
     setOpen(false);
   };
-
-  useEffect(() => {
-    if (!open) return;
-    const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [open]);
 
   return (
     <Field data-invalid={!!bind.error || undefined}>

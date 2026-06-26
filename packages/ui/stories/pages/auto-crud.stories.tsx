@@ -519,28 +519,25 @@ function AutoForm({
       )}
 
       {mode === 'edit' && !hideActions && (
-        <>
-          <DividerWidget props={{ margin: 'sm' }} bind={{ value: null }} on={on} context={ctx} />
-          <GroupWidget
-            props={{ direction: 'row', gap: 'sm', justify: 'end' }}
+        <GroupWidget
+          props={{ direction: 'row', gap: 'sm', justify: 'end' }}
+          bind={{ value: null }}
+          on={on}
+          context={ctx}
+        >
+          <ButtonWidget
+            props={{ label: 'Cancel', variant: 'ghost', size: 'sm' }}
             bind={{ value: null }}
             on={on}
             context={ctx}
-          >
-            <ButtonWidget
-              props={{ label: 'Cancel', variant: 'ghost', size: 'sm' }}
-              bind={{ value: null }}
-              on={on}
-              context={ctx}
-            />
-            <ButtonWidget
-              props={{ label: 'Save', variant: 'primary', size: 'sm' }}
-              bind={{ value: null }}
-              on={on}
-              context={ctx}
-            />
-          </GroupWidget>
-        </>
+          />
+          <ButtonWidget
+            props={{ label: 'Save', variant: 'primary', size: 'sm' }}
+            bind={{ value: null }}
+            on={on}
+            context={ctx}
+          />
+        </GroupWidget>
       )}
     </StackWidget>
   );
@@ -721,14 +718,7 @@ export const CustomerCreate: Story = {
   name: 'Customer — Create',
   render: () => (
     <PageShell module="Sales" page="Customers">
-      <CardWidget
-        props={{ title: 'New Customer', description: 'Auto-generated form from model definition.' }}
-        bind={{ value: null }}
-        on={on}
-        context={{ record: {}, model: 'sales.customer', mode: 'edit' }}
-      >
-        <AutoForm model={customerModel} mode="edit" data={{}} />
-      </CardWidget>
+      <AutoForm model={customerModel} mode="edit" data={{}} />
     </PageShell>
   ),
 };
@@ -837,14 +827,7 @@ export const ItemCreate: Story = {
   name: 'Item — Create',
   render: () => (
     <PageShell module="Inventory" page="Items">
-      <CardWidget
-        props={{ title: 'New Item', description: 'Auto-generated form from model definition.' }}
-        bind={{ value: null }}
-        on={on}
-        context={{ record: {}, model: 'inventory.item', mode: 'edit' }}
-      >
-        <AutoForm model={inventoryItemModel} mode="edit" data={{}} />
-      </CardWidget>
+      <AutoForm model={inventoryItemModel} mode="edit" data={{}} />
     </PageShell>
   ),
 };
