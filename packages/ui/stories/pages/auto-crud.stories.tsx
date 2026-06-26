@@ -389,10 +389,12 @@ function AutoForm({
   model,
   mode,
   data,
+  hideActions,
 }: {
   model: ModelMeta;
   mode: 'edit' | 'view';
   data: Record<string, unknown>;
+  hideActions?: boolean;
 }) {
   const { basic, details, wide, relations, system } = sortFields(model);
   const ctx = { record: data, model: model.name, mode };
@@ -516,7 +518,7 @@ function AutoForm({
         </SectionWidget>
       )}
 
-      {mode === 'edit' && (
+      {mode === 'edit' && !hideActions && (
         <>
           <DividerWidget props={{ margin: 'sm' }} bind={{ value: null }} on={on} context={ctx} />
           <GroupWidget
@@ -731,64 +733,75 @@ export const CustomerCreate: Story = {
   ),
 };
 
-export const CustomerView: Story = {
-  name: 'Customer — View',
-  render: () => (
-    <PageShell
-      module="Sales"
-      page="Customers"
-      action={
-        <Button variant="secondary" size="xs">
-          <Icon icon={Pencil} size="sm" />
-          <span>Edit</span>
-        </Button>
-      }
-    >
-      <StackWidget
-        props={{ gap: 'md' }}
-        bind={{ value: null }}
-        on={on}
-        context={{ record: customerData, model: 'sales.customer', mode: 'view' }}
+export const CustomerDetail: Story = {
+  name: 'Customer — Detail',
+  render: function CustomerDetailDemo() {
+    const [editing, setEditing] = useState(false);
+    const mode = editing ? 'edit' : 'view';
+
+    return (
+      <PageShell
+        module="Sales"
+        page="Customers"
+        action={
+          editing ? (
+            <GroupWidget
+              props={{ direction: 'row', gap: 'sm' }}
+              bind={{ value: null }}
+              on={on}
+              context={{ record: {}, model: '', mode: 'edit' }}
+            >
+              <ButtonWidget
+                props={{ label: 'Cancel', variant: 'ghost', size: 'xs' }}
+                bind={{ value: null }}
+                on={{ click: () => setEditing(false) }}
+                context={{ record: {}, model: '', mode: 'edit' }}
+              />
+              <ButtonWidget
+                props={{ label: 'Save', variant: 'primary', size: 'xs' }}
+                bind={{ value: null }}
+                on={{}}
+                context={{ record: {}, model: '', mode: 'edit' }}
+              />
+            </GroupWidget>
+          ) : (
+            <Button variant="secondary" size="xs" onClick={() => setEditing(true)}>
+              <Icon icon={Pencil} size="sm" />
+              <span>Edit</span>
+            </Button>
+          )
+        }
       >
-        <GroupWidget
-          props={{ direction: 'row', gap: 'sm', align: 'center' }}
+        <StackWidget
+          props={{ gap: 'md' }}
           bind={{ value: null }}
           on={on}
-          context={{ record: {}, model: '', mode: 'view' }}
+          context={{ record: customerData, model: 'sales.customer', mode }}
         >
-          <TextWidget
-            props={{ variant: 'heading' }}
-            bind={{ value: customerData.name }}
-            on={on}
-            context={{ record: {}, model: '', mode: 'view' }}
-          />
-          <BadgeWidget
-            props={{ variant: 'default', label: 'Active' }}
+          <GroupWidget
+            props={{ direction: 'row', gap: 'sm', align: 'center' }}
             bind={{ value: null }}
             on={on}
-            context={{ record: {}, model: '', mode: 'view' }}
-          />
-        </GroupWidget>
-        <AutoForm model={customerModel} mode="view" data={customerData} />
-      </StackWidget>
-    </PageShell>
-  ),
-};
-
-export const CustomerEdit: Story = {
-  name: 'Customer — Edit',
-  render: () => (
-    <PageShell module="Sales" page="Customers">
-      <CardWidget
-        props={{ title: 'Edit Customer' }}
-        bind={{ value: null }}
-        on={on}
-        context={{ record: customerData, model: 'sales.customer', mode: 'edit' }}
-      >
-        <AutoForm model={customerModel} mode="edit" data={customerData} />
-      </CardWidget>
-    </PageShell>
-  ),
+            context={{ record: {}, model: '', mode }}
+          >
+            <TextWidget
+              props={{ variant: 'heading' }}
+              bind={{ value: customerData.name }}
+              on={on}
+              context={{ record: {}, model: '', mode }}
+            />
+            <BadgeWidget
+              props={{ variant: 'default', label: 'Active' }}
+              bind={{ value: null }}
+              on={on}
+              context={{ record: {}, model: '', mode }}
+            />
+          </GroupWidget>
+          <AutoForm model={customerModel} mode={mode} data={customerData} hideActions />
+        </StackWidget>
+      </PageShell>
+    );
+  },
 };
 
 // --- Stories: Inventory Item model ---
@@ -836,68 +849,79 @@ export const ItemCreate: Story = {
   ),
 };
 
-export const ItemView: Story = {
-  name: 'Item — View',
-  render: () => (
-    <PageShell
-      module="Inventory"
-      page="Items"
-      action={
-        <Button variant="secondary" size="xs">
-          <Icon icon={Pencil} size="sm" />
-          <span>Edit</span>
-        </Button>
-      }
-    >
-      <StackWidget
-        props={{ gap: 'md' }}
-        bind={{ value: null }}
-        on={on}
-        context={{ record: itemData, model: 'inventory.item', mode: 'view' }}
+export const ItemDetail: Story = {
+  name: 'Item — Detail',
+  render: function ItemDetailDemo() {
+    const [editing, setEditing] = useState(false);
+    const mode = editing ? 'edit' : 'view';
+
+    return (
+      <PageShell
+        module="Inventory"
+        page="Items"
+        action={
+          editing ? (
+            <GroupWidget
+              props={{ direction: 'row', gap: 'sm' }}
+              bind={{ value: null }}
+              on={on}
+              context={{ record: {}, model: '', mode: 'edit' }}
+            >
+              <ButtonWidget
+                props={{ label: 'Cancel', variant: 'ghost', size: 'xs' }}
+                bind={{ value: null }}
+                on={{ click: () => setEditing(false) }}
+                context={{ record: {}, model: '', mode: 'edit' }}
+              />
+              <ButtonWidget
+                props={{ label: 'Save', variant: 'primary', size: 'xs' }}
+                bind={{ value: null }}
+                on={{}}
+                context={{ record: {}, model: '', mode: 'edit' }}
+              />
+            </GroupWidget>
+          ) : (
+            <Button variant="secondary" size="xs" onClick={() => setEditing(true)}>
+              <Icon icon={Pencil} size="sm" />
+              <span>Edit</span>
+            </Button>
+          )
+        }
       >
-        <GroupWidget
-          props={{ direction: 'row', gap: 'sm', align: 'center' }}
+        <StackWidget
+          props={{ gap: 'md' }}
           bind={{ value: null }}
           on={on}
-          context={{ record: {}, model: '', mode: 'view' }}
+          context={{ record: itemData, model: 'inventory.item', mode }}
         >
-          <SequenceWidget
-            props={{}}
-            bind={{ value: itemData.item_code }}
-            on={on}
-            context={{ record: {}, model: '', mode: 'view' }}
-          />
-          <TextWidget
-            props={{ variant: 'heading' }}
-            bind={{ value: itemData.name }}
-            on={on}
-            context={{ record: {}, model: '', mode: 'view' }}
-          />
-          <BadgeWidget
-            props={{ variant: 'default', label: 'Active' }}
+          <GroupWidget
+            props={{ direction: 'row', gap: 'sm', align: 'center' }}
             bind={{ value: null }}
             on={on}
-            context={{ record: {}, model: '', mode: 'view' }}
-          />
-        </GroupWidget>
-        <AutoForm model={inventoryItemModel} mode="view" data={itemData} />
-      </StackWidget>
-    </PageShell>
-  ),
-};
-
-export const ItemEdit: Story = {
-  name: 'Item — Edit',
-  render: () => (
-    <PageShell module="Inventory" page="Items">
-      <CardWidget
-        props={{ title: 'Edit Item' }}
-        bind={{ value: null }}
-        on={on}
-        context={{ record: itemData, model: 'inventory.item', mode: 'edit' }}
-      >
-        <AutoForm model={inventoryItemModel} mode="edit" data={itemData} />
-      </CardWidget>
-    </PageShell>
-  ),
+            context={{ record: {}, model: '', mode }}
+          >
+            <SequenceWidget
+              props={{}}
+              bind={{ value: itemData.item_code }}
+              on={on}
+              context={{ record: {}, model: '', mode }}
+            />
+            <TextWidget
+              props={{ variant: 'heading' }}
+              bind={{ value: itemData.name }}
+              on={on}
+              context={{ record: {}, model: '', mode }}
+            />
+            <BadgeWidget
+              props={{ variant: 'default', label: 'Active' }}
+              bind={{ value: null }}
+              on={on}
+              context={{ record: {}, model: '', mode }}
+            />
+          </GroupWidget>
+          <AutoForm model={inventoryItemModel} mode={mode} data={itemData} hideActions />
+        </StackWidget>
+      </PageShell>
+    );
+  },
 };

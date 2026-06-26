@@ -61,7 +61,7 @@ const fieldVariants = cva('group/field flex w-full gap-2 data-[invalid=true]:tex
   variants: {
     orientation: {
       vertical: 'flex-col *:w-full',
-      horizontal: 'flex-row items-center',
+      horizontal: 'flex-row items-center self-end pb-2.5',
     },
   },
   defaultVariants: { orientation: 'vertical' },
