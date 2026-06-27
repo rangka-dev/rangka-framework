@@ -16,7 +16,6 @@
     "@fontsource-variable/noto-sans": "^5.2.10",
     "@monaco-editor/react": "^4.7.0",
     "@rangka/studio-core": "workspace:*",
-    "monaco-editor": "^0.52.0",
     "@tailwindcss/typography": "^0.5.20",
     "@xyflow/react": "^12.11.0",
     "class-variance-authority": "^0.7.1",

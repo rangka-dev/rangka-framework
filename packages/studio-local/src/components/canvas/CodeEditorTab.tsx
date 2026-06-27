@@ -1,6 +1,5 @@
 import { useRef, useCallback } from 'react';
 import Editor, { type Monaco, type OnMount } from '@monaco-editor/react';
-import type { editor } from 'monaco-editor';
 
 type CodeEditorTabProps = {
   filename: string;
@@ -51,7 +50,7 @@ function defineStudioTheme(monaco: Monaco) {
 
 export function CodeEditorTab({ content, language, onChange, onSave }: CodeEditorTabProps) {
   const themeReady = useRef(false);
-  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
+  const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
 
   function handleBeforeMount(monaco: Monaco) {
     if (!themeReady.current) {
