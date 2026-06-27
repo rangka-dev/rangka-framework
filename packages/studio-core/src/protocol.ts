@@ -64,7 +64,9 @@ export type ServerMessage =
   | { type: 'schema.error'; message: string; operationIds: string[] }
   | { type: 'files.data'; tree: FileNode[] }
   | { type: 'file.content'; path: string; content: string }
-  | { type: 'file.error'; path: string; message: string };
+  | { type: 'file.error'; path: string; message: string }
+  | { type: 'file.saved'; path: string }
+  | { type: 'file.saveError'; path: string; message: string };
 
 export interface AvailableModel {
   id: string;
@@ -94,7 +96,8 @@ export type ClientMessage =
   | { type: 'runtime.apply' }
   | { type: 'runtime.start' }
   | { type: 'files.list' }
-  | { type: 'file.read'; path: string };
+  | { type: 'file.read'; path: string }
+  | { type: 'file.write'; path: string; content: string };
 
 export interface FileNode {
   name: string;
