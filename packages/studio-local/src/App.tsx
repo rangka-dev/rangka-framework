@@ -44,8 +44,80 @@ function getLanguageFromPath(filePath: string): string {
   }
 }
 
+function FileEditorTab({
+  filePath,
+  initialContent,
+  language,
+  onDirtyChange,
+  onSave,
+  conflict,
+  onReload,
+  onDismissConflict,
+}: {
+  filePath: string;
+  initialContent: string;
+  language: string;
+  onDirtyChange: (dirty: boolean) => void;
+  onSave: (content: string) => void;
+  conflict: boolean;
+  onReload: () => void;
+  onDismissConflict: () => void;
+}) {
+  const [editorContent, setEditorContent] = useState(initialContent);
+  const savedRef = useRef(initialContent);
+  const filename = filePath.split('/').pop() ?? filePath;
+
+  const handleChange = useCallback(
+    (content: string) => {
+      setEditorContent(content);
+      onDirtyChange(content !== savedRef.current);
+    },
+    [onDirtyChange],
+  );
+
+  const handleSave = useCallback(
+    (content: string) => {
+      onSave(content);
+      savedRef.current = content;
+      onDirtyChange(false);
+    },
+    [onSave, onDirtyChange],
+  );
+
+  return (
+    <div className="flex h-full flex-col">
+      {conflict && (
+        <div className="flex items-center gap-2 border-b border-border bg-yellow-500/10 px-3 py-2 text-sm">
+          <span className="text-yellow-600 dark:text-yellow-400">File changed on disk.</span>
+          <button
+            className="rounded px-2 py-0.5 text-xs font-medium bg-yellow-600 text-white hover:bg-yellow-700"
+            onClick={onReload}
+          >
+            Reload
+          </button>
+          <button
+            className="rounded px-2 py-0.5 text-xs font-medium border border-border hover:bg-muted"
+            onClick={onDismissConflict}
+          >
+            Keep editing
+          </button>
+        </div>
+      )}
+      <div className="flex-1">
+        <CodeEditorTab
+          filename={filename}
+          content={editorContent}
+          language={language}
+          onChange={handleChange}
+          onSave={handleSave}
+        />
+      </div>
+    </div>
+  );
+}
+
 function StudioApp() {
-  const { fileContents, readFile } = useStudio();
+  const { fileContents, readFile, writeFile, lastChangedFile } = useStudio();
   const [activeTabId, setActiveTabId] = useState('preview');
   const [selectedWidgetPath, setSelectedWidgetPath] = useState<string[] | null>(null);
   const [canvasTabs, setCanvasTabs] = useState<CanvasTab[]>([
@@ -64,36 +136,70 @@ function StudioApp() {
   ]);
 
   const pendingFileRef = useRef<string | null>(null);
+  const [dirtyTabs, setDirtyTabs] = useState<Set<string>>(new Set());
+  const [conflictPaths, setConflictPaths] = useState<Set<string>>(new Set());
+
+  const createFileTab = useCallback(
+    (filePath: string, content: string): CanvasTab => {
+      const filename = filePath.split('/').pop() ?? filePath;
+      const tabId = `file-${filePath}`;
+      return {
+        id: tabId,
+        label: filename,
+        closeable: true,
+        content: (
+          <FileEditorTab
+            filePath={filePath}
+            initialContent={content}
+            language={getLanguageFromPath(filePath)}
+            onDirtyChange={(dirty) => {
+              setDirtyTabs((prev) => {
+                const next = new Set(prev);
+                if (dirty) next.add(tabId);
+                else next.delete(tabId);
+                return next;
+              });
+            }}
+            onSave={(newContent) => {
+              writeFile(filePath, newContent);
+            }}
+            conflict={conflictPaths.has(filePath)}
+            onReload={() => {
+              setConflictPaths((prev) => {
+                const next = new Set(prev);
+                next.delete(filePath);
+                return next;
+              });
+              readFile(filePath);
+            }}
+            onDismissConflict={() => {
+              setConflictPaths((prev) => {
+                const next = new Set(prev);
+                next.delete(filePath);
+                return next;
+              });
+            }}
+          />
+        ),
+      };
+    },
+    [conflictPaths, writeFile, readFile],
+  );
 
   useEffect(() => {
     const pending = pendingFileRef.current;
     if (pending && pending in fileContents) {
       pendingFileRef.current = null;
       const content = fileContents[pending];
-      const filename = pending.split('/').pop() ?? pending;
       const tabId = `file-${pending}`;
 
       setCanvasTabs((prev) => {
         if (prev.find((t) => t.id === tabId)) return prev;
-        return [
-          ...prev,
-          {
-            id: tabId,
-            label: filename,
-            closeable: true,
-            content: (
-              <CodeEditorTab
-                filename={filename}
-                content={content}
-                language={getLanguageFromPath(pending)}
-              />
-            ),
-          },
-        ];
+        return [...prev, createFileTab(pending, content)];
       });
       setActiveTabId(tabId);
     }
-  }, [fileContents]);
+  }, [fileContents, createFileTab]);
 
   const openFile = useCallback(
     (filePath: string) => {
@@ -106,28 +212,46 @@ function StudioApp() {
 
       if (filePath in fileContents) {
         const content = fileContents[filePath];
-        const filename = filePath.split('/').pop() ?? filePath;
-        const newTab: CanvasTab = {
-          id: tabId,
-          label: filename,
-          closeable: true,
-          content: (
-            <CodeEditorTab
-              filename={filename}
-              content={content}
-              language={getLanguageFromPath(filePath)}
-            />
-          ),
-        };
-        setCanvasTabs((prev) => [...prev, newTab]);
+        setCanvasTabs((prev) => [...prev, createFileTab(filePath, content)]);
         setActiveTabId(tabId);
       } else {
         pendingFileRef.current = filePath;
         readFile(filePath);
       }
     },
-    [canvasTabs, fileContents, readFile],
+    [canvasTabs, fileContents, readFile, createFileTab],
   );
+
+  const dirtyTabsRef = useRef(dirtyTabs);
+  const canvasTabsRef = useRef(canvasTabs);
+
+  useEffect(() => {
+    dirtyTabsRef.current = dirtyTabs;
+  }, [dirtyTabs]);
+
+  useEffect(() => {
+    canvasTabsRef.current = canvasTabs;
+  }, [canvasTabs]);
+
+  const handleFileChanged = useCallback(
+    (filePath: string) => {
+      const tabId = `file-${filePath}`;
+      const hasTab = canvasTabsRef.current.some((t) => t.id === tabId);
+      if (!hasTab) return;
+
+      if (dirtyTabsRef.current.has(tabId)) {
+        setConflictPaths((prev) => new Set(prev).add(filePath));
+      } else {
+        readFile(filePath);
+      }
+    },
+    [readFile],
+  );
+
+  useEffect(() => {
+    if (!lastChangedFile.path) return;
+    handleFileChanged(lastChangedFile.path);
+  }, [lastChangedFile.key, lastChangedFile.path, handleFileChanged]);
 
   return (
     <div className="flex h-screen flex-col bg-background text-foreground">
@@ -149,20 +273,27 @@ function StudioApp() {
           <Separator className="w-1 bg-border transition-colors hover:bg-primary/50 cursor-col-resize" />
           <Panel defaultSize="70%">
             <Canvas
-              tabs={canvasTabs.map((tab) =>
-                tab.id === 'preview'
-                  ? {
-                      ...tab,
-                      content: (
-                        <PreviewTab onSelectElement={(path) => setSelectedWidgetPath(path)} />
-                      ),
-                    }
-                  : tab,
-              )}
+              tabs={canvasTabs.map((tab) => {
+                if (tab.id === 'preview') {
+                  return {
+                    ...tab,
+                    content: <PreviewTab onSelectElement={(path) => setSelectedWidgetPath(path)} />,
+                  };
+                }
+                if (dirtyTabs.has(tab.id)) {
+                  return { ...tab, label: `● ${tab.label}` };
+                }
+                return tab;
+              })}
               activeTabId={activeTabId}
               onActiveTabChange={setActiveTabId}
               onCloseTab={(id) => {
                 setCanvasTabs((prev) => prev.filter((t) => t.id !== id));
+                setDirtyTabs((prev) => {
+                  const next = new Set(prev);
+                  next.delete(id);
+                  return next;
+                });
                 if (activeTabId === id) {
                   setActiveTabId('preview');
                 }

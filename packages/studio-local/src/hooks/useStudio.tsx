@@ -91,6 +91,9 @@ interface StudioContextValue {
   startRuntime: () => void;
   requestFileTree: () => void;
   readFile: (path: string) => void;
+  writeFile: (path: string, content: string) => void;
+  fileSaveError: { path: string; message: string } | null;
+  lastChangedFile: { path: string; key: number };
 }
 
 const StudioContext = createContext<StudioContextValue | null>(null);
@@ -115,6 +118,13 @@ export function StudioProvider({ children }: { children: ReactNode }) {
   const [fileTree, setFileTree] = useState<FileNode[]>([]);
   const [fileContents, setFileContents] = useState<Record<string, string>>({});
   const [hasPendingChanges, setHasPendingChanges] = useState(false);
+  const [fileSaveError, setFileSaveError] = useState<{ path: string; message: string } | null>(
+    null,
+  );
+  const [lastChangedFile, setLastChangedFile] = useState<{ path: string; key: number }>({
+    path: '',
+    key: 0,
+  });
   const [runtimeStatus, setRuntimeStatus] = useState<RuntimeStatus>({
     status: 'idle',
     models: 0,
@@ -281,10 +291,13 @@ export function StudioProvider({ children }: { children: ReactNode }) {
           }));
           break;
 
-        case 'file.changed':
+        case 'file.changed': {
+          const changedMsg = msg as unknown as { path: string; action: string };
           setHasPendingChanges(true);
+          setLastChangedFile((prev) => ({ path: changedMsg.path, key: prev.key + 1 }));
           connRef.current?.send({ type: 'files.list' });
           break;
+        }
 
         case 'files.data':
           setFileTree((msg as unknown as { tree: FileNode[] }).tree);
@@ -293,6 +306,19 @@ export function StudioProvider({ children }: { children: ReactNode }) {
         case 'file.content': {
           const fileMsg = msg as unknown as { path: string; content: string };
           setFileContents((prev) => ({ ...prev, [fileMsg.path]: fileMsg.content }));
+          break;
+        }
+
+        case 'file.saved': {
+          const savedMsg = msg as unknown as { path: string };
+          void savedMsg;
+          setFileSaveError(null);
+          break;
+        }
+
+        case 'file.saveError': {
+          const errMsg = msg as unknown as { path: string; message: string };
+          setFileSaveError({ path: errMsg.path, message: errMsg.message });
           break;
         }
 
@@ -467,6 +493,10 @@ export function StudioProvider({ children }: { children: ReactNode }) {
     connRef.current?.send({ type: 'file.read', path: filePath });
   }, []);
 
+  const writeFile = useCallback((filePath: string, content: string) => {
+    connRef.current?.send({ type: 'file.write', path: filePath, content });
+  }, []);
+
   return (
     <StudioContext.Provider
       value={{
@@ -503,6 +533,9 @@ export function StudioProvider({ children }: { children: ReactNode }) {
         startRuntime,
         requestFileTree,
         readFile,
+        writeFile,
+        fileSaveError,
+        lastChangedFile,
       }}
     >
       {children}
