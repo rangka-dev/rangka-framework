@@ -1,3 +1,4 @@
+import { type ReactNode } from 'react';
 import { Table } from '../../data/table';
 import { TablePagination } from '../../data/table-pagination';
 import type { WidgetComponentProps, WidgetNode } from '../types';
@@ -8,12 +9,17 @@ interface ColumnDef {
   width?: string;
   align?: 'left' | 'center' | 'right';
   sortable?: boolean;
+  children?: WidgetNode[];
+  renderCell?: (row: Record<string, unknown>, index: number) => ReactNode;
 }
 
 export function TableWidget({ props, bind, on, childNodes }: WidgetComponentProps) {
   const variant = (props.variant as 'card' | 'flat') ?? 'flat';
   const selectable = props.selectable as boolean | undefined;
   const striped = props.striped as boolean | undefined;
+  const bordered = props.bordered as boolean | undefined;
+  const loading = props.loading as boolean | undefined;
+  const fetching = props.fetching as boolean | undefined;
   const emptyText = (props.emptyText as string) ?? 'No data';
 
   const page = (props.page as number) ?? 1;
@@ -23,30 +29,20 @@ export function TableWidget({ props, bind, on, childNodes }: WidgetComponentProp
 
   const columns = resolveColumns(props.columns as ColumnDef[] | undefined, childNodes);
   const records = (bind.value as Record<string, unknown>[]) ?? [];
-
-  const handleSort = (field: string) => {
-    on.sort?.(field);
-  };
-
-  const handleRowClick = (row: Record<string, unknown>) => {
-    on.rowClick?.(row);
-  };
-
-  const handleSelect = (row: Record<string, unknown>) => {
-    on.select?.(row);
-  };
+  const colCount = columns.length + (selectable ? 1 : 0);
 
   const showPagination = pageSize > 0 && total > 0;
 
   return (
-    <Table variant={variant}>
+    <Table variant={variant} className={bordered ? 'ring-1 ring-border' : undefined}>
       <Table.Content>
         <Table.Header>
           <tr>
             {selectable && (
-              <Table.Head width="40px" align="center">
-                <input type="checkbox" className="cursor-pointer" aria-label="Select all" />
-              </Table.Head>
+              <Table.SelectHead
+                allSelected={false}
+                onSelectAll={(checked) => on.selectAll?.(checked)}
+              />
             )}
             {columns.map((col) => (
               <Table.Head
@@ -55,7 +51,7 @@ export function TableWidget({ props, bind, on, childNodes }: WidgetComponentProp
                 width={col.width}
                 sortable={col.sortable}
                 sorted={sorted?.field === col.field ? sorted.direction : null}
-                onSort={() => handleSort(col.field)}
+                onSort={() => on.sort?.(col.field)}
               >
                 {col.label}
               </Table.Head>
@@ -63,34 +59,36 @@ export function TableWidget({ props, bind, on, childNodes }: WidgetComponentProp
           </tr>
         </Table.Header>
 
-        {records.length === 0 ? (
+        {loading ? (
+          <Table.Skeleton columns={colCount} rows={pageSize || 5} />
+        ) : records.length === 0 ? (
           <Table.Body>
-            <Table.Empty colSpan={columns.length + (selectable ? 1 : 0)}>{emptyText}</Table.Empty>
+            <Table.Empty colSpan={colCount}>{emptyText}</Table.Empty>
           </Table.Body>
         ) : (
-          <Table.Body>
+          <Table.Body
+            className={fetching ? 'opacity-50 transition-opacity duration-150' : undefined}
+          >
             {records.map((row, idx) => (
               <Table.Row
                 key={(row.id as string) ?? idx}
                 striped={striped && idx % 2 === 1}
-                onClick={on.rowClick ? () => handleRowClick(row) : undefined}
+                onClick={on.rowClick ? () => on.rowClick?.(row) : undefined}
               >
                 {selectable && (
-                  <Table.Cell align="center">
-                    <input
-                      type="checkbox"
-                      className="cursor-pointer"
-                      aria-label={`Select row ${idx + 1}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleSelect(row);
-                      }}
-                    />
-                  </Table.Cell>
+                  <Table.SelectCell
+                    rowNumber={idx + 1}
+                    selected={false}
+                    onSelectChange={(checked) => on.select?.(row, checked)}
+                  />
                 )}
                 {columns.map((col) => (
                   <Table.Cell key={col.field} align={col.align}>
-                    {row[col.field] != null ? String(row[col.field]) : ''}
+                    {col.renderCell
+                      ? col.renderCell(row, idx)
+                      : row[col.field] != null
+                        ? String(row[col.field])
+                        : ''}
                   </Table.Cell>
                 ))}
               </Table.Row>
@@ -126,6 +124,7 @@ function resolveColumns(
         width: node.props?.width as string | undefined,
         align: node.props?.align as 'left' | 'center' | 'right' | undefined,
         sortable: node.props?.sortable as boolean | undefined,
+        children: node.children,
       }));
   }
 
