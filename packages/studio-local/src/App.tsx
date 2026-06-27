@@ -84,10 +84,6 @@ function FileEditorTab({
     [onSave, onDirtyChange],
   );
 
-  useEffect(() => {
-    if (!conflict) return;
-  }, [conflict]);
-
   return (
     <div className="flex h-full flex-col">
       {conflict && (
