@@ -283,6 +283,8 @@ DatagridCell.displayName = 'Datagrid.Cell';
 // --- Datagrid.SelectCell ---
 
 export type DatagridSelectCellProps = ComponentProps<'div'> & {
+  /** Row number to display when not hovered */
+  rowNumber?: number;
   /** Whether the row is selected */
   selected?: boolean;
   /** Called when checkbox state changes */
@@ -290,20 +292,37 @@ export type DatagridSelectCellProps = ComponentProps<'div'> & {
 };
 
 const DatagridSelectCell = forwardRef<HTMLDivElement, DatagridSelectCellProps>(
-  ({ className, selected, onSelectChange, ...props }, ref) => (
+  ({ className, rowNumber, selected, onSelectChange, ...props }, ref) => (
     <div
       ref={ref}
       role="gridcell"
       data-slot="datagrid-select-cell"
-      className={cn('flex items-center justify-center border-r border-border/50', className)}
+      className={cn(
+        'group/select flex items-center justify-center border-r border-border/50 text-xs text-foreground/50',
+        className,
+      )}
       {...props}
     >
+      <span
+        className={cn(
+          'inline-flex items-center justify-center',
+          selected && 'hidden',
+          'group-hover/select:hidden',
+        )}
+      >
+        {rowNumber}
+      </span>
       <input
         type="checkbox"
         checked={selected}
         onChange={(e) => onSelectChange?.(e.target.checked)}
-        className="size-3.5 cursor-pointer rounded-sm border border-border accent-primary"
-        aria-label="Select row"
+        className={cn(
+          'size-3.5 cursor-pointer rounded-sm border border-border accent-primary',
+          !selected && 'hidden group-hover/select:inline-flex',
+          selected && 'inline-flex',
+        )}
+        onClick={(e) => e.stopPropagation()}
+        aria-label={`Select row ${rowNumber}`}
       />
     </div>
   ),

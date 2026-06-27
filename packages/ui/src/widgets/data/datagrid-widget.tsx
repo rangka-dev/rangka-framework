@@ -106,6 +106,7 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
                 >
                   {selectable && (
                     <Datagrid.SelectCell
+                      rowNumber={idx + 1}
                       selected={isSelected}
                       onSelectChange={(checked) => on.select?.(row, checked)}
                     />
