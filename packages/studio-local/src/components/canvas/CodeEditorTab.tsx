@@ -1,10 +1,13 @@
-import { useRef } from 'react';
-import Editor, { type Monaco } from '@monaco-editor/react';
+import { useRef, useCallback } from 'react';
+import Editor, { type Monaco, type OnMount } from '@monaco-editor/react';
+import type { editor } from 'monaco-editor';
 
 type CodeEditorTabProps = {
   filename: string;
   content: string;
   language: string;
+  onChange?: (content: string) => void;
+  onSave?: (content: string) => void;
 };
 
 function defineStudioTheme(monaco: Monaco) {
@@ -46,8 +49,9 @@ function defineStudioTheme(monaco: Monaco) {
   });
 }
 
-export function CodeEditorTab({ content, language }: CodeEditorTabProps) {
+export function CodeEditorTab({ content, language, onChange, onSave }: CodeEditorTabProps) {
   const themeReady = useRef(false);
+  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
 
   function handleBeforeMount(monaco: Monaco) {
     if (!themeReady.current) {
@@ -55,6 +59,30 @@ export function CodeEditorTab({ content, language }: CodeEditorTabProps) {
       themeReady.current = true;
     }
   }
+
+  const handleMount: OnMount = useCallback(
+    (editorInstance, monaco) => {
+      editorRef.current = editorInstance;
+      editorInstance.addAction({
+        id: 'studio.save',
+        label: 'Save File',
+        keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS],
+        run: (ed) => {
+          onSave?.(ed.getValue());
+        },
+      });
+    },
+    [onSave],
+  );
+
+  const handleChange = useCallback(
+    (value: string | undefined) => {
+      if (value !== undefined) {
+        onChange?.(value);
+      }
+    },
+    [onChange],
+  );
 
   const isDark = document.documentElement.classList.contains('dark');
 
@@ -65,8 +93,9 @@ export function CodeEditorTab({ content, language }: CodeEditorTabProps) {
         language={language}
         value={content}
         beforeMount={handleBeforeMount}
+        onMount={handleMount}
+        onChange={handleChange}
         options={{
-          readOnly: true,
           minimap: { enabled: false },
           fontSize: 13,
           lineNumbers: 'on',
