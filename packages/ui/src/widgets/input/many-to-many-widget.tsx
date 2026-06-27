@@ -3,7 +3,7 @@ import { Search, X } from 'lucide-react';
 import { Badge } from '../../primitives/badge';
 import { Icon } from '../../primitives/icon';
 import { Field } from '../../form/field';
-import { cn } from '../../lib/cn';
+import { Listbox } from '../../form/listbox';
 import { useClickOutside } from '../../lib/use-click-outside';
 import type { WidgetComponentProps } from '../types';
 
@@ -47,67 +47,52 @@ export function ManyToManyWidget({ props, bind, on }: WidgetComponentProps) {
   return (
     <Field data-invalid={!!bind.error || undefined}>
       {label && <Field.Label required={required}>{label}</Field.Label>}
-      <div className="relative" ref={containerRef}>
-        <div
-          className={cn(
-            'flex min-h-9 w-full flex-wrap items-center gap-1 rounded-md border border-border bg-transparent px-2 py-1',
-            disabled && 'cursor-not-allowed opacity-50',
-          )}
+      <Listbox ref={containerRef}>
+        <Listbox.Trigger
+          onClick={() => !disabled && setOpen(!open)}
+          disabled={disabled}
+          placeholder={selectedItems.length === 0}
+          className="h-auto min-h-9 flex-wrap gap-1 py-1"
         >
           {selectedItems.map((item) => (
             <Badge key={item.value} variant="secondary" className="gap-1 pr-1">
               {item.label}
               {!disabled && (
-                <button
-                  type="button"
-                  onClick={() => handleRemove(item.value)}
-                  className="rounded-full p-0.5 hover:bg-foreground/10"
-                >
-                  <Icon icon={X} size="sm" />
-                </button>
+                <Icon
+                  icon={X}
+                  size="sm"
+                  className="h-3 w-3 cursor-pointer rounded-full hover:bg-foreground/10"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRemove(item.value);
+                  }}
+                />
               )}
             </Badge>
           ))}
-          {!disabled && (
-            <button
-              type="button"
-              onClick={() => setOpen(!open)}
-              className="flex h-7 flex-1 items-center gap-1 px-1 text-2xs text-muted-foreground"
-            >
-              {selectedItems.length === 0 && <span>{placeholder}</span>}
-              <Icon icon={Search} size="sm" className="ml-auto" />
-            </button>
-          )}
-        </div>
+          {selectedItems.length === 0 && <Listbox.TriggerValue>{placeholder}</Listbox.TriggerValue>}
+          <Listbox.TriggerIcon className="ml-auto">
+            <Icon icon={Search} size="sm" />
+          </Listbox.TriggerIcon>
+        </Listbox.Trigger>
         {open && (
-          <div className="absolute z-50 mt-1 w-full rounded-md border border-border bg-surface shadow-md">
-            <div className="p-2">
-              <input
-                value={search}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
-                placeholder="Search..."
-                autoFocus
-                className="flex h-8 w-full rounded-md border border-border bg-transparent px-3 text-xs text-foreground placeholder:text-muted-foreground focus-visible:outline-none"
-              />
-            </div>
-            <div className="max-h-48 overflow-auto p-1">
-              {filtered.length === 0 && (
-                <div className="px-3 py-2 text-sm text-muted-foreground">No results</div>
-              )}
+          <Listbox.Content>
+            <Listbox.Search
+              value={search}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
+              placeholder="Search..."
+            />
+            <Listbox.Items>
+              {filtered.length === 0 && <Listbox.Empty />}
               {filtered.map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => handleToggle(opt.value)}
-                  className="flex w-full items-center rounded-sm px-3 py-1.5 text-2xs cursor-pointer hover:bg-foreground/6"
-                >
+                <Listbox.Item key={opt.value} onClick={() => handleToggle(opt.value)}>
                   {opt.label}
-                </button>
+                </Listbox.Item>
               ))}
-            </div>
-          </div>
+            </Listbox.Items>
+          </Listbox.Content>
         )}
-      </div>
+      </Listbox>
       {bind.error && <Field.Error>{bind.error}</Field.Error>}
     </Field>
   );

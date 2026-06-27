@@ -1,5 +1,6 @@
 import { Select } from '../../primitives/select';
 import { Field } from '../../form/field';
+import { Group } from '../../layout/group';
 import type { WidgetComponentProps } from '../types';
 import { LinkWidget } from './link-widget';
 
@@ -20,30 +21,21 @@ export function DynamicLinkWidget({ props, bind, on, context }: WidgetComponentP
   return (
     <Field data-invalid={!!bind.error || undefined}>
       {label && <Field.Label required={required}>{label}</Field.Label>}
-      <div className="flex gap-2">
-        <div className="w-1/3">
-          <Select value={currentModel} onValueChange={handleModelChange} disabled={disabled}>
-            <Select.Trigger>
-              <Select.Value placeholder="Type..." />
-            </Select.Trigger>
-            <Select.Content>
-              {models.map((m) => (
-                <Select.Item key={m.value} value={m.value}>
-                  {m.label}
-                </Select.Item>
-              ))}
-            </Select.Content>
-          </Select>
-        </div>
-        <div className="flex-1">
-          <LinkWidget
-            props={{ ...props, label: undefined }}
-            bind={bind}
-            on={on}
-            context={context}
-          />
-        </div>
-      </div>
+      <Group direction="row" gap="sm">
+        <Select value={currentModel} onValueChange={handleModelChange} disabled={disabled}>
+          <Select.Trigger className="w-32">
+            <Select.Value placeholder="Type..." />
+          </Select.Trigger>
+          <Select.Content>
+            {models.map((m) => (
+              <Select.Item key={m.value} value={m.value}>
+                {m.label}
+              </Select.Item>
+            ))}
+          </Select.Content>
+        </Select>
+        <LinkWidget props={{ ...props, label: undefined }} bind={bind} on={on} context={context} />
+      </Group>
       {bind.error && <Field.Error>{bind.error}</Field.Error>}
     </Field>
   );

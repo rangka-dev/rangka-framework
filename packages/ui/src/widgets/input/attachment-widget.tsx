@@ -1,13 +1,18 @@
-import { Upload, X, File } from 'lucide-react';
-import { Icon } from '../../primitives/icon';
 import { Field } from '../../form/field';
-import { cn } from '../../lib/cn';
+import { FileUpload } from '../../form/file-upload';
 import type { WidgetComponentProps } from '../types';
 
 interface FileValue {
   name: string;
   url?: string;
   size?: number;
+}
+
+function formatSize(bytes?: number) {
+  if (!bytes) return '';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 export function AttachmentWidget({ props, bind, on }: WidgetComponentProps) {
@@ -31,51 +36,18 @@ export function AttachmentWidget({ props, bind, on }: WidgetComponentProps) {
     on.change?.(null);
   };
 
-  const formatSize = (bytes?: number) => {
-    if (!bytes) return '';
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  };
-
   return (
     <Field data-invalid={!!bind.error || undefined}>
       {label && <Field.Label required={required}>{label}</Field.Label>}
       {!file ? (
-        <label
-          className={cn(
-            'flex h-20 w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-md border-2 border-dashed border-border',
-            'text-sm text-muted-foreground transition-colors hover:border-foreground/30 hover:bg-foreground/4',
-            disabled && 'cursor-not-allowed opacity-50',
-          )}
-        >
-          <Icon icon={Upload} size="md" />
-          <span>Drop file or click to upload</span>
-          <input
-            type="file"
-            className="hidden"
-            onChange={handleFileChange}
-            disabled={disabled}
-            accept={accept}
-          />
-        </label>
+        <FileUpload.Dropzone accept={accept} disabled={disabled} onChange={handleFileChange} />
       ) : (
-        <div className="flex items-center gap-2 rounded-md border border-border px-3 py-2">
-          <Icon icon={File} size="sm" className="text-muted-foreground" />
-          <span className="flex-1 truncate text-sm">{file.name}</span>
-          {file.size && (
-            <span className="text-xs text-muted-foreground">{formatSize(file.size)}</span>
-          )}
-          {!disabled && (
-            <button
-              type="button"
-              onClick={handleRemove}
-              className="rounded-full p-1 hover:bg-foreground/6"
-            >
-              <Icon icon={X} size="sm" />
-            </button>
-          )}
-        </div>
+        <FileUpload.Item
+          name={file.name}
+          size={formatSize(file.size)}
+          disabled={disabled}
+          onRemove={handleRemove}
+        />
       )}
       {bind.error && <Field.Error>{bind.error}</Field.Error>}
     </Field>

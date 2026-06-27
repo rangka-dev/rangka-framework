@@ -27,3 +27,23 @@ export {
   type InputGroupTextProps,
   type InputGroupInputProps,
 } from './input-group';
+
+export {
+  Listbox,
+  type ListboxProps,
+  type ListboxTriggerProps,
+  type ListboxTriggerValueProps,
+  type ListboxTriggerIconProps,
+  type ListboxContentProps,
+  type ListboxSearchProps,
+  type ListboxItemsProps,
+  type ListboxItemProps,
+  type ListboxEmptyProps,
+} from './listbox';
+
+export {
+  FileUpload,
+  type FileUploadProps,
+  type FileUploadDropzoneProps,
+  type FileUploadItemProps,
+} from './file-upload';
