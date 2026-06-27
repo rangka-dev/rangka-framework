@@ -169,13 +169,27 @@ const products = [
 ];
 
 const columns = [
-  { field: 'name', label: 'Product', width: 200, sortable: true },
-  { field: 'sku', label: 'SKU', width: 120 },
-  { field: 'category', label: 'Category', width: 120, sortable: true },
-  { field: 'price', label: 'Price', width: 100, align: 'right' as const, sortable: true },
-  { field: 'stock', label: 'Stock', width: 80, align: 'right' as const, sortable: true },
-  { field: 'unit', label: 'Unit', width: 80 },
-  { field: 'active', label: 'Active', width: 80 },
+  { field: 'name', label: 'Product', width: 200, sortable: true, fieldType: 'string' },
+  { field: 'sku', label: 'SKU', width: 120, fieldType: 'string' },
+  { field: 'category', label: 'Category', width: 120, sortable: true, fieldType: 'link' },
+  {
+    field: 'price',
+    label: 'Price',
+    width: 100,
+    align: 'right' as const,
+    sortable: true,
+    fieldType: 'money',
+  },
+  {
+    field: 'stock',
+    label: 'Stock',
+    width: 80,
+    align: 'right' as const,
+    sortable: true,
+    fieldType: 'int',
+  },
+  { field: 'unit', label: 'Unit', width: 80, fieldType: 'enum' },
+  { field: 'active', label: 'Active', width: 80, fieldType: 'boolean' },
 ];
 
 export const InventoryGrid: Story = {

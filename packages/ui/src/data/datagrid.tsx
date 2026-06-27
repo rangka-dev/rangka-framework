@@ -1,7 +1,23 @@
 import { forwardRef, type ComponentProps } from 'react';
 import { cn } from '../lib/cn';
 import { Icon } from '../primitives/icon';
-import { ChevronUp, ChevronDown, ChevronsUpDown, GripVertical } from 'lucide-react';
+import {
+  ChevronUp,
+  ChevronDown,
+  ChevronsUpDown,
+  GripVertical,
+  Type,
+  Hash,
+  Calendar,
+  ToggleLeft,
+  Link2,
+  List,
+  DollarSign,
+  Code,
+  Paperclip,
+  FileText,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
 // --- Datagrid (Root) ---
 
@@ -67,6 +83,27 @@ const DatagridHeader = forwardRef<HTMLDivElement, DatagridHeaderProps>(
 );
 DatagridHeader.displayName = 'Datagrid.Header';
 
+// --- Field type icon mapping ---
+
+const fieldTypeIcons: Record<string, LucideIcon> = {
+  string: Type,
+  text: FileText,
+  int: Hash,
+  decimal: Hash,
+  money: DollarSign,
+  date: Calendar,
+  datetime: Calendar,
+  boolean: ToggleLeft,
+  enum: List,
+  link: Link2,
+  manyToMany: Link2,
+  json: Code,
+  code: Code,
+  attachment: Paperclip,
+  attachments: Paperclip,
+  sequence: Hash,
+};
+
 // --- Datagrid.HeaderCell ---
 
 export type DatagridHeaderCellProps = ComponentProps<'div'> & {
@@ -76,37 +113,44 @@ export type DatagridHeaderCellProps = ComponentProps<'div'> & {
   sorted?: 'asc' | 'desc' | null;
   /** Whether the column is reorderable */
   reorderable?: boolean;
+  /** Field type for icon display */
+  fieldType?: string;
   /** Sort click handler */
   onSort?: () => void;
 };
 
 const DatagridHeaderCell = forwardRef<HTMLDivElement, DatagridHeaderCellProps>(
-  ({ className, sortable, sorted, reorderable, onSort, children, ...props }, ref) => (
-    <div
-      ref={ref}
-      role="columnheader"
-      data-slot="datagrid-header-cell"
-      className={cn(
-        'flex items-center gap-1 px-3 h-9 text-xs font-medium text-foreground/50 border-r border-border last:border-r-0',
-        sortable && 'cursor-pointer select-none hover:text-foreground',
-        className,
-      )}
-      onClick={sortable ? onSort : undefined}
-      {...props}
-    >
-      {reorderable && (
-        <Icon icon={GripVertical} size="sm" className="shrink-0 text-foreground/30 cursor-grab" />
-      )}
-      <span className="flex-1 truncate">{children}</span>
-      {sortable && sorted === 'asc' && (
-        <Icon icon={ChevronUp} size="sm" className="text-foreground" />
-      )}
-      {sortable && sorted === 'desc' && (
-        <Icon icon={ChevronDown} size="sm" className="text-foreground" />
-      )}
-      {sortable && !sorted && <Icon icon={ChevronsUpDown} size="sm" className="opacity-40" />}
-    </div>
-  ),
+  ({ className, sortable, sorted, reorderable, fieldType, onSort, children, ...props }, ref) => {
+    const typeIcon = fieldType ? fieldTypeIcons[fieldType] : undefined;
+
+    return (
+      <div
+        ref={ref}
+        role="columnheader"
+        data-slot="datagrid-header-cell"
+        className={cn(
+          'flex items-center gap-1 px-3 h-9 text-xs font-medium text-foreground/50 border-r border-border last:border-r-0',
+          sortable && 'cursor-pointer select-none hover:text-foreground',
+          className,
+        )}
+        onClick={sortable ? onSort : undefined}
+        {...props}
+      >
+        {reorderable && (
+          <Icon icon={GripVertical} size="sm" className="shrink-0 text-foreground/30 cursor-grab" />
+        )}
+        {typeIcon && <Icon icon={typeIcon} size="sm" className="shrink-0 opacity-50" />}
+        <span className="flex-1 truncate">{children}</span>
+        {sortable && sorted === 'asc' && (
+          <Icon icon={ChevronUp} size="sm" className="text-foreground" />
+        )}
+        {sortable && sorted === 'desc' && (
+          <Icon icon={ChevronDown} size="sm" className="text-foreground" />
+        )}
+        {sortable && !sorted && <Icon icon={ChevronsUpDown} size="sm" className="opacity-40" />}
+      </div>
+    );
+  },
 );
 DatagridHeaderCell.displayName = 'Datagrid.HeaderCell';
 

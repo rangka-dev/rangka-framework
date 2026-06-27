@@ -8,6 +8,7 @@ interface ColumnDef {
   align?: 'left' | 'center' | 'right';
   sortable?: boolean;
   editable?: boolean;
+  fieldType?: string;
 }
 
 export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentProps) {
@@ -54,6 +55,7 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
               key={col.field}
               sortable={col.sortable}
               sorted={getSortState(col.field)}
+              fieldType={col.fieldType}
               onSort={() => on.sort?.(col.field)}
             >
               {col.label}
@@ -146,6 +148,7 @@ function resolveColumns(
         align: node.props?.align as 'left' | 'center' | 'right' | undefined,
         sortable: node.props?.sortable as boolean | undefined,
         editable: node.props?.editable as boolean | undefined,
+        fieldType: node.props?.fieldType as string | undefined,
       }));
   }
 
