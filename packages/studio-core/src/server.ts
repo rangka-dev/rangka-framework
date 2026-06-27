@@ -340,6 +340,9 @@ export class StudioServer {
       case 'file.read':
         this.handleFileRead(ws, msg.path);
         break;
+      case 'file.write':
+        this.handleFileWrite(ws, msg.path, msg.content);
+        break;
     }
   }
 
@@ -607,6 +610,35 @@ export class StudioServer {
       this.send(ws, { type: 'file.content', path: filePath, content });
     } catch {
       this.send(ws, { type: 'file.error', path: filePath, message: 'File not found' });
+    }
+  }
+
+  private handleFileWrite(ws: WebSocket, filePath: string, content: string): void {
+    if (!filePath.startsWith('modules/')) {
+      this.send(ws, { type: 'file.saveError', path: filePath, message: 'Access denied' });
+      return;
+    }
+
+    const resolved = path.resolve(this.config.projectRoot, filePath);
+    if (!resolved.startsWith(path.resolve(this.config.projectRoot) + path.sep)) {
+      this.send(ws, { type: 'file.saveError', path: filePath, message: 'Access denied' });
+      return;
+    }
+
+    const ext = path.extname(filePath).toLowerCase();
+    if (!StudioServer.TEXT_EXTENSIONS.has(ext)) {
+      this.send(ws, { type: 'file.saveError', path: filePath, message: 'Unsupported file type' });
+      return;
+    }
+
+    try {
+      const dir = path.dirname(resolved);
+      fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(resolved, content, 'utf-8');
+      this.send(ws, { type: 'file.saved', path: filePath });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      this.send(ws, { type: 'file.saveError', path: filePath, message });
     }
   }
 
