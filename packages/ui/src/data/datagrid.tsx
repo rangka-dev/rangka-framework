@@ -223,7 +223,7 @@ const DatagridRow = forwardRef<HTMLDivElement, DatagridRowProps>(
       data-selected={selected || undefined}
       data-active={active || undefined}
       className={cn(
-        'absolute left-0 right-0 grid border-b border-border/50',
+        'absolute left-0 min-w-full grid border-b border-border/50',
         selected && 'bg-primary/5',
         active && 'bg-foreground/3',
         !selected && !active && 'hover:bg-foreground/3',
@@ -244,8 +244,6 @@ DatagridRow.displayName = 'Datagrid.Row';
 // --- Datagrid.Cell ---
 
 export type DatagridCellProps = ComponentProps<'div'> & {
-  /** Text alignment */
-  align?: 'left' | 'center' | 'right';
   /** Whether this cell is the active (focused) cell */
   active?: boolean;
   /** Whether this cell is in edit mode */
@@ -255,9 +253,7 @@ export type DatagridCellProps = ComponentProps<'div'> & {
 };
 
 const DatagridCell = forwardRef<HTMLDivElement, DatagridCellProps>(
-  ({ className, align = 'left', active, editing, pending, ...props }, ref) => {
-    const alignClass =
-      align === 'center' ? 'justify-center' : align === 'right' ? 'justify-end' : 'justify-start';
+  ({ className, active, editing, pending, ...props }, ref) => {
     return (
       <div
         ref={ref}
@@ -267,9 +263,8 @@ const DatagridCell = forwardRef<HTMLDivElement, DatagridCellProps>(
         data-editing={editing || undefined}
         className={cn(
           'flex items-center px-3 border-r border-border/50 last:border-r-0 truncate',
-          alignClass,
           active && !editing && 'ring-2 ring-inset ring-primary',
-          editing && 'ring-2 ring-inset ring-primary bg-card p-0',
+          editing && 'ring-2 ring-inset ring-primary bg-card px-3 py-0',
           pending && 'bg-amber-50/50',
           className,
         )}
