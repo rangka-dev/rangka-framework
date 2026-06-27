@@ -30,3 +30,19 @@ export {
   type FilterBarOperatorFormProps,
   type OperatorOption,
 } from './filter-bar';
+
+export {
+  Datagrid,
+  type DatagridProps,
+  type DatagridScrollAreaProps,
+  type DatagridHeaderProps,
+  type DatagridHeaderCellProps,
+  type DatagridResizeHandleProps,
+  type DatagridBodyProps,
+  type DatagridRowProps,
+  type DatagridCellProps,
+  type DatagridSelectCellProps,
+  type DatagridSelectHeaderProps,
+  type DatagridFooterProps,
+  type DatagridFooterCountProps,
+} from './datagrid';
