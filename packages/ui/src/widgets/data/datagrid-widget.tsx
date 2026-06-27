@@ -1,4 +1,7 @@
+import { Plus } from 'lucide-react';
 import { Datagrid } from '../../data/datagrid';
+import { Button } from '../../primitives/button';
+import { Icon } from '../../primitives/icon';
 import type { WidgetComponentProps, WidgetNode } from '../types';
 
 interface ColumnDef {
@@ -18,6 +21,7 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
   const emptyText = (props.emptyText as string) ?? 'No records';
   const loading = props.loading as boolean | undefined;
   const fetching = props.fetching as boolean | undefined;
+  const addRow = (props.addRow as boolean) ?? false;
 
   const sorted = props.sorted as { field: string; direction: 'asc' | 'desc' }[] | undefined;
   const selectedRows = (props.selectedRows as string[]) ?? [];
@@ -126,6 +130,13 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
       </Datagrid.ScrollArea>
 
       <Datagrid.Footer>
+        {addRow && (
+          <Button variant="ghost" size="xs" onClick={() => on.addRow?.()}>
+            <Icon icon={Plus} size="sm" />
+            <span>Add row</span>
+          </Button>
+        )}
+        {!addRow && <span />}
         <Datagrid.FooterCount count={records.length} total={props.total as number | undefined} />
       </Datagrid.Footer>
     </Datagrid>

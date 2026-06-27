@@ -225,6 +225,7 @@ export const InventoryGrid: Story = {
             selectable: true,
             selectedRows: selected,
             rowHeight: 'default',
+            addRow: true,
             total: 234,
           }}
           bind={{ value: products }}
