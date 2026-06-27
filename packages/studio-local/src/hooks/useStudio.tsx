@@ -93,6 +93,7 @@ interface StudioContextValue {
   readFile: (path: string) => void;
   writeFile: (path: string, content: string) => void;
   fileSaveError: { path: string; message: string } | null;
+  lastChangedFile: { path: string; key: number };
 }
 
 const StudioContext = createContext<StudioContextValue | null>(null);
@@ -120,6 +121,10 @@ export function StudioProvider({ children }: { children: ReactNode }) {
   const [fileSaveError, setFileSaveError] = useState<{ path: string; message: string } | null>(
     null,
   );
+  const [lastChangedFile, setLastChangedFile] = useState<{ path: string; key: number }>({
+    path: '',
+    key: 0,
+  });
   const [runtimeStatus, setRuntimeStatus] = useState<RuntimeStatus>({
     status: 'idle',
     models: 0,
@@ -286,10 +291,13 @@ export function StudioProvider({ children }: { children: ReactNode }) {
           }));
           break;
 
-        case 'file.changed':
+        case 'file.changed': {
+          const changedMsg = msg as unknown as { path: string; action: string };
           setHasPendingChanges(true);
+          setLastChangedFile((prev) => ({ path: changedMsg.path, key: prev.key + 1 }));
           connRef.current?.send({ type: 'files.list' });
           break;
+        }
 
         case 'files.data':
           setFileTree((msg as unknown as { tree: FileNode[] }).tree);
@@ -527,6 +535,7 @@ export function StudioProvider({ children }: { children: ReactNode }) {
         readFile,
         writeFile,
         fileSaveError,
+        lastChangedFile,
       }}
     >
       {children}
