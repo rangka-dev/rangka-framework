@@ -78,6 +78,81 @@ export function createStudioTools(
       },
     },
     {
+      name: 'write_file',
+      label: 'Write File',
+      description:
+        'Write content to a file in the project. Creates the file if it does not exist. ' +
+        'The path must be within the project root and must be a text file ' +
+        '(.ts, .tsx, .js, .jsx, .json, .yaml, .yml, .md, .css, .html).',
+      parameters: Type.Object({
+        path: Type.String({
+          description: 'Relative path to the file (e.g. modules/sales/models/order.ts)',
+        }),
+        content: Type.String({
+          description: 'Full file content to write',
+        }),
+      }),
+      execute: async (_toolCallId: string, params: { path: string; content: string }) => {
+        const root = projectRoot ?? subprocess.getProjectRoot();
+        const fullPath = resolve(root, params.path);
+        const rel = relative(root, fullPath);
+
+        if (rel.startsWith('..')) {
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: `Refused: path is outside the project root. Got: ${params.path}`,
+              },
+            ],
+            details: { success: false },
+          };
+        }
+
+        const ext = params.path.split('.').pop()?.toLowerCase();
+        const ALLOWED = new Set([
+          'ts',
+          'tsx',
+          'js',
+          'jsx',
+          'json',
+          'yaml',
+          'yml',
+          'md',
+          'css',
+          'html',
+        ]);
+        if (!ext || !ALLOWED.has(ext)) {
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: `Refused: unsupported file extension. Got: .${ext ?? '(none)'}`,
+              },
+            ],
+            details: { success: false },
+          };
+        }
+
+        try {
+          const { mkdir, writeFile } = await import('node:fs/promises');
+          const { dirname } = await import('node:path');
+          await mkdir(dirname(fullPath), { recursive: true });
+          await writeFile(fullPath, params.content, 'utf-8');
+          return {
+            content: [{ type: 'text' as const, text: `File written: ${params.path}` }],
+            details: { success: true, path: params.path },
+          };
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          return {
+            content: [{ type: 'text' as const, text: `Failed to write: ${message}` }],
+            details: { success: false, error: message },
+          };
+        }
+      },
+    },
+    {
       name: 'introspect',
       label: 'Introspect',
       description:
