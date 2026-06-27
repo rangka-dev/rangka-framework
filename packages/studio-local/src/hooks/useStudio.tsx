@@ -91,6 +91,8 @@ interface StudioContextValue {
   startRuntime: () => void;
   requestFileTree: () => void;
   readFile: (path: string) => void;
+  writeFile: (path: string, content: string) => void;
+  fileSaveError: { path: string; message: string } | null;
 }
 
 const StudioContext = createContext<StudioContextValue | null>(null);
@@ -115,6 +117,9 @@ export function StudioProvider({ children }: { children: ReactNode }) {
   const [fileTree, setFileTree] = useState<FileNode[]>([]);
   const [fileContents, setFileContents] = useState<Record<string, string>>({});
   const [hasPendingChanges, setHasPendingChanges] = useState(false);
+  const [fileSaveError, setFileSaveError] = useState<{ path: string; message: string } | null>(
+    null,
+  );
   const [runtimeStatus, setRuntimeStatus] = useState<RuntimeStatus>({
     status: 'idle',
     models: 0,
@@ -296,6 +301,19 @@ export function StudioProvider({ children }: { children: ReactNode }) {
           break;
         }
 
+        case 'file.saved': {
+          const savedMsg = msg as unknown as { path: string };
+          void savedMsg;
+          setFileSaveError(null);
+          break;
+        }
+
+        case 'file.saveError': {
+          const errMsg = msg as unknown as { path: string; message: string };
+          setFileSaveError({ path: errMsg.path, message: errMsg.message });
+          break;
+        }
+
         case 'settings.current':
           setSettings((msg as unknown as { config: StudioConfig | null }).config);
           break;
@@ -467,6 +485,10 @@ export function StudioProvider({ children }: { children: ReactNode }) {
     connRef.current?.send({ type: 'file.read', path: filePath });
   }, []);
 
+  const writeFile = useCallback((filePath: string, content: string) => {
+    connRef.current?.send({ type: 'file.write', path: filePath, content });
+  }, []);
+
   return (
     <StudioContext.Provider
       value={{
@@ -503,6 +525,8 @@ export function StudioProvider({ children }: { children: ReactNode }) {
         startRuntime,
         requestFileTree,
         readFile,
+        writeFile,
+        fileSaveError,
       }}
     >
       {children}
