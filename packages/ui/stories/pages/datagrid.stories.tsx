@@ -211,7 +211,6 @@ export const InventoryGrid: Story = {
             selectable: true,
             selectedRows: selected,
             rowHeight: 'default',
-            maxHeight: 600,
             total: 234,
           }}
           bind={{ value: products }}
@@ -237,7 +236,6 @@ export const CompactGrid: Story = {
           selectable: true,
           selectedRows: [],
           rowHeight: 'compact',
-          maxHeight: 500,
           total: 15,
         }}
         bind={{ value: products }}
@@ -277,7 +275,6 @@ export const WithFilterBar: Story = {
           selectable: true,
           selectedRows: [],
           rowHeight: 'default',
-          maxHeight: 500,
           total: 3,
         }}
         bind={{ value: products.filter((p) => p.category === 'Laptops') }}
@@ -297,7 +294,6 @@ export const LoadingGrid: Story = {
           columns,
           selectable: true,
           loading: true,
-          maxHeight: 500,
         }}
         bind={{ value: [] }}
         on={{}}
@@ -316,7 +312,6 @@ export const EmptyGrid: Story = {
           columns,
           selectable: false,
           emptyText: 'No items found. Add your first inventory item.',
-          maxHeight: 300,
         }}
         bind={{ value: [] }}
         on={{}}
