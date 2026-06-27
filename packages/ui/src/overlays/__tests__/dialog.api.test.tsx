@@ -9,6 +9,7 @@ describe('Dialog API surface', () => {
     expect(Dialog.Header).toBeDefined();
     expect(Dialog.Title).toBeDefined();
     expect(Dialog.Description).toBeDefined();
+    expect(Dialog.Body).toBeDefined();
     expect(Dialog.Footer).toBeDefined();
     expect(Dialog.Close).toBeDefined();
     expect(Dialog.Overlay).toBeDefined();
@@ -20,6 +21,7 @@ describe('Dialog API surface', () => {
     expect(Dialog.Header.displayName).toBe('Dialog.Header');
     expect(Dialog.Title.displayName).toBe('Dialog.Title');
     expect(Dialog.Description.displayName).toBe('Dialog.Description');
+    expect(Dialog.Body.displayName).toBe('Dialog.Body');
     expect(Dialog.Footer.displayName).toBe('Dialog.Footer');
     expect(Dialog.Close.displayName).toBe('Dialog.Close');
     expect(Dialog.Overlay.displayName).toBe('Dialog.Overlay');

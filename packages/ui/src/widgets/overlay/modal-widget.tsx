@@ -3,8 +3,8 @@ import type { WidgetComponentProps } from '../types';
 
 export function ModalWidget({ props, bind, on, children }: WidgetComponentProps) {
   const title = (props.title as string) ?? '';
+  const description = props.description as string | undefined;
   const size = (props.size as 'sm' | 'md' | 'lg') ?? 'md';
-  const closable = (props.closable as boolean) ?? true;
 
   const open = bind.value as boolean;
 
@@ -21,15 +21,14 @@ export function ModalWidget({ props, bind, on, children }: WidgetComponentProps)
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <Dialog.Overlay />
       <Dialog.Content className={sizeClasses[size]}>
         {title && (
           <Dialog.Header>
             <Dialog.Title>{title}</Dialog.Title>
+            {description && <Dialog.Description>{description}</Dialog.Description>}
           </Dialog.Header>
         )}
-        <div className="p-4">{children}</div>
-        {closable && <Dialog.Close />}
+        <Dialog.Body>{children}</Dialog.Body>
       </Dialog.Content>
     </Dialog>
   );

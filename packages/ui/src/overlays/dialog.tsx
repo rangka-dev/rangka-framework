@@ -125,6 +125,13 @@ const DialogDescription = forwardRef<HTMLParagraphElement, DialogDescriptionProp
 );
 DialogDescription.displayName = 'Dialog.Description';
 
+export type DialogBodyProps = ComponentProps<'div'>;
+
+const DialogBody = forwardRef<HTMLDivElement, DialogBodyProps>(({ className, ...props }, ref) => {
+  return <div ref={ref} className={cn('px-6 py-4', className)} {...props} />;
+});
+DialogBody.displayName = 'Dialog.Body';
+
 const DialogFooter = forwardRef<HTMLDivElement, DialogFooterProps>(
   ({ className, ...props }, ref) => {
     return (
@@ -159,6 +166,7 @@ export const Dialog = Object.assign(DialogRoot, {
   Header: DialogHeader,
   Title: DialogTitle,
   Description: DialogDescription,
+  Body: DialogBody,
   Footer: DialogFooter,
   Close: DialogClose,
   Overlay: DialogOverlay,
