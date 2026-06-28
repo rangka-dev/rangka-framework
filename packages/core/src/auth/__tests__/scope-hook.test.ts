@@ -4,14 +4,13 @@ import type { FilterProvider } from '../scopes.js';
 import { ScopeRegistry } from '../scope-registry.js';
 import { SchemaRegistry } from '../../schema/registry.js';
 import type { ResolvedModel } from '../../schema/types.js';
-import type { ModuleConfig } from '@rangka/shared';
+import type { AppConfig } from '@rangka/shared';
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import { AppError } from '../../errors.js';
 
 function makeModel(overrides: Partial<ResolvedModel> & { qualifiedName: string }): ResolvedModel {
   return {
-    app: overrides.module ?? 'test',
-    module: overrides.module ?? 'test',
+    app: overrides.app ?? 'test',
     name: overrides.qualifiedName.split('.')[1],
     auditLog: false,
     traits: [],
@@ -85,7 +84,7 @@ function createMockReply() {
 }
 
 function buildScopeContext() {
-  const modules: ModuleConfig[] = [
+  const modules: AppConfig[] = [
     {
       name: 'core',
       label: 'Core',
@@ -94,16 +93,16 @@ function buildScopeContext() {
       },
     },
   ];
-  const companyModel = makeModel({ qualifiedName: 'core.company', module: 'core' });
+  const companyModel = makeModel({ qualifiedName: 'core.company', app: 'core' });
   const invoiceModel = makeModel({
     qualifiedName: 'sales.invoice',
-    module: 'sales',
+    app: 'sales',
     scope: 'company',
     fields: [linkField('company', 'core.company')],
   });
   const unscopedModel = makeModel({
     qualifiedName: 'sales.customer',
-    module: 'sales',
+    app: 'sales',
     fields: [],
   });
   const schemaRegistry = new SchemaRegistry([companyModel, invoiceModel, unscopedModel]);

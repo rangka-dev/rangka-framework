@@ -7,7 +7,6 @@ function makeModel(overrides: Partial<ResolvedModel> = {}): ResolvedModel {
   return {
     qualifiedName: 'sales.invoice',
     app: 'sales',
-    module: 'sales',
     name: 'invoice',
     auditLog: true,
     traits: [],

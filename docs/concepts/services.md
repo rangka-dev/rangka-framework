@@ -14,7 +14,7 @@ A service is a named, reusable unit of business logic. It can be called from an 
 ## Defining a service
 
 ```typescript
-// modules/sales/services/pricing.ts
+// services/pricing.ts
 import { defineService } from 'rangka';
 
 export default defineService({
@@ -56,7 +56,7 @@ export default defineService({
 
 | Field     | Type       | Description                                   |
 | --------- | ---------- | --------------------------------------------- |
-| `name`    | `string`   | Unique identifier (`{module}.{purpose}`)      |
+| `name`    | `string`   | Unique identifier (`{app}.{purpose}`)         |
 | `deps`    | `string[]` | Other services that must be available         |
 | `factory` | `function` | Returns the service instance with its methods |
 

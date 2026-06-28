@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   defineModel,
-  defineModule,
+  defineApp,
   defineHooks,
   defineExtension,
   defineService,
@@ -18,9 +18,9 @@ describe('define functions', () => {
     expect(defineModel(config)).toBe(config);
   });
 
-  it('defineModule passes through config unchanged', () => {
+  it('defineApp passes through config unchanged', () => {
     const config = { name: 'Sales', label: 'Sales' };
-    expect(defineModule(config)).toBe(config);
+    expect(defineApp(config)).toBe(config);
   });
 
   it('defineHooks adds model to config', () => {

@@ -20,7 +20,7 @@ export class FileWatcher {
   }
 
   start(): void {
-    const modulesDir = path.join(this.config.projectRoot, 'modules');
+    const modulesDir = path.join(this.config.projectRoot);
 
     this.watcher = watch(modulesDir, {
       ignoreInitial: true,

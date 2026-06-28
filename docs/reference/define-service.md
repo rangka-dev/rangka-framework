@@ -144,10 +144,10 @@ defineJob('sales.daily-summary', {
 
 ## Registration
 
-Services are automatically discovered from the `services/` directory in each module:
+Services are automatically discovered from the `services/` directory in each app:
 
 ```
-modules/sales/
+apps/sales/
   services/
     pricing.ts       # defineService({ name: 'sales.pricing', ... })
     invoicing.ts     # defineService({ name: 'sales.invoicing', ... })

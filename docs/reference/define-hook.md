@@ -215,17 +215,17 @@ export default defineHooks('sales.order', {
 
 ## Multiple Hook Sources
 
-Multiple modules can define hooks for the same model using `defineHooks()`. All hooks are merged and execute in registration order.
+Multiple apps can define hooks for the same model using `defineHooks()`. All hooks are merged and execute in registration order.
 
 ```typescript
-// Module A: modules/sales/hooks/invoice.ts
+// Module A: hooks/invoice.ts
 export default defineHooks('sales.invoice', {
   beforeSave: async (doc, ctx) => {
     /* ... */
   },
 });
 
-// Module B: modules/tax/hooks/invoice.ts
+// Module B: hooks/invoice.ts
 export default defineHooks('sales.invoice', {
   beforeSave: async (doc, ctx) => {
     /* ... */

@@ -2,12 +2,11 @@ import { describe, it, expect } from 'vitest';
 import { ScopeRegistry, ScopeResolutionError } from '../scope-registry.js';
 import { SchemaRegistry } from '../../schema/registry.js';
 import type { ResolvedModel } from '../../schema/types.js';
-import type { ModuleConfig } from '@rangka/shared';
+import type { AppConfig } from '@rangka/shared';
 
 function makeModel(overrides: Partial<ResolvedModel> & { qualifiedName: string }): ResolvedModel {
   return {
-    app: overrides.module ?? 'test',
-    module: overrides.module ?? 'test',
+    app: overrides.qualifiedName.split('.')[0],
     name: overrides.qualifiedName.split('.')[1],
     auditLog: false,
     traits: [],
@@ -27,8 +26,8 @@ function linkField(name: string, model: string) {
 
 describe('ScopeRegistry', () => {
   describe('scope registration', () => {
-    it('registers scopes from modules', () => {
-      const modules: ModuleConfig[] = [
+    it('registers scopes from apps', () => {
+      const modules: AppConfig[] = [
         {
           name: 'core',
           label: 'Core',
@@ -38,7 +37,7 @@ describe('ScopeRegistry', () => {
         },
       ];
       const schemaRegistry = new SchemaRegistry([
-        makeModel({ qualifiedName: 'core.company', module: 'core', fields: [] }),
+        makeModel({ qualifiedName: 'core.company', app: 'core', fields: [] }),
       ]);
 
       const scopeRegistry = new ScopeRegistry(modules, schemaRegistry);
@@ -47,11 +46,11 @@ describe('ScopeRegistry', () => {
       expect(scope).toBeDefined();
       expect(scope!.name).toBe('company');
       expect(scope!.definition.model).toBe('core.company');
-      expect(scope!.module).toBe('core');
+      expect(scope!.app).toBe('core');
     });
 
-    it('registers multiple scopes from different modules', () => {
-      const modules: ModuleConfig[] = [
+    it('registers multiple scopes from different apps', () => {
+      const modules: AppConfig[] = [
         {
           name: 'core',
           label: 'Core',
@@ -68,8 +67,8 @@ describe('ScopeRegistry', () => {
         },
       ];
       const schemaRegistry = new SchemaRegistry([
-        makeModel({ qualifiedName: 'core.company', module: 'core' }),
-        makeModel({ qualifiedName: 'cms.workspace', module: 'cms' }),
+        makeModel({ qualifiedName: 'core.company', app: 'core' }),
+        makeModel({ qualifiedName: 'cms.workspace', app: 'cms' }),
       ]);
 
       const scopeRegistry = new ScopeRegistry(modules, schemaRegistry);
@@ -79,8 +78,8 @@ describe('ScopeRegistry', () => {
       expect(scopeRegistry.getScope('workspace')).toBeDefined();
     });
 
-    it('throws on duplicate scope name across modules', () => {
-      const modules: ModuleConfig[] = [
+    it('throws on duplicate scope name across apps', () => {
+      const modules: AppConfig[] = [
         {
           name: 'core',
           label: 'Core',
@@ -93,18 +92,18 @@ describe('ScopeRegistry', () => {
         },
       ];
       const schemaRegistry = new SchemaRegistry([
-        makeModel({ qualifiedName: 'core.company', module: 'core' }),
-        makeModel({ qualifiedName: 'sales.company', module: 'sales' }),
+        makeModel({ qualifiedName: 'core.company', app: 'core' }),
+        makeModel({ qualifiedName: 'sales.company', app: 'sales' }),
       ]);
 
       expect(() => new ScopeRegistry(modules, schemaRegistry)).toThrow(ScopeResolutionError);
       expect(() => new ScopeRegistry(modules, schemaRegistry)).toThrow(
-        /Scope "company" declared by module "sales" conflicts/,
+        /Scope "company" declared by app "sales" conflicts/,
       );
     });
 
     it('handles modules without scopes', () => {
-      const modules: ModuleConfig[] = [
+      const modules: AppConfig[] = [
         { name: 'core', label: 'Core' },
         { name: 'sales', label: 'Sales' },
       ];
@@ -117,7 +116,7 @@ describe('ScopeRegistry', () => {
 
   describe('model binding resolution', () => {
     it('resolves scope column from link field targeting scope model', () => {
-      const modules: ModuleConfig[] = [
+      const modules: AppConfig[] = [
         {
           name: 'core',
           label: 'Core',
@@ -126,13 +125,13 @@ describe('ScopeRegistry', () => {
       ];
       const invoiceModel = makeModel({
         qualifiedName: 'sales.invoice',
-        module: 'sales',
+        app: 'sales',
         scope: 'company',
         fields: [linkField('company', 'core.company'), linkField('customer', 'sales.customer')],
       });
       const schemaRegistry = new SchemaRegistry([
-        makeModel({ qualifiedName: 'core.company', module: 'core' }),
-        makeModel({ qualifiedName: 'sales.customer', module: 'sales' }),
+        makeModel({ qualifiedName: 'core.company', app: 'core' }),
+        makeModel({ qualifiedName: 'sales.customer', app: 'sales' }),
         invoiceModel,
       ]);
 
@@ -146,7 +145,7 @@ describe('ScopeRegistry', () => {
     });
 
     it('returns undefined for models without scope', () => {
-      const modules: ModuleConfig[] = [
+      const modules: AppConfig[] = [
         {
           name: 'core',
           label: 'Core',
@@ -155,11 +154,11 @@ describe('ScopeRegistry', () => {
       ];
       const customerModel = makeModel({
         qualifiedName: 'sales.customer',
-        module: 'sales',
+        app: 'sales',
         fields: [linkField('company', 'core.company')],
       });
       const schemaRegistry = new SchemaRegistry([
-        makeModel({ qualifiedName: 'core.company', module: 'core' }),
+        makeModel({ qualifiedName: 'core.company', app: 'core' }),
         customerModel,
       ]);
 
@@ -169,7 +168,7 @@ describe('ScopeRegistry', () => {
     });
 
     it('isModelScoped returns true for scoped models', () => {
-      const modules: ModuleConfig[] = [
+      const modules: AppConfig[] = [
         {
           name: 'core',
           label: 'Core',
@@ -178,12 +177,12 @@ describe('ScopeRegistry', () => {
       ];
       const invoiceModel = makeModel({
         qualifiedName: 'sales.invoice',
-        module: 'sales',
+        app: 'sales',
         scope: 'company',
         fields: [linkField('company', 'core.company')],
       });
       const schemaRegistry = new SchemaRegistry([
-        makeModel({ qualifiedName: 'core.company', module: 'core' }),
+        makeModel({ qualifiedName: 'core.company', app: 'core' }),
         invoiceModel,
       ]);
 
@@ -192,15 +191,15 @@ describe('ScopeRegistry', () => {
     });
 
     it('throws when model references undefined scope', () => {
-      const modules: ModuleConfig[] = [{ name: 'core', label: 'Core' }];
+      const modules: AppConfig[] = [{ name: 'core', label: 'Core' }];
       const invoiceModel = makeModel({
         qualifiedName: 'sales.invoice',
-        module: 'sales',
+        app: 'sales',
         scope: 'company',
         fields: [linkField('company', 'core.company')],
       });
       const schemaRegistry = new SchemaRegistry([
-        makeModel({ qualifiedName: 'core.company', module: 'core' }),
+        makeModel({ qualifiedName: 'core.company', app: 'core' }),
         invoiceModel,
       ]);
 
@@ -211,7 +210,7 @@ describe('ScopeRegistry', () => {
     });
 
     it('throws when model has no link field to scope model', () => {
-      const modules: ModuleConfig[] = [
+      const modules: AppConfig[] = [
         {
           name: 'core',
           label: 'Core',
@@ -220,14 +219,14 @@ describe('ScopeRegistry', () => {
       ];
       const invoiceModel = makeModel({
         qualifiedName: 'sales.invoice',
-        module: 'sales',
+        app: 'sales',
         scope: 'company',
         fields: [
           { name: 'total', config: { type: 'number' } as any, provenance: { source: 'base' } },
         ],
       });
       const schemaRegistry = new SchemaRegistry([
-        makeModel({ qualifiedName: 'core.company', module: 'core' }),
+        makeModel({ qualifiedName: 'core.company', app: 'core' }),
         invoiceModel,
       ]);
 
@@ -238,7 +237,7 @@ describe('ScopeRegistry', () => {
     });
 
     it('throws when model has multiple link fields to scope model without explicit field', () => {
-      const modules: ModuleConfig[] = [
+      const modules: AppConfig[] = [
         {
           name: 'core',
           label: 'Core',
@@ -247,7 +246,7 @@ describe('ScopeRegistry', () => {
       ];
       const transferModel = makeModel({
         qualifiedName: 'accounting.transfer',
-        module: 'accounting',
+        app: 'accounting',
         scope: 'company',
         fields: [
           linkField('source_company', 'core.company'),
@@ -255,7 +254,7 @@ describe('ScopeRegistry', () => {
         ],
       });
       const schemaRegistry = new SchemaRegistry([
-        makeModel({ qualifiedName: 'core.company', module: 'core' }),
+        makeModel({ qualifiedName: 'core.company', app: 'core' }),
         transferModel,
       ]);
 
@@ -266,7 +265,7 @@ describe('ScopeRegistry', () => {
     });
 
     it('uses explicit field override when model has multiple links', () => {
-      const modules: ModuleConfig[] = [
+      const modules: AppConfig[] = [
         {
           name: 'core',
           label: 'Core',
@@ -275,7 +274,7 @@ describe('ScopeRegistry', () => {
       ];
       const transferModel = makeModel({
         qualifiedName: 'accounting.transfer',
-        module: 'accounting',
+        app: 'accounting',
         scope: { name: 'company', field: 'source_company' },
         fields: [
           linkField('source_company', 'core.company'),
@@ -283,7 +282,7 @@ describe('ScopeRegistry', () => {
         ],
       });
       const schemaRegistry = new SchemaRegistry([
-        makeModel({ qualifiedName: 'core.company', module: 'core' }),
+        makeModel({ qualifiedName: 'core.company', app: 'core' }),
         transferModel,
       ]);
 

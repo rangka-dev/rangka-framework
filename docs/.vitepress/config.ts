@@ -49,7 +49,7 @@ export default defineConfig({
           text: `${icons.rocket}Getting Started`,
           items: [
             { text: 'Overview', link: '/' },
-            { text: 'Your First Module', link: '/guides/your-first-module' },
+            { text: 'Your First App', link: '/guides/your-first-app' },
             { text: 'How It Works', link: '/concepts/how-it-works' },
             { text: 'Project Structure', link: '/concepts/project-structure' },
           ],
@@ -58,7 +58,7 @@ export default defineConfig({
           text: `${icons.database}Data Layer`,
           collapsed: false,
           items: [
-            { text: 'Modules', link: '/concepts/modules' },
+            { text: 'Apps', link: '/concepts/apps' },
             { text: 'Models', link: '/concepts/models' },
             { text: 'Hooks', link: '/concepts/hooks' },
             { text: 'Services', link: '/concepts/services' },
@@ -104,7 +104,7 @@ export default defineConfig({
           collapsed: false,
           items: [
             { text: 'CLI', link: '/reference/cli' },
-            { text: 'defineModule', link: '/reference/define-module' },
+            { text: 'defineApp', link: '/reference/define-app' },
             { text: 'defineModel', link: '/reference/define-model' },
             { text: 'definePage', link: '/reference/define-page' },
             { text: 'defineWidget', link: '/reference/define-widget' },

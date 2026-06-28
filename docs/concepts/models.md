@@ -14,7 +14,7 @@ You describe the shape of your data. The framework handles the mechanics of stor
 ## Defining a model
 
 ```typescript
-// modules/sales/models/customer.ts
+// models/customer.ts
 import { defineModel, field } from 'rangka';
 
 export default defineModel({
@@ -41,7 +41,7 @@ This is a complete entity. The framework handles the table creation, the API end
 
 | Field      | Type                          | Description                                                        |
 | ---------- | ----------------------------- | ------------------------------------------------------------------ |
-| `name`     | `string`                      | Model name (becomes `{module}.{name}`)                             |
+| `name`     | `string`                      | Model name (becomes `{app}.{name}`)                                |
 | `label`    | `string`                      | Human-readable name for the UI                                     |
 | `naming`   | `string`                      | Which field to use as the record's display title                   |
 | `scope`    | `string`                      | Auto-filter queries by user's active scope (e.g. `'core.company'`) |
@@ -229,7 +229,7 @@ naming: 'invoice_number'; // sequence field as title
 
 ## Extensions
 
-Other modules can add fields and hooks to your models without modifying them:
+Other apps can add fields and hooks to your models without modifying them:
 
 ```typescript
 import { defineExtension, field } from 'rangka';
@@ -248,11 +248,11 @@ Extended fields merge into the model's schema. They appear in the API, forms, an
 
 From a single `defineModel()`, the framework produces:
 
-| Layer           | What you get                                                                    |
-| --------------- | ------------------------------------------------------------------------------- |
-| **Database**    | Table with typed columns, foreign keys, indexes                                 |
-| **REST API**    | `GET/POST/PUT/DELETE /api/{module}/{model}` with filtering, sorting, pagination |
-| **Permissions** | CRUD + field-level access control                                               |
-| **Form UI**     | Input fields matched to types (text, date picker, dropdown, file upload)        |
-| **List UI**     | Table columns with formatting and sorting                                       |
-| **Validation**  | Required fields, type checking, relationship integrity                          |
+| Layer           | What you get                                                                 |
+| --------------- | ---------------------------------------------------------------------------- |
+| **Database**    | Table with typed columns, foreign keys, indexes                              |
+| **REST API**    | `GET/POST/PUT/DELETE /api/{app}/{model}` with filtering, sorting, pagination |
+| **Permissions** | CRUD + field-level access control                                            |
+| **Form UI**     | Input fields matched to types (text, date picker, dropdown, file upload)     |
+| **List UI**     | Table columns with formatting and sorting                                    |
+| **Validation**  | Required fields, type checking, relationship integrity                       |

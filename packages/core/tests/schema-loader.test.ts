@@ -8,7 +8,7 @@ function makeApp(overrides: Partial<DiscoveredApp> & { name: string }): Discover
     packageInfo: {
       packageName: `@rangka/${overrides.name}`,
       path: `/fake/${overrides.name}`,
-      rangka: { type: 'app', entrypoint: './module.ts' },
+      rangka: { type: 'app', entrypoint: './app.ts' },
     },
     config: { name: overrides.name, label: overrides.name },
     schemas: overrides.schemas ?? [],
@@ -22,7 +22,7 @@ describe('loadSchemas', () => {
       makeApp({
         name: 'sales',
         schemas: [
-          { module: 'sales', schema: { name: 'invoice', fields: { total: field.decimal() } } },
+          { app: 'sales', schema: { name: 'invoice', fields: { total: field.decimal() } } },
         ],
       }),
     ];
@@ -31,7 +31,6 @@ describe('loadSchemas', () => {
 
     expect(result.schemas).toHaveLength(1);
     expect(result.schemas[0].app).toBe('sales');
-    expect(result.schemas[0].module).toBe('sales');
     expect(result.schemas[0].schema.name).toBe('invoice');
   });
 

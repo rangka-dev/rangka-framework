@@ -32,7 +32,7 @@ import { validateApps } from './validator.js';
 import { validateModelReferences } from './cross-validator.js';
 import { validatePageBindings } from './page-utils.js';
 import type { PluginDefinition } from '../plugins/types.js';
-import type { RolesConfig, JobConfig } from '@rangka/shared';
+import type { RolesConfig, JobConfig, AppConfig } from '@rangka/shared';
 import type { JobWorkerConfig } from '../jobs/types.js';
 import type { ServiceDefinition } from '../services/types.js';
 import type { FixtureDefinition } from '../fixtures/types.js';
@@ -69,8 +69,8 @@ export interface BootResult {
   scheduleManager?: ScheduleManager;
   db?: DatabaseClient;
   server?: FastifyInstance;
-  pages?: Array<{ module: string; page: import('@rangka/shared').PageDefinition }>;
-  modules?: import('@rangka/shared').ModuleConfig[];
+  pages?: Array<{ app: string; page: import('@rangka/shared').PageDefinition }>;
+  apps?: AppConfig[];
 }
 
 // Boot sequence:
@@ -91,7 +91,7 @@ export async function boot(options: BootOptions): Promise<BootResult> {
 
   // Warn about invalid widget bindings (does not halt boot)
   const allPagesForValidation: Array<{
-    module: string;
+    app: string;
     page: import('@rangka/shared').PageDefinition;
     file?: string;
   }> = [];
@@ -137,14 +137,11 @@ export async function boot(options: BootOptions): Promise<BootResult> {
     };
   }
 
-  const { server, pages, modules } = await initServer(
-    options,
-    sortedApps,
-    registry,
-    db,
-    registries,
-    adapterRegistry,
-  );
+  const {
+    server,
+    pages,
+    apps: allApps,
+  } = await initServer(options, sortedApps, registry, db, registries, adapterRegistry);
 
   await lifecycleManager.emit('afterBoot');
 
@@ -159,7 +156,7 @@ export async function boot(options: BootOptions): Promise<BootResult> {
     db,
     server,
     pages,
-    modules,
+    apps: allApps,
   };
 }
 
@@ -230,10 +227,7 @@ function buildRegistries(
   registry: SchemaRegistry,
   options: BootOptions,
 ): Registries {
-  const allModules: import('@rangka/shared').ModuleConfig[] = [];
-  for (const app of sortedApps) {
-    if (app.modules) allModules.push(...app.modules);
-  }
+  const allAppConfigs: AppConfig[] = sortedApps.map((a) => a.config);
 
   return {
     hookRegistry: buildHookRegistry(sortedApps),
@@ -242,7 +236,7 @@ function buildRegistries(
     eventBus: buildEventBus(sortedApps, options),
     serviceRegistry: buildServiceRegistry(sortedApps, options),
     fixtureRegistry: buildFixtureRegistry(sortedApps, options),
-    scopeRegistry: new ScopeRegistry(allModules, registry),
+    scopeRegistry: new ScopeRegistry(allAppConfigs, registry),
     widgetRegistry: buildWidgetRegistry(sortedApps),
   };
 }
@@ -439,18 +433,17 @@ async function initServer(
   adapterRegistry?: AdapterRegistry,
 ): Promise<{
   server: FastifyInstance;
-  pages: Array<{ module: string; page: import('@rangka/shared').PageDefinition }>;
-  modules: import('@rangka/shared').ModuleConfig[];
+  pages: Array<{ app: string; page: import('@rangka/shared').PageDefinition }>;
+  apps: AppConfig[];
 }> {
   const moduleTags = [...registry.getModelsByModule().keys()].map((name) => ({ name }));
   const server = await createServer({ ...options.server!, tags: moduleTags });
 
-  const allPages: Array<{ module: string; page: import('@rangka/shared').PageDefinition }> = [];
-  const allModules: import('@rangka/shared').ModuleConfig[] = [];
+  const allPages: Array<{ app: string; page: import('@rangka/shared').PageDefinition }> = [];
+  const allAppConfigs: AppConfig[] = sortedApps.map((a) => a.config);
 
   for (const app of sortedApps) {
     if (app.pages) allPages.push(...app.pages);
-    if (app.modules) allModules.push(...app.modules);
   }
 
   generateRoutes(server, registry, db, {
@@ -461,7 +454,7 @@ async function initServer(
     scopeRegistry: registries.scopeRegistry,
     config: options.config ?? {},
     pages: allPages.length > 0 ? allPages : undefined,
-    modules: allModules.length > 0 ? allModules : undefined,
+    apps: allAppConfigs.length > 0 ? allAppConfigs : undefined,
     widgets: registries.widgetRegistry.getAll(),
     adapterRegistry,
   });
@@ -473,7 +466,7 @@ async function initServer(
     }
   }
 
-  return { server, pages: allPages, modules: allModules };
+  return { server, pages: allPages, apps: allAppConfigs };
 }
 
 function buildWidgetRegistry(sortedApps: DiscoveredApp[]): WidgetRegistry {

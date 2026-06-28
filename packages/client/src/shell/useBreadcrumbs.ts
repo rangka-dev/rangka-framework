@@ -13,15 +13,15 @@ export function useBreadcrumbs(
 
     const result: BreadcrumbItem[] = [];
 
-    const moduleName = parts[0];
-    const mod = navigation.find((n) => n.module === moduleName);
+    const appName = parts[0];
+    const mod = navigation.find((n) => n.app === appName);
     if (mod) {
       result.push({
         label: mod.label,
-        path: '/' + moduleName,
+        path: '/' + appName,
       });
     } else {
-      result.push({ label: moduleName, path: '/' + moduleName });
+      result.push({ label: appName, path: '/' + appName });
     }
 
     if (parts.length >= 2) {

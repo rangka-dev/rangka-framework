@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { validateModule } from '../schemas/module.js';
+import { validateApp } from '../schemas/module.js';
 
-describe('validateModule', () => {
-  it('accepts valid module', () => {
-    const result = validateModule({
+describe('validateApp', () => {
+  it('accepts valid app', () => {
+    const result = validateApp({
       name: 'sales',
       label: 'Sales',
       icon: 'shopping-cart',
@@ -12,42 +12,42 @@ describe('validateModule', () => {
   });
 
   it('rejects missing name', () => {
-    const result = validateModule({ label: 'Sales' });
+    const result = validateApp({ label: 'Sales' });
     expect(result.success).toBe(false);
   });
 
   it('rejects missing label', () => {
-    const result = validateModule({ name: 'sales' });
+    const result = validateApp({ name: 'sales' });
     expect(result.success).toBe(false);
   });
 
-  it('rejects reserved module name "core"', () => {
-    const result = validateModule({ name: 'core', label: 'Core' });
+  it('rejects reserved app name "core"', () => {
+    const result = validateApp({ name: 'core', label: 'Core' });
     expect(result.success).toBe(false);
   });
 
-  it('rejects reserved module name case-insensitive "Core"', () => {
-    const result = validateModule({ name: 'Core', label: 'Core Module' });
+  it('rejects reserved app name case-insensitive "Core"', () => {
+    const result = validateApp({ name: 'Core', label: 'Core App' });
     expect(result.success).toBe(false);
   });
 
-  it('rejects reserved module name case-insensitive "CORE"', () => {
-    const result = validateModule({ name: 'CORE', label: 'Core Module' });
+  it('rejects reserved app name case-insensitive "CORE"', () => {
+    const result = validateApp({ name: 'CORE', label: 'Core App' });
     expect(result.success).toBe(false);
   });
 
-  it('rejects module names starting with "rangka"', () => {
-    const result = validateModule({ name: 'rangka_internal', label: 'Internal' });
+  it('rejects app names starting with "rangka"', () => {
+    const result = validateApp({ name: 'rangka_internal', label: 'Internal' });
     expect(result.success).toBe(false);
   });
 
-  it('rejects module names starting with "Rangka" (case-insensitive)', () => {
-    const result = validateModule({ name: 'Rangka_test', label: 'Test' });
+  it('rejects app names starting with "Rangka" (case-insensitive)', () => {
+    const result = validateApp({ name: 'Rangka_test', label: 'Test' });
     expect(result.success).toBe(false);
   });
 
-  it('accepts module with navigation', () => {
-    const result = validateModule({
+  it('accepts app with navigation', () => {
+    const result = validateApp({
       name: 'sales',
       label: 'Sales',
       navigation: [
@@ -60,8 +60,8 @@ describe('validateModule', () => {
     expect(result.success).toBe(true);
   });
 
-  it('accepts module with scopes', () => {
-    const result = validateModule({
+  it('accepts app with scopes', () => {
+    const result = validateApp({
       name: 'sales',
       label: 'Sales',
       scopes: {
@@ -71,8 +71,8 @@ describe('validateModule', () => {
     expect(result.success).toBe(true);
   });
 
-  it('accepts module with depends', () => {
-    const result = validateModule({
+  it('accepts app with depends', () => {
+    const result = validateApp({
       name: 'invoicing',
       label: 'Invoicing',
       depends: ['sales', 'inventory'],
@@ -80,8 +80,8 @@ describe('validateModule', () => {
     expect(result.success).toBe(true);
   });
 
-  it('accepts module with type', () => {
-    const result = validateModule({
+  it('accepts app with type', () => {
+    const result = validateApp({
       name: 'payments',
       label: 'Payments',
       type: 'external',

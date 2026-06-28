@@ -3,7 +3,7 @@ import * as path from 'node:path';
 
 export interface DiscoveredComponent {
   type: 'widget';
-  module: string;
+  app: string;
   key: string;
   filePath: string;
 }
@@ -15,33 +15,29 @@ export interface ScanResult {
 
 export async function scanCustomUI(root: string): Promise<ScanResult> {
   const components: DiscoveredComponent[] = [];
-  const modulesDir = path.join(root, 'modules');
 
-  if (!(await dirExists(modulesDir))) {
-    return { components, hasCustomUI: false };
-  }
+  // Scan root widgets/ directory
+  const rootAppName = await resolveAppName(root);
+  const rootWidgets = await scanWidgetsDir(path.join(root, 'widgets'), rootAppName);
+  components.push(...rootWidgets);
 
-  const modules = await fs.readdir(modulesDir, { withFileTypes: true });
-
-  for (const mod of modules) {
-    if (!mod.isDirectory()) continue;
-
-    const moduleDir = path.join(modulesDir, mod.name);
-    const widgets = await scanComponentDir(moduleDir, 'widgets', mod.name);
-
-    components.push(...widgets);
+  // Scan apps/*/widgets/ directories
+  const appsDir = path.join(root, 'apps');
+  if (await dirExists(appsDir)) {
+    const apps = await fs.readdir(appsDir, { withFileTypes: true });
+    for (const app of apps) {
+      if (!app.isDirectory()) continue;
+      const appDir = path.join(appsDir, app.name);
+      const widgets = await scanWidgetsDir(path.join(appDir, 'widgets'), app.name);
+      components.push(...widgets);
+    }
   }
 
   return { components, hasCustomUI: components.length > 0 };
 }
 
-async function scanComponentDir(
-  moduleDir: string,
-  subdir: string,
-  moduleName: string,
-): Promise<DiscoveredComponent[]> {
+async function scanWidgetsDir(dir: string, appName: string): Promise<DiscoveredComponent[]> {
   const components: DiscoveredComponent[] = [];
-  const dir = path.join(moduleDir, subdir);
 
   if (!(await dirExists(dir))) return components;
 
@@ -52,11 +48,11 @@ async function scanComponentDir(
     if (!entry.name.endsWith('.tsx') && !entry.name.endsWith('.ts')) continue;
 
     const basename = entry.name.replace(/\.(tsx?|ts)$/, '');
-    const key = toRegistryKey(moduleName, basename);
+    const key = toRegistryKey(appName, basename);
 
     components.push({
       type: 'widget',
-      module: moduleName,
+      app: appName,
       key,
       filePath: path.join(dir, entry.name),
     });
@@ -65,9 +61,19 @@ async function scanComponentDir(
   return components;
 }
 
-function toRegistryKey(moduleName: string, basename: string): string {
+async function resolveAppName(root: string): Promise<string> {
+  try {
+    const appFile = path.join(root, 'app.ts');
+    const mod = await import(`file://${appFile}?t=${Date.now()}`);
+    return mod.default?.name ?? 'app';
+  } catch {
+    return 'app';
+  }
+}
+
+function toRegistryKey(appName: string, basename: string): string {
   const kebab = basename.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
-  return `${moduleName}.${kebab}`;
+  return `${appName}.${kebab}`;
 }
 
 async function dirExists(dirPath: string): Promise<boolean> {

@@ -25,7 +25,6 @@ function makeModel(qualifiedName: string, traits: string[] = []): ResolvedModel 
   return {
     qualifiedName,
     app: 'test',
-    module: qualifiedName.split('.')[0],
     name: qualifiedName.split('.')[1],
     auditLog: false,
     traits,
@@ -173,7 +172,6 @@ describe('applyScopeEnforcement', () => {
     const modelWithoutCreatedBy = {
       qualifiedName: 'sales.Order',
       app: 'test',
-      module: 'sales',
       name: 'Order',
       auditLog: false,
       traits: [],

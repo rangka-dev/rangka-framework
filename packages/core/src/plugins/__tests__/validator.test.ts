@@ -17,7 +17,6 @@ function makeExternalModel(name: string, source: string): ResolvedModel {
   return {
     qualifiedName: `billing.${name}`,
     app: 'billing-app',
-    module: 'billing',
     name,
     auditLog: false,
     traits: [],
@@ -131,7 +130,6 @@ describe('validatePluginSetup', () => {
       const internalModel: ResolvedModel = {
         qualifiedName: 'sales.Order',
         app: 'sales-app',
-        module: 'sales',
         name: 'Order',
         auditLog: false,
         traits: [],
@@ -258,7 +256,6 @@ describe('validatePluginSetup', () => {
       const internalModel: ResolvedModel = {
         qualifiedName: 'sales.Order',
         app: 'test',
-        module: 'sales',
         name: 'Order',
         auditLog: false,
         traits: [],

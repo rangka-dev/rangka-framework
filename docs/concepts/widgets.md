@@ -287,7 +287,7 @@ Operators: `+`, `-`, `*`, `/`, `%`, `==`, `!=`, `>`, `<`, `>=`, `<=`, `&&`, `||`
 
 When the renderer encounters a widget `type`:
 
-1. Module custom widgets (registered via `defineWidget()` in the module)
+1. App custom widgets (registered via `defineWidget()` in the app)
 2. Framework built-in widgets
 3. Error at boot
 

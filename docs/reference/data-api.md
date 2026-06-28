@@ -14,11 +14,11 @@ See [Models concept](../concepts/models.md) and [Permissions concept](../concept
 ## Endpoint Pattern
 
 ```
-GET    /api/:module/:model          # List records
-GET    /api/:module/:model/:id      # Get single record
-POST   /api/:module/:model          # Create record
-PUT    /api/:module/:model/:id      # Update record
-DELETE /api/:module/:model/:id      # Delete record
+GET    /api/:app/:model          # List records
+GET    /api/:app/:model/:id      # Get single record
+POST   /api/:app/:model          # Create record
+PUT    /api/:app/:model/:id      # Update record
+DELETE /api/:app/:model/:id      # Delete record
 ```
 
 ## Query Parameters

@@ -1,6 +1,6 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import type {
-  ModuleConfig,
+  AppConfig,
   PageDefinition,
   BootResponse,
   ModelMeta,
@@ -18,8 +18,8 @@ import { UnauthorizedError } from '../errors.js';
 
 export interface MetaBootContext {
   schemaRegistry: SchemaRegistry;
-  pages: Array<{ module: string; page: PageDefinition }>;
-  modules: ModuleConfig[];
+  pages: Array<{ app: string; page: PageDefinition }>;
+  apps: AppConfig[];
   widgets?: WidgetDefinitionMeta[];
 }
 
@@ -37,7 +37,7 @@ export function createMetaBootHandler(ctx: MetaBootContext) {
 
     const { user, permissions } = authCtx;
     const accessiblePages = resolveAccessiblePages(ctx.pages, permissions);
-    const navigation = buildNavigationTree(ctx.modules, accessiblePages);
+    const navigation = buildNavigationTree(ctx.apps, accessiblePages);
     const models = buildModelMeta(accessiblePages, ctx.schemaRegistry);
 
     const response: BootResponse = {
@@ -69,9 +69,9 @@ export function createMetaBootHandler(ctx: MetaBootContext) {
  * or if the user has read access to any model the page references.
  */
 function resolveAccessiblePages(
-  pages: Array<{ module: string; page: PageDefinition }>,
+  pages: Array<{ app: string; page: PageDefinition }>,
   permissions: ResolvedPermissions,
-): Array<{ module: string; page: PageDefinition }> {
+): Array<{ app: string; page: PageDefinition }> {
   return pages.filter(({ page }) => {
     if (permissions.pages.includes(page.key)) {
       return true;
@@ -118,20 +118,20 @@ function collectModelRefsFromNode(node: WidgetNode, models: Set<string>): void {
  * down to only pages the user can access, then sorting by module order.
  */
 function buildNavigationTree(
-  modules: ModuleConfig[],
-  accessiblePages: Array<{ module: string; page: PageDefinition }>,
+  apps: AppConfig[],
+  accessiblePages: Array<{ app: string; page: PageDefinition }>,
 ): NavigationTree[] {
   const accessiblePageKeys = new Set(accessiblePages.map((p) => p.page.key));
   const tree: NavigationTree[] = [];
 
-  for (const mod of modules) {
+  for (const mod of apps) {
     if (!mod.navigation) continue;
 
     const sections = buildAccessibleSections(mod.navigation, accessiblePageKeys);
     if (sections.length === 0) continue;
 
     tree.push({
-      module: mod.name,
+      app: mod.name,
       label: mod.label,
       description: mod.description,
       icon: mod.icon,
@@ -148,7 +148,7 @@ function buildNavigationTree(
 
 /** Filters a module's navigation sections to only include accessible pages. */
 function buildAccessibleSections(
-  navigation: NonNullable<ModuleConfig['navigation']>,
+  navigation: NonNullable<AppConfig['navigation']>,
   accessiblePageKeys: Set<string>,
 ): NavigationTreeSection[] {
   const sections: NavigationTreeSection[] = [];
@@ -176,7 +176,7 @@ function buildAccessibleSections(
  * Builds a map of model metadata for all models referenced by accessible pages.
  */
 function buildModelMeta(
-  accessiblePages: Array<{ module: string; page: PageDefinition }>,
+  accessiblePages: Array<{ app: string; page: PageDefinition }>,
   schemaRegistry: SchemaRegistry,
 ): Record<string, ModelMeta> {
   const referencedModelNames = new Set<string>();

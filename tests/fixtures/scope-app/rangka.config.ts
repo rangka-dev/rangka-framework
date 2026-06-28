@@ -1,6 +1,7 @@
 import { defineConfig } from '@rangka/shared';
 
 export default defineConfig({
+  apps: ['tenant', 'sales'],
   database: {
     dialect: 'pg',
     host: process.env.RANGKA_DB_HOST ?? 'localhost',

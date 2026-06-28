@@ -36,7 +36,7 @@ rangka start [--root <path>] [--no-sync]
 
 **Behavior:**
 
-- Scans the project root for modules, models, and configuration
+- Scans the project root for apps, models, and configuration
 - Connects to the configured database (SQLite by default, PostgreSQL if configured)
 - Syncs the database schema (unless `--no-sync` is passed)
 - Serves the pre-built shell from `@rangka/client`
@@ -84,17 +84,17 @@ rangka build [--root <path>]
 
 **Widget discovery:**
 
-The scanner looks for `.ts` and `.tsx` files in each module's `widgets/` directory:
+The scanner looks for `.ts` and `.tsx` files in each app's `widgets/` directory:
 
 ```
-modules/<module>/widgets/
+widgets/
 ```
 
-Each file becomes a widget registered under the key `<module>.<kebab-name>`. For example, `modules/sales/widgets/PipelineBoard.tsx` registers as `sales.pipeline-board`.
+Each file becomes a widget registered under the key `<app>.<kebab-name>`. For example, `widgets/PipelineBoard.tsx` registers as `sales.pipeline-board`.
 
 **Behavior:**
 
-- Scans all module directories for custom widgets
+- Scans the app for custom widgets
 - Bundles each widget with esbuild (ESM, browser target `es2022`)
 - Externalizes `react`, `react-dom`, and `@rangka/client`
 - Outputs bundles and a `manifest.json` to `.rangka/`
@@ -105,7 +105,7 @@ Each file becomes a widget registered under the key `<module>.<kebab-name>`. For
 ```
 .rangka/
 ├── widgets/
-│   └── <module>--<name>.<hash>.js
+│   └── <app>--<name>.<hash>.js
 └── manifest.json
 ```
 

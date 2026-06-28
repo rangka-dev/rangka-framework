@@ -75,13 +75,13 @@ shared/src/
 │   └── ...            — app, service, job, fixture, extension, api, layout
 ├── widget.ts          — Widget node builders and types
 ├── action.ts          — Action builders and types
-├── define.ts          — defineModel, defineModule, defineHooks, defineService, etc.
+├── define.ts          — defineModel, defineApp, defineHooks, defineService, etc.
 ├── field.ts           — field() helper for typed FieldConfig creation
 ├── traits.ts          — Built-in trait definitions (timestamped, soft_delete)
 └── index.ts           — Public exports
 ```
 
-Key exports: `defineModel`, `defineModule`, `defineHooks`, `defineService`, `definePage`, `defineJob`, `defineFixture`, `defineRoles`, `defineConfig`, `defineWidget`, `field`, `TRAITS`.
+Key exports: `defineModel`, `defineApp`, `defineHooks`, `defineService`, `definePage`, `defineJob`, `defineFixture`, `defineRoles`, `defineConfig`, `defineWidget`, `field`, `TRAITS`.
 
 ### packages/core
 

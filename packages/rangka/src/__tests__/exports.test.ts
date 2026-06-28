@@ -7,8 +7,8 @@ describe('rangka public API exports', () => {
       expect(rangka.defineModel).toBeTypeOf('function');
     });
 
-    it('exports defineModule', () => {
-      expect(rangka.defineModule).toBeTypeOf('function');
+    it('exports defineApp', () => {
+      expect(rangka.defineApp).toBeTypeOf('function');
     });
 
     it('exports defineHooks', () => {
@@ -143,8 +143,8 @@ describe('rangka public API exports', () => {
       expect(rangka.modelSchema).toBeDefined();
     });
 
-    it('exports moduleSchema', () => {
-      expect(rangka.moduleSchema).toBeDefined();
+    it('exports appSchema', () => {
+      expect(rangka.appSchema).toBeDefined();
     });
 
     it('exports fieldSchema', () => {
@@ -193,8 +193,8 @@ describe('rangka public API exports', () => {
       expect(rangka.validateModel).toBeTypeOf('function');
     });
 
-    it('exports validateModule', () => {
-      expect(rangka.validateModule).toBeTypeOf('function');
+    it('exports validateApp', () => {
+      expect(rangka.validateApp).toBeTypeOf('function');
     });
 
     it('exports validatePage', () => {

@@ -15,7 +15,7 @@ The shell is the outermost container of the application. It provides the frame a
 | --------------- | ------------------------------------------------------ |
 | Auth            | Session management, login gate                         |
 | Permissions     | What the user can access (filtered at boot)            |
-| Navigation      | Sidebar built from module definitions                  |
+| Navigation      | Sidebar built from app definitions                     |
 | Breadcrumbs     | Auto-derived from route and page label                 |
 | Command palette | Cmd+K search across all pages                          |
 | Topbar          | Breadcrumbs left, page actions right                   |
@@ -91,12 +91,12 @@ The shell is the boundary between framework-managed chrome (sidebar, topbar, bre
 
 ## Sidebar
 
-Built from module navigation definitions. See [Navigation](/concepts/navigation) for how it is configured.
+Built from app navigation definitions. See [Navigation](/concepts/navigation) for how it is configured.
 
 The sidebar shows:
 
-- Module groups ordered by `order` field
-- Navigation sections and items within each module
+- App groups ordered by `order` field
+- Navigation sections and items within each app
 - Permission-filtered items (users only see what they can access)
 - Active state based on current route
 
@@ -113,4 +113,4 @@ For `record` type pages the breadcrumb includes the parent collection and the re
 
 ## Command palette
 
-All navigation items are indexed for Cmd+K search. Users search by label, module name, or page key.
+All navigation items are indexed for Cmd+K search. Users search by label, app name, or page key.

@@ -13,7 +13,7 @@ Rangka uses role-based access control that reaches deep. Roles define what a use
 
 ## The two layers
 
-1. **Code-defined roles** (`defineRoles()`) ship with your module as defaults. They seed the database on first install.
+1. **Code-defined roles** (`defineRoles()`) ship with your app as defaults. They seed the database on first install.
 2. **Database-stored roles** are the runtime source of truth. Admins manage these through the built-in role editor.
 
 Code roles are the starting point. The database is where permissions actually live.
@@ -21,7 +21,7 @@ Code roles are the starting point. The database is where permissions actually li
 ## Defining roles
 
 ```typescript
-// modules/sales/roles.ts
+// roles.ts
 import { defineRoles } from 'rangka';
 
 export default defineRoles({
@@ -175,7 +175,7 @@ Every request passes through: authentication, model permission check, scope filt
 
 ## Admin role management
 
-Every Rangka app includes a built-in role editor. Admins can create roles, edit permissions via a visual matrix, assign roles to users, and clone existing roles. Admin edits persist through module upgrades because the sync only adds new permissions and never removes existing ones.
+Every Rangka app includes a built-in role editor. Admins can create roles, edit permissions via a visual matrix, assign roles to users, and clone existing roles. Admin edits persist through app upgrades because the sync only adds new permissions and never removes existing ones.
 
 ## Real-world example
 

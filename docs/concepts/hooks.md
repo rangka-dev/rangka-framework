@@ -14,7 +14,7 @@ They are small by design. A hook answers one question: "when this event happens 
 ## Defining hooks
 
 ```typescript
-// modules/sales/hooks/order.ts
+// hooks/order.ts
 import { defineHooks } from 'rangka';
 
 export default defineHooks('sales.order', {
@@ -152,7 +152,7 @@ defineHooks('sales.customer', {
 
 ## Multiple hook sources
 
-A model can have hooks from its own module, from extensions, and from traits. They all chain together and execute in registration order. A `validate` hook that throws stops the entire pipeline.
+A model can have hooks from its own app, from extensions, and from traits. They all chain together and execute in registration order. A `validate` hook that throws stops the entire pipeline.
 
 ## When to use hooks vs services vs computed fields
 

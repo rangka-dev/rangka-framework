@@ -9,17 +9,17 @@ interface ScaffoldOptions {
 export async function scaffold({ name, dir }: ScaffoldOptions) {
   const root = path.resolve(dir);
   await fs.mkdir(root, { recursive: true });
-  await fs.mkdir(path.join(root, 'modules', 'main', 'models'), { recursive: true });
-  await fs.mkdir(path.join(root, 'modules', 'main', 'pages'), { recursive: true });
+  await fs.mkdir(path.join(root, 'models'), { recursive: true });
+  await fs.mkdir(path.join(root, 'pages'), { recursive: true });
 
   await Promise.all([
     write(root, 'package.json', packageJson(name)),
     write(root, 'rangka.config.ts', rangkaConfig()),
+    write(root, 'app.ts', appDef(name)),
     write(root, 'tsconfig.json', tsconfig()),
     write(root, '.gitignore', gitignore()),
-    write(root, 'modules/main/module.ts', moduleDef()),
-    write(root, 'modules/main/models/task.ts', taskModel()),
-    write(root, 'modules/main/pages/tasks.ts', tasksPage()),
+    write(root, 'models/task.ts', taskModel(name)),
+    write(root, 'pages/tasks.ts', tasksPage(name)),
   ]);
 }
 
@@ -65,6 +65,26 @@ export default defineConfig({
 `;
 }
 
+function appDef(name: string) {
+  const label = name.charAt(0).toUpperCase() + name.slice(1);
+  return `import { defineApp } from 'rangka';
+
+export default defineApp({
+  name: '${name}',
+  label: '${label}',
+  icon: 'box',
+  navigation: [
+    {
+      section: 'Data',
+      items: [
+        { page: '${name}.tasks', label: 'Tasks' },
+      ],
+    },
+  ],
+});
+`;
+}
+
 function tsconfig() {
   return (
     JSON.stringify(
@@ -79,7 +99,7 @@ function tsconfig() {
           outDir: 'dist',
           rootDir: '.',
         },
-        include: ['modules', 'rangka.config.ts'],
+        include: ['*.ts', 'models', 'pages', 'hooks', 'services', 'jobs', 'rangka.config.ts'],
       },
       null,
       2,
@@ -95,28 +115,7 @@ dist/
 `;
 }
 
-function moduleDef() {
-  return `import { defineModule } from 'rangka';
-
-export default defineModule({
-  name: 'main',
-  label: 'Main',
-  description: 'Default application module',
-  icon: 'box',
-  order: 1,
-  navigation: [
-    {
-      section: 'Data',
-      items: [
-        { page: 'main.tasks', label: 'Tasks' },
-      ],
-    },
-  ],
-});
-`;
-}
-
-function taskModel() {
+function taskModel(_appName: string) {
   return `import { defineModel, field } from 'rangka';
 
 export default defineModel({
@@ -132,7 +131,7 @@ export default defineModel({
 `;
 }
 
-function tasksPage() {
+function tasksPage(appName: string) {
   return `import { definePage } from 'rangka';
 import type { WidgetNode } from 'rangka';
 
@@ -143,7 +142,7 @@ const widgets: WidgetNode[] = [
     children: [
       {
         type: 'table',
-        source: { model: 'main.task' },
+        source: { model: '${appName}.task' },
         props: { pageSize: 10 },
         children: [
           {
@@ -169,9 +168,8 @@ const widgets: WidgetNode[] = [
 ];
 
 export default definePage({
-  key: 'main.tasks',
+  key: '${appName}.tasks',
   label: 'Tasks',
-  path: '/main/tasks',
   widgets,
 });
 `;

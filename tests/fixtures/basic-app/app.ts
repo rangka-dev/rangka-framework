@@ -1,6 +1,6 @@
-import { defineModule } from '@rangka/shared';
+import { defineApp } from '@rangka/shared';
 
-export default defineModule({
+export default defineApp({
   name: 'sales',
   label: 'Sales',
   icon: 'shopping-cart',

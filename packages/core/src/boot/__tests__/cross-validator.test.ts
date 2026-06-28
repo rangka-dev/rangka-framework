@@ -11,8 +11,7 @@ function makeModel(
   const [module, name] = qualifiedName.split('.');
   return {
     qualifiedName,
-    app: 'test-app',
-    module,
+    app: module,
     name,
     auditLog: false,
     traits: [],

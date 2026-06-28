@@ -31,18 +31,18 @@ CLI start/dev command
 
 `ProjectScanner` (`packages/core/src/boot/`) performs filesystem discovery from the app root:
 
-| Path pattern              | What it loads                |
-| ------------------------- | ---------------------------- |
-| `rangka.config.ts`        | Database and server settings |
-| `modules/*/module.ts`     | Module configs               |
-| `modules/*/models/*.ts`   | Model definitions            |
-| `modules/*/hooks/*.ts`    | Lifecycle hooks              |
-| `modules/*/roles.ts`      | Permission roles             |
-| `modules/*/services/*.ts` | Injectable services          |
-| `modules/*/jobs/*.ts`     | Background jobs              |
-| `modules/*/fixtures/*.ts` | Seed data                    |
-| `modules/*/pages/*.ts`    | Page definitions             |
-| `extensions/*.ts`         | Field extensions             |
+| Path pattern           | What it loads                |
+| ---------------------- | ---------------------------- |
+| `rangka.config.ts`     | Database and server settings |
+| `apps/*/app.ts`        | App configs                  |
+| `apps/*/models/*.ts`   | Model definitions            |
+| `apps/*/hooks/*.ts`    | Lifecycle hooks              |
+| `apps/*/roles.ts`      | Permission roles             |
+| `apps/*/services/*.ts` | Injectable services          |
+| `apps/*/jobs/*.ts`     | Background jobs              |
+| `apps/*/fixtures/*.ts` | Seed data                    |
+| `apps/*/pages/*.ts`    | Page definitions             |
+| `extensions/*.ts`      | Field extensions             |
 
 For multi-app setups, `NodeModulesDiscoverySource` finds dependent Rangka apps in `node_modules`. `MemoryDiscoverySource` is used in tests.
 
@@ -64,16 +64,16 @@ The result is an immutable `SchemaRegistry` with methods:
 
 After the schema is resolved, boot creates:
 
-| Registry             | Source                  | Purpose                              |
-| -------------------- | ----------------------- | ------------------------------------ |
-| `HookRegistry`       | `hooks/*.ts` per module | validate/before/after CRUD lifecycle |
-| `ServiceRegistry`    | `services/*.ts`         | Injectable business logic with DI    |
-| `JobRegistry`        | `jobs/*.ts`             | Background jobs                      |
-| `EventBus`           | Created at boot         | Transaction-scoped pub/sub           |
-| `PermissionRegistry` | `roles.ts` per module   | Role-based model/field permissions   |
-| `ScopeRegistry`      | Scope definitions       | Row-level tenant isolation           |
-| `FixtureRegistry`    | `fixtures/*.ts`         | Seed data                            |
-| `AdapterRegistry`    | Plugin definitions      | External data source adapters        |
+| Registry             | Source               | Purpose                              |
+| -------------------- | -------------------- | ------------------------------------ |
+| `HookRegistry`       | `hooks/*.ts` per app | validate/before/after CRUD lifecycle |
+| `ServiceRegistry`    | `services/*.ts`      | Injectable business logic with DI    |
+| `JobRegistry`        | `jobs/*.ts`          | Background jobs                      |
+| `EventBus`           | Created at boot      | Transaction-scoped pub/sub           |
+| `PermissionRegistry` | `roles.ts` per app   | Role-based model/field permissions   |
+| `ScopeRegistry`      | Scope definitions    | Row-level tenant isolation           |
+| `FixtureRegistry`    | `fixtures/*.ts`      | Seed data                            |
+| `AdapterRegistry`    | Plugin definitions   | External data source adapters        |
 
 ### 4. Database Initialization
 

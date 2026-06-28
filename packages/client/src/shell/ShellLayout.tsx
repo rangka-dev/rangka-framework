@@ -21,14 +21,14 @@ import {
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/Icon';
 import { AppSidebar } from './app-sidebar/index.js';
-import type { AppSidebarNavSection, AppSidebarModule } from './app-sidebar/types.js';
+import type { AppSidebarNavSection, AppSidebarApp } from './app-sidebar/types.js';
 import { CommandPalette } from './CommandPalette.js';
 import { HeaderActions } from './HeaderActions.js';
 import { ShellDevTools } from './ShellDevTools.js';
 import { DrawerProvider, useDrawer } from './DrawerContext.js';
 import { ShellAPIProvider } from './ShellContext.js';
 import { useMeta } from '../context/MetaContext.js';
-import { useModule } from '../context/ModuleContext.js';
+import { useApp } from '../context/ModuleContext.js';
 import { useBootContext } from '../boot/BootProvider.js';
 import { useRouter, useRouterState } from '@tanstack/react-router';
 import { useBreadcrumbs } from './useBreadcrumbs.js';
@@ -38,18 +38,18 @@ function ShellLayoutInner({ children }: { children: ReactNode }) {
   const router = useRouter();
   const currentPath = useRouterState({ select: (s) => s.location.pathname });
   const { navigation, pages } = useMeta();
-  const { activeModule, setActiveModule, clearActiveModule } = useModule();
+  const { activeApp, setActiveApp, clearActiveApp } = useApp();
   const { state } = useBootContext();
   const { state: drawerState, closeDrawer } = useDrawer();
 
   useEffect(() => {
-    const pathModule = currentPath.split('/').filter(Boolean)[0];
-    if (pathModule && navigation.some((n: NavigationTree) => n.module === pathModule)) {
-      setActiveModule(pathModule);
+    const pathApp = currentPath.split('/').filter(Boolean)[0];
+    if (pathApp && navigation.some((n: NavigationTree) => n.app === pathApp)) {
+      setActiveApp(pathApp);
     } else if (currentPath === '/') {
-      clearActiveModule();
+      clearActiveApp();
     }
-  }, [currentPath, navigation, setActiveModule, clearActiveModule]);
+  }, [currentPath, navigation, setActiveApp, clearActiveApp]);
 
   const handleNavigate = useCallback(
     (path: string) => {
@@ -84,15 +84,15 @@ function ShellLayoutInner({ children }: { children: ReactNode }) {
     <HeaderActions actions={currentPage.actions} onAction={handleAction} />
   ) : undefined;
 
-  const modules: AppSidebarModule[] = navigation.map((mod: NavigationTree) => ({
-    name: mod.module,
+  const apps: AppSidebarApp[] = navigation.map((mod: NavigationTree) => ({
+    name: mod.app,
     label: mod.label,
     icon: mod.icon ? <Icon name={mod.icon} size={14} /> : undefined,
   }));
 
   const sidebarNavigation: AppSidebarNavSection[] = useMemo(() => {
-    const activeNav = activeModule
-      ? navigation.filter((mod: NavigationTree) => mod.module === activeModule)
+    const activeNav = activeApp
+      ? navigation.filter((mod: NavigationTree) => mod.app === activeApp)
       : [];
     return activeNav.flatMap((mod: NavigationTree) =>
       mod.sections.map((section) => ({
@@ -104,24 +104,24 @@ function ShellLayoutInner({ children }: { children: ReactNode }) {
         })),
       })),
     );
-  }, [activeModule, navigation]);
+  }, [activeApp, navigation]);
 
-  const handleModuleSwitch = useCallback(
-    (moduleName: string) => {
-      setActiveModule(moduleName);
-      const mod = navigation.find((n: NavigationTree) => n.module === moduleName);
+  const handleAppSwitch = useCallback(
+    (appName: string) => {
+      setActiveApp(appName);
+      const mod = navigation.find((n: NavigationTree) => n.app === appName);
       const firstPage = mod?.sections[0]?.items[0]?.page;
       if (firstPage) {
         router.navigate({ to: '/' + firstPage.replace('.', '/') });
       }
     },
-    [navigation, router, setActiveModule],
+    [navigation, router, setActiveApp],
   );
 
-  const handleAllModules = useCallback(() => {
-    clearActiveModule();
+  const handleAllApps = useCallback(() => {
+    clearActiveApp();
     router.navigate({ to: '/' });
-  }, [clearActiveModule, router]);
+  }, [clearActiveApp, router]);
 
   const handleLogout = useCallback(() => {
     document.dispatchEvent(new CustomEvent('rangka:logout'));
@@ -140,15 +140,15 @@ function ShellLayoutInner({ children }: { children: ReactNode }) {
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }));
   }, []);
 
-  const isModuleSelectorPage = !activeModule;
+  const isAppSelectorPage = !activeApp;
 
   return (
     <SidebarProvider className="h-svh !min-h-0">
       <AppSidebar
-        modules={modules}
-        activeModule={activeModule ?? undefined}
-        onModuleSwitch={handleModuleSwitch}
-        onAllModules={handleAllModules}
+        apps={apps}
+        activeApp={activeApp ?? undefined}
+        onAppSwitch={handleAppSwitch}
+        onAllApps={handleAllApps}
         onSearch={handleSearch}
         navigation={sidebarNavigation}
         currentPath={currentPath}
@@ -160,10 +160,10 @@ function ShellLayoutInner({ children }: { children: ReactNode }) {
       <SidebarInset className="overflow-hidden">
         <header className="flex h-12 shrink-0 items-center gap-2 border-b border-border bg-background px-4">
           <SidebarTrigger className="-ml-1" />
-          {isModuleSelectorPage ? (
+          {isAppSelectorPage ? (
             <>
               <Separator orientation="vertical" className="mr-2" />
-              <span className="text-sm font-medium">Select Module</span>
+              <span className="text-sm font-medium">Select App</span>
             </>
           ) : (
             <>

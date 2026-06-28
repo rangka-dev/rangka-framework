@@ -359,7 +359,7 @@ export function StudioProvider({ children }: { children: ReactNode }) {
           break;
 
         case 'resources.data':
-          setResources(msg.modules);
+          setResources(msg.apps);
           break;
 
         case 'models.data':

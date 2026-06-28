@@ -51,15 +51,15 @@ export class SchemaRegistry {
     return this.extensionSourceMap.get(qualifiedName) ?? [];
   }
 
-  /** Group all models by their module name. */
+  /** Group all models by their app name. */
   getModelsByModule(): Map<string, ResolvedModel[]> {
-    const moduleToModels = new Map<string, ResolvedModel[]>();
+    const appToModels = new Map<string, ResolvedModel[]>();
     for (const model of this.modelMap.values()) {
-      const group = moduleToModels.get(model.module) ?? [];
+      const group = appToModels.get(model.app) ?? [];
       group.push(model);
-      moduleToModels.set(model.module, group);
+      appToModels.set(model.app, group);
     }
-    return moduleToModels;
+    return appToModels;
   }
 
   /**

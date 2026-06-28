@@ -160,7 +160,7 @@ export class StudioServer {
         this.broadcast({ type: 'runtime.error', message: `File watcher error: ${error}` });
       },
       onReady: () => {
-        console.log(`[studio] Watching for file changes in modules/`);
+        console.log(`[studio] Watching for file changes`);
       },
     });
     this.fileWatcher.start();
@@ -348,13 +348,13 @@ export class StudioServer {
 
   private async handleResourcesList(ws: WebSocket): Promise<void> {
     try {
-      const result = await this.subprocess.introspect('modules');
+      const result = await this.subprocess.introspect('apps');
       this.send(ws, {
         type: 'resources.data',
-        modules: result.data as import('./protocol.js').ResourceModule[],
+        apps: result.data as import('./protocol.js').ResourceModule[],
       });
     } catch {
-      this.send(ws, { type: 'resources.data', modules: [] });
+      this.send(ws, { type: 'resources.data', apps: [] });
     }
   }
 
@@ -556,12 +556,12 @@ export class StudioServer {
   ]);
 
   private handleFilesList(ws: WebSocket): void {
-    const modulesDir = path.join(this.config.projectRoot, 'modules');
+    const modulesDir = this.config.projectRoot;
     if (!fs.existsSync(modulesDir)) {
       this.send(ws, { type: 'files.data', tree: [] });
       return;
     }
-    const tree = this.buildFileTree(modulesDir, 'modules');
+    const tree = this.buildFileTree(modulesDir, '.');
     this.send(ws, { type: 'files.data', tree });
   }
 
@@ -588,7 +588,7 @@ export class StudioServer {
   }
 
   private handleFileRead(ws: WebSocket, filePath: string): void {
-    if (!filePath.startsWith('modules/')) {
+    if (!filePath || filePath.startsWith('..')) {
       this.send(ws, { type: 'file.error', path: filePath, message: 'Access denied' });
       return;
     }
@@ -614,7 +614,7 @@ export class StudioServer {
   }
 
   private handleFileWrite(ws: WebSocket, filePath: string, content: string): void {
-    if (!filePath.startsWith('modules/')) {
+    if (!filePath || filePath.startsWith('..')) {
       this.send(ws, { type: 'file.saveError', path: filePath, message: 'Access denied' });
       return;
     }

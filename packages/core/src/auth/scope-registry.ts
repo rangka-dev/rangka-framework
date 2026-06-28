@@ -1,11 +1,11 @@
-import type { ModuleConfig, ScopeDefinition, ScopeConfig } from '@rangka/shared';
+import type { AppConfig, ScopeDefinition, ScopeConfig } from '@rangka/shared';
 import type { SchemaRegistry } from '../schema/registry.js';
 import type { ResolvedModel } from '../schema/types.js';
 
 export interface ResolvedScope {
   name: string;
   definition: ScopeDefinition;
-  module: string;
+  app: string;
 }
 
 export interface ModelScopeBinding {
@@ -25,8 +25,8 @@ export class ScopeRegistry {
   private readonly scopes: Map<string, ResolvedScope> = new Map();
   private readonly modelBindings: Map<string, ModelScopeBinding> = new Map();
 
-  constructor(modules: ModuleConfig[], schemaRegistry: SchemaRegistry) {
-    this.registerScopes(modules);
+  constructor(apps: AppConfig[], schemaRegistry: SchemaRegistry) {
+    this.registerScopes(apps);
     this.resolveModelBindings(schemaRegistry);
   }
 
@@ -46,16 +46,16 @@ export class ScopeRegistry {
     return this.modelBindings.has(qualifiedName);
   }
 
-  private registerScopes(modules: ModuleConfig[]): void {
-    for (const mod of modules) {
+  private registerScopes(apps: AppConfig[]): void {
+    for (const mod of apps) {
       if (!mod.scopes) continue;
       for (const [name, definition] of Object.entries(mod.scopes)) {
         if (this.scopes.has(name)) {
           throw new ScopeResolutionError(
-            `Scope "${name}" declared by module "${mod.name}" conflicts with existing scope from module "${this.scopes.get(name)!.module}"`,
+            `Scope "${name}" declared by app "${mod.name}" conflicts with existing scope from app "${this.scopes.get(name)!.app}"`,
           );
         }
-        this.scopes.set(name, { name, definition, module: mod.name });
+        this.scopes.set(name, { name, definition, app: mod.name });
       }
     }
   }

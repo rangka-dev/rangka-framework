@@ -8,7 +8,6 @@ export interface ResolvedFieldInfo {
 export interface ResolvedModelInfo {
   qualifiedName: string;
   app: string;
-  module: string;
   name: string;
   label?: string;
   fields: ResolvedFieldInfo[];

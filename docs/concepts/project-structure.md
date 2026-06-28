@@ -1,28 +1,58 @@
 ---
 status: stable
 since: 0.1.0
-last-updated: 2026-06-12
+last-updated: 2026-06-28
 description: File and folder conventions, naming rules, and auto-discovery
 ---
 
-# Project Structure
+# Project structure
 
-A Rangka project is a Node.js application with modules. You install the framework, create modules, and run. There are no boilerplate generators and no scaffolding commands to memorize.
+A Rangka project is a Node.js application with an app definition. You install the framework, define your app, and run. There are no boilerplate generators and no scaffolding commands to memorize.
 
 The structure is intentionally predictable. Once you understand the conventions, you can navigate any Rangka project without surprises.
 
-## Top-level layout
+## Single app (most common)
+
+```
+my-app/
+├── package.json
+├── rangka.config.ts       # Database, server, runtime settings
+├── app.ts                 # defineApp() (required)
+├── tsconfig.json
+├── models/
+│   ├── customer.ts        # defineModel()
+│   └── order.ts           # defineModel()
+├── pages/
+│   └── orders.ts          # definePage()
+├── hooks/
+│   └── order.ts           # defineHooks()
+├── services/
+│   └── pricing.ts         # defineService()
+├── jobs/
+│   └── send-confirmation.ts # defineJob()
+├── fixtures/
+│   └── seed.ts            # defineFixture()
+└── roles.ts               # defineRoles()
+```
+
+## Multi-app composition
+
+When running multiple apps together, external apps live in `apps/`:
 
 ```
 my-erp/
 ├── package.json
-├── rangka.config.ts       # Database, server, runtime settings
-├── tsconfig.json
-└── modules/
-    ├── core/              # Users, companies, currencies
-    ├── sales/             # Customers, orders, invoices
-    ├── inventory/         # Items, warehouses, stock
-    └── accounting/        # Journal entries, ledgers
+├── rangka.config.ts       # apps: ['foundation', 'crm', 'hr']
+├── app.ts                 # defineApp({ name: 'my-erp', label: 'My ERP' })
+├── models/                # your own models (optional)
+├── apps/
+│   ├── foundation/        # cloned prebuilt app
+│   │   ├── app.ts
+│   │   └── models/
+│   ├── crm/
+│   │   ├── app.ts
+│   │   └── models/
+│   └── hr/
 ```
 
 ## rangka.config.ts
@@ -31,9 +61,11 @@ my-erp/
 import { defineConfig } from 'rangka';
 
 export default defineConfig({
+  apps: ['foundation', 'crm'], // external apps in apps/ directory
   database: {
     dialect: 'pg',
-    connectionString: process.env.DATABASE_URL,
+    host: 'localhost',
+    database: 'my-erp',
   },
   server: {
     port: 3000,
@@ -41,15 +73,14 @@ export default defineConfig({
 });
 ```
 
-No module registration needed. The framework discovers everything under `modules/` automatically.
+The `apps` field lists external apps by name. The framework resolves each from `apps/<name>/`. Omit `apps` when running a single app with no external dependencies.
 
-## Module layout
+## App layout
 
-Each module is a folder with a `module.ts` at its root:
+Every app (root or external) follows the same flat structure:
 
 ```
-modules/sales/
-├── module.ts              # defineModule() (required)
+├── app.ts                 # defineApp() (required)
 ├── models/
 │   ├── customer.ts        # defineModel()
 │   ├── order.ts           # defineModel()
@@ -67,26 +98,29 @@ modules/sales/
 ├── fixtures/
 │   └── seed.ts            # defineFixture()
 ├── roles.ts               # defineRoles()
+├── extensions/
+│   └── customer.ts        # defineExtension()
 └── widgets/
     └── PipelineBoard.tsx  # defineWidget()
 ```
 
-Only `module.ts` is required. Add directories as you need them.
+Only `app.ts` is required. Add directories as you need them.
 
 ## Discovery
 
 The framework loads files based on their parent folder:
 
-| Directory   | Expected export   | How it's identified               |
-| ----------- | ----------------- | --------------------------------- |
-| `models/`   | `defineModel()`   | Qualified name: `{module}.{name}` |
-| `pages/`    | `definePage()`    | Page key from config              |
-| `hooks/`    | `defineHooks()`   | Model from first argument         |
-| `services/` | `defineService()` | Service name from config          |
-| `jobs/`     | `defineJob()`     | Job name from config              |
-| `fixtures/` | `defineFixture()` | Target model from config          |
-| `widgets/`  | `defineWidget()`  | Widget name from config           |
-| `roles.ts`  | `defineRoles()`   | Module root scan                  |
+| Directory     | Expected export     | How it's identified            |
+| ------------- | ------------------- | ------------------------------ |
+| `models/`     | `defineModel()`     | Qualified name: `{app}.{name}` |
+| `pages/`      | `definePage()`      | Page key from config           |
+| `hooks/`      | `defineHooks()`     | Model from first argument      |
+| `services/`   | `defineService()`   | Service name from config       |
+| `jobs/`       | `defineJob()`       | Job name from config           |
+| `fixtures/`   | `defineFixture()`   | Target model from config       |
+| `extensions/` | `defineExtension()` | Target model from first arg    |
+| `widgets/`    | `defineWidget()`    | Widget name from config        |
+| `roles.ts`    | `defineRoles()`     | App root scan                  |
 
 Each file must have a default export with the corresponding `define*()` call. One file, one definition.
 
@@ -96,24 +130,24 @@ Each file must have a default export with the corresponding `define*()` call. On
 
 - `snake_case` for models: `order_item.ts`, `stock_entry.ts`
 - `kebab-case` for pages and jobs: `daily-summary.ts`
-- `PascalCase` for custom views: `SalesDashboard.tsx`
+- `PascalCase` for custom widgets: `PipelineBoard.tsx`
 
 **Qualified names:**
 
 ```
-Module: modules/sales/
+App:    defineApp({ name: 'sales' })
 Model:  defineModel({ name: 'order' })
 Result: sales.order         (qualified name)
         sales__order        (database table)
         /api/sales/order    (API endpoint)
 ```
 
-**Services and jobs** follow `{module}.{purpose}`:
+**Services and jobs** follow `{app}.{purpose}`:
 
 ```typescript
 defineService({ name: 'sales.pricing' });
 defineService({ name: 'sales.submitOrder' });
-defineJob({ name: 'sales.send-confirmation' });
+defineJob('sales.send-confirmation', { ... });
 ```
 
 ## Multiple hooks per model
@@ -128,27 +162,17 @@ hooks/
 
 Both export `defineHooks('sales.order', {...})`. Their hooks merge and execute in discovery order.
 
-## Third-party modules
+## Extending other apps
 
-Modules can be npm packages:
-
-```bash
-npm install @rangka/accounting
-```
-
-A package with `"rangka": { "module": true }` in its `package.json` is discovered from `node_modules` at boot and merged alongside your local modules. No extra configuration.
-
-## Extending other modules
-
-A module can add fields and hooks to models from another module:
+An app can add fields and hooks to models from another app using the `extensions/` directory:
 
 ```
-modules/loyalty/
-├── module.ts              # depends: ['sales']
+my-app/
+├── app.ts                 # depends: ['sales']
 ├── extensions/
 │   └── customer.ts        # defineExtension('sales.customer', { fields, hooks })
 └── pages/
     └── rewards.ts
 ```
 
-Extensions merge into the target model's schema without modifying the source.
+Extensions merge into the target model's schema without modifying the source app.

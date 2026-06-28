@@ -4,7 +4,7 @@ export { action } from './action.js';
 export * from './validation/index.js';
 export {
   defineModel,
-  defineModule,
+  defineApp,
   defineHooks,
   defineExtension,
   defineService,

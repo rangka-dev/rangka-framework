@@ -7,7 +7,7 @@ description: defineRoles() API — role definitions and permission grants
 
 # defineRoles
 
-Declares roles for a module. Roles are registered in-memory via PermissionRegistry at boot and used for permission enforcement.
+Declares roles for an app. Roles are registered in-memory via PermissionRegistry at boot and used for permission enforcement.
 
 See [Permissions concept](../concepts/permissions.md) for how permissions are resolved and enforced.
 
@@ -41,10 +41,10 @@ export default defineRoles({
 ## File Location
 
 ```
-modules/{module}/roles.ts
+apps/{app}/roles.ts
 ```
 
-One file per module. Each module declares its own roles.
+One file per app. Each app declares its own roles.
 
 ## RoleDefinition
 
@@ -121,7 +121,7 @@ When a role extends another:
 - Multi-level inheritance is supported (`controller` extends `manager` extends `user`)
 - Circular inheritance is detected and raises an error at boot
 
-The `extends` target must be a role defined in the same module or a previously registered module (respects module dependency order).
+The `extends` target must be a role defined in the same app or a previously registered app (respects app dependency order).
 
 ## Admin operations
 
@@ -129,10 +129,10 @@ The `extends` target must be a role defined in the same module or a previously r
 
 ## Example: Cross-Module Roles
 
-A role can reference models from any installed module:
+A role can reference models from any installed app:
 
 ```typescript
-// modules/core/roles.ts
+// roles.ts
 export default defineRoles({
   system_admin: {
     label: 'System Admin',
@@ -146,7 +146,7 @@ export default defineRoles({
 ```
 
 ```typescript
-// modules/sales/roles.ts
+// roles.ts
 export default defineRoles({
   sales_user: {
     label: 'Sales User',

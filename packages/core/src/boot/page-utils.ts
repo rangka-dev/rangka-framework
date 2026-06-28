@@ -26,7 +26,7 @@ export function extractSourceModels(page: PageDefinition): string[] {
  * in the known model set. Returns warnings for unresolved references.
  */
 export function validatePageSources(
-  pages: Array<{ module: string; page: PageDefinition }>,
+  pages: Array<{ app: string; page: PageDefinition }>,
   knownModels: Set<string>,
 ): PageValidationWarning[] {
   const warnings: PageValidationWarning[] = [];
@@ -40,23 +40,23 @@ export function validatePageSources(
   return warnings;
 }
 
-/** Detect pages that share the same key across different modules. */
+/** Detect pages that share the same key across different apps. */
 export function detectDuplicatePageKeys(
-  pages: Array<{ module: string; page: PageDefinition }>,
+  pages: Array<{ app: string; page: PageDefinition }>,
 ): PageValidationWarning[] {
   const warnings: PageValidationWarning[] = [];
-  const seenKeyInModule = new Map<string, string>();
+  const seenKeyInApp = new Map<string, string>();
 
-  for (const { module, page } of pages) {
-    const previousModule = seenKeyInModule.get(page.key);
-    if (previousModule) {
+  for (const { app, page } of pages) {
+    const previousApp = seenKeyInApp.get(page.key);
+    if (previousApp) {
       warnings.push({
         pageKey: page.key,
-        location: `modules/${module}/pages`,
-        message: `Duplicate page key "${page.key}" (also defined in ${previousModule})`,
+        location: `${app}/pages`,
+        message: `Duplicate page key "${page.key}" (also defined in ${previousApp})`,
       });
     } else {
-      seenKeyInModule.set(page.key, `modules/${module}/pages`);
+      seenKeyInApp.set(page.key, `${app}/pages`);
     }
   }
 
@@ -107,13 +107,13 @@ function checkWidgetNodeSources(
  * ancestor source. Returns warnings (does not halt boot).
  */
 export function validatePageBindings(
-  pages: Array<{ module: string; page: PageDefinition; file?: string }>,
+  pages: Array<{ app: string; page: PageDefinition; file?: string }>,
   registry: SchemaRegistry,
 ): PageValidationWarning[] {
   const warnings: PageValidationWarning[] = [];
 
-  for (const { module, page, file } of pages) {
-    const filePath = file ? `modules/${module}/pages/${file}` : undefined;
+  for (const { app, page, file } of pages) {
+    const filePath = file ? `${app}/pages/${file}` : undefined;
     for (let i = 0; i < page.widgets.length; i++) {
       checkWidgetBindings(
         page.widgets[i],

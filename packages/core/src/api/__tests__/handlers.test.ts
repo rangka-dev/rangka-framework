@@ -5,11 +5,10 @@ import type { SchemaRegistry } from '../../schema/registry.js';
 import type { DatabaseClient } from '../../db/client.js';
 import type { ResolvedModel } from '../../schema/types.js';
 
-function makeModel(module: string, name: string): ResolvedModel {
+function makeModel(app: string, name: string): ResolvedModel {
   return {
-    qualifiedName: `${module}.${name}`,
-    app: 'test',
-    module,
+    qualifiedName: `${app}.${name}`,
+    app,
     name,
     auditLog: false,
     traits: [],
@@ -49,9 +48,9 @@ function makeRegistry(models: ResolvedModel[]): SchemaRegistry {
     getModelsByModule: () => {
       const map = new Map<string, ResolvedModel[]>();
       for (const m of models) {
-        const list = map.get(m.module) ?? [];
+        const list = map.get(m.app) ?? [];
         list.push(m);
-        map.set(m.module, list);
+        map.set(m.app, list);
       }
       return map;
     },

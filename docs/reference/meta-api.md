@@ -90,7 +90,7 @@ interface ModelPermissions {
 
 ```typescript
 interface NavigationTree {
-  module: string;
+  app: string;
   label: string;
   description?: string;
   icon?: string;
@@ -103,13 +103,13 @@ interface NavigationTree {
 
 | Field         | Type                       | Description                                                      |
 | ------------- | -------------------------- | ---------------------------------------------------------------- |
-| `module`      | `string`                   | Module name.                                                     |
+| `app`         | `string`                   | Module name.                                                     |
 | `label`       | `string`                   | Module display label.                                            |
-| `description` | `string`                   | Short description of the module.                                 |
+| `description` | `string`                   | Short description of the app.                                    |
 | `icon`        | `string`                   | Module icon (Lucide name).                                       |
 | `color`       | `string`                   | Module theme color.                                              |
 | `order`       | `number`                   | Sort order for sidebar.                                          |
-| `type`        | `'internal' \| 'external'` | Whether the module links internally or to an external URL.       |
+| `type`        | `'internal' \| 'external'` | Whether the app links internally or to an external URL.          |
 | `sections`    | `NavigationTreeSection[]`  | Grouped navigation items (already filtered by user permissions). |
 
 ### NavigationTreeSection
@@ -143,7 +143,7 @@ interface ModelMeta {
 
 | Field           | Type          | Description                     |
 | --------------- | ------------- | ------------------------------- |
-| `qualifiedName` | `string`      | `module.model` format.          |
+| `qualifiedName` | `string`      | `app.model` format.             |
 | `label`         | `string`      | Human-readable model name.      |
 | `fields`        | `FieldMeta[]` | All fields with their metadata. |
 
@@ -213,7 +213,7 @@ interface FieldMeta {
   },
   "navigation": [
     {
-      "module": "sales",
+      "app": "sales",
       "label": "Sales",
       "icon": "shopping-cart",
       "order": 10,
