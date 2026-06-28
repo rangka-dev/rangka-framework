@@ -86,7 +86,12 @@ export type ClientMessage =
   | { type: 'schema.reject'; reason?: string }
   | { type: 'settings.get' }
   | { type: 'settings.save'; config: StudioConfig }
-  | { type: 'settings.fetch_models' }
+  | {
+      type: 'settings.fetch_models';
+      provider: 'anthropic' | 'openai';
+      apiKey: string;
+      baseUrl?: string;
+    }
   | { type: 'settings.set_model'; modelId: string }
   | { type: 'session.list' }
   | { type: 'session.new' }
