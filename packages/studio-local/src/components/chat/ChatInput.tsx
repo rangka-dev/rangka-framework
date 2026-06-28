@@ -20,8 +20,9 @@ export function ChatInput({ onSend }: ChatInputProps) {
   const [attachOpen, setAttachOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const activeModelId = settings?.model ?? '';
-  const selectedModels = (settings?.selectedModels ?? []).map((id) => {
+  const activeProviderSettings = settings?.providers?.[settings.activeProvider] ?? {};
+  const activeModelId = activeProviderSettings.model ?? '';
+  const selectedModels = (activeProviderSettings.selectedModels ?? []).map((id) => {
     const found = availableModels.find((m) => m.id === id);
     return { id, name: found?.name || id };
   });

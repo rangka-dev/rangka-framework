@@ -16,6 +16,10 @@
     "./protocol": {
       "import": "./dist/protocol.js",
       "types": "./dist/protocol.d.ts"
+    },
+    "./providers": {
+      "import": "./dist/providers.js",
+      "types": "./dist/providers.d.ts"
     }
   },
   "scripts": {
