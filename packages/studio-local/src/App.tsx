@@ -10,6 +10,7 @@ import { CodeTab } from '@/components/code/CodeTab';
 import { PreviewTab } from '@/components/canvas/PreviewTab';
 import { ModelGraphTab } from '@/components/canvas/ModelGraphTab';
 import { CodeEditorTab } from '@/components/canvas/CodeEditorTab';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { StudioProvider, useStudio } from '@/hooks/useStudio';
 
 interface CanvasTab {
@@ -138,6 +139,7 @@ function StudioApp() {
   const pendingFileRef = useRef<string | null>(null);
   const [dirtyTabs, setDirtyTabs] = useState<Set<string>>(new Set());
   const [conflictPaths, setConflictPaths] = useState<Set<string>>(new Set());
+  const [pendingCloseTabId, setPendingCloseTabId] = useState<string | null>(null);
 
   const createFileTab = useCallback(
     (filePath: string, content: string): CanvasTab => {
@@ -288,12 +290,11 @@ function StudioApp() {
               activeTabId={activeTabId}
               onActiveTabChange={setActiveTabId}
               onCloseTab={(id) => {
+                if (dirtyTabs.has(id)) {
+                  setPendingCloseTabId(id);
+                  return;
+                }
                 setCanvasTabs((prev) => prev.filter((t) => t.id !== id));
-                setDirtyTabs((prev) => {
-                  const next = new Set(prev);
-                  next.delete(id);
-                  return next;
-                });
                 if (activeTabId === id) {
                   setActiveTabId('preview');
                 }
@@ -303,6 +304,28 @@ function StudioApp() {
         </Group>
       </div>
       <StatusBar />
+      <ConfirmDialog
+        open={pendingCloseTabId !== null}
+        title="Unsaved changes"
+        description="This file has unsaved changes that will be lost. Are you sure you want to close it?"
+        confirmLabel="Discard"
+        cancelLabel="Cancel"
+        variant="destructive"
+        onConfirm={() => {
+          const id = pendingCloseTabId!;
+          setPendingCloseTabId(null);
+          setCanvasTabs((prev) => prev.filter((t) => t.id !== id));
+          setDirtyTabs((prev) => {
+            const next = new Set(prev);
+            next.delete(id);
+            return next;
+          });
+          if (activeTabId === id) {
+            setActiveTabId('preview');
+          }
+        }}
+        onCancel={() => setPendingCloseTabId(null)}
+      />
     </div>
   );
 }
