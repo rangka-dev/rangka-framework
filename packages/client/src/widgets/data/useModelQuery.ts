@@ -27,7 +27,7 @@ export function filtersToParams(filters: ParsedFilter[]): Record<string, string>
   const params: Record<string, string> = {};
   for (const f of filters) {
     const key = f.operator === 'eq' ? `filter[${f.field}]` : `filter[${f.field}][${f.operator}]`;
-    params[key] = String(f.value);
+    params[key] = Array.isArray(f.value) ? f.value.join(',') : String(f.value);
   }
   return params;
 }

@@ -5,6 +5,8 @@ import { useWidgetComponent } from '../../ui/UIProvider.js';
 import { useWidgetContext, WidgetContextProvider } from '../hooks/useWidgetContext.js';
 import { usePageState } from '../hooks/usePageState.js';
 import { useModelQuery } from '../data/useModelQuery.js';
+import { useDataQuery } from '../hooks/useDataQuery.js';
+import { useSurfaceContext } from '../hooks/useSurfaceContext.js';
 import { buildRowContext } from '../context/builder.js';
 import { useModelMeta } from '../../data/useModelMeta.js';
 import { WidgetRenderer } from '../renderer/WidgetRenderer.js';
@@ -13,6 +15,7 @@ export function TableController({ props, on, childNodes }: WidgetProps) {
   const ctx = useWidgetContext();
   const store = usePageState();
   const Table = useWidgetComponent('table');
+  const surface = useSurfaceContext();
 
   const model = ctx.model;
   const columns = ctx.__columns ?? [];
@@ -28,6 +31,8 @@ export function TableController({ props, on, childNodes }: WidgetProps) {
     staticFilters: ctx.sourceFilters,
   });
 
+  const { filters: activeFilters } = useDataQuery(model || '');
+
   const records = smartMode ? source.data : (ctx.records ?? []);
 
   const { modelMeta } = useModelMeta(model);
@@ -39,6 +44,20 @@ export function TableController({ props, on, childNodes }: WidgetProps) {
   const filterableColumns = columns.filter(
     (col: WidgetNode) => col.props?.filterable && col.bind?.field,
   );
+
+  const filterFields = useMemo(() => {
+    if (!model || !modelMeta) return [];
+    return filterableColumns.map((col: WidgetNode) => {
+      const field = col.bind?.field ?? '';
+      const fieldDef = modelMeta.fields.find((f) => f.name === field);
+      return {
+        field,
+        type: fieldDef?.type ?? 'string',
+        label: (col.props?.label as string) ?? fieldDef?.label ?? field,
+        options: fieldDef?.options ? [...fieldDef.options] : undefined,
+      };
+    });
+  }, [model, modelMeta, filterableColumns]);
 
   const handleSort = useCallback(
     (field: string) => {
@@ -121,11 +140,41 @@ export function TableController({ props, on, childNodes }: WidgetProps) {
       sorted,
       hasSearch: smartMode && hasSearchableFields,
       hasFilters: smartMode && filterableColumns.length > 0,
+      filterFields,
+      activeFilters: activeFilters.map((f) => ({
+        field: f.field,
+        operator: f.operator,
+        value: f.value,
+      })),
+      surface,
     },
     bind: { value: records },
     on: {
       sort: (...args: unknown[]) => handleSort(args[0] as string),
       pageChange: (...args: unknown[]) => handlePageChange(args[0] as number),
+      setFilter: (...args: unknown[]) => {
+        if (!model) return;
+        const field = args[0] as string;
+        const operator = args[1] as string;
+        const value = args[2];
+        const key =
+          operator === 'eq'
+            ? `$filter.${model}.${field}`
+            : `$filter.${model}.${field}__${operator}`;
+        store.set(key, value);
+        store.set(`$page.${model}`, 1);
+      },
+      removeFilter: (...args: unknown[]) => {
+        if (!model) return;
+        const field = args[0] as string;
+        const operator = args[1] as string;
+        const key =
+          operator === 'eq'
+            ? `$filter.${model}.${field}`
+            : `$filter.${model}.${field}__${operator}`;
+        store.set(key, null);
+        store.set(`$page.${model}`, 1);
+      },
       rowClick: on.rowClick,
       select: on.select,
       selectAll: on.selectAll,

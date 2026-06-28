@@ -1,44 +1,80 @@
-# Shell Revamp Checkpoint
+# Filter System Checkpoint (RAN-29)
 
-## Goal
+## What's done
 
-Revamp the shell layer to match Plane.so's structure. The client writes zero divs, zero Tailwind — all rendering comes from `@rangka/ui` components exclusively.
+- `filterable: true` on columns works — `TableController` resolves field metadata
+- Inline `TableFilterBar` renders above table when `surface === 'card'` (default layout)
+- Filter operators utility (`packages/ui/src/data/filter-operators.ts`)
+- `TableFilterBar` UI component with two-step field→operator→value flow
+- Auto CRUD generator sets `filterable` on appropriate column types (enum, boolean, link, date, datetime, int, decimal, money)
+- Filter state writes to page state store (`$filter.{model}.{field}__${op}`) via `useDataQuery`
+- `useModelQuery` picks up filter changes and re-fetches automatically
+- `SurfaceProvider` wraps pages based on layout in `buildRouteTree.tsx`
+- Same field+operator: second filter replaces first (API limitation — server only supports one value per field+operator)
 
-## Plane.so Structure (from inspection)
+## What's NOT done — full layout page-level filter
 
-- **Top bar** (horizontal, full width): workspace avatar + name + switcher, search input, action buttons (notifications, AI assistant), user avatar
-- **Secondary nav** (horizontal, below top bar): workspace-level links (Projects, Wiki, AI, Settings)
-- **Left sidebar** (vertical, below secondary nav): collapsible sections — "New work item" button, quick links (Home, Drafts, Your work, Stickies), Workspace section (Projects, More), Projects section (expandable per-project with sub-nav: Overview, Work items, Cycles, Modules, Views, Pages), "Try" section with tips
-- **Main content area**: breadcrumb header row (project name + page title + actions) then page body
-- Sidebar is resizable with a drag handle
+For `layout: 'full'` pages (auto CRUD list pages), the table does NOT render inline filters (`surface === 'page'`). The filter UI should appear at the page level: trigger button in `Shell.Main.Actions`, filter chips below the header.
 
-## Current State
+## The problem to solve
 
-- Shell components exist: Sidebar (full composition), ShellContent (Header + Main), PageContainer, Breadcrumb
-- Full shell story demonstrates the pattern at `stories/shell/full-shell.stories.tsx`
-- Sidebar already has: Header, Content, Footer, Group, GroupLabel, Menu, MenuItem, MenuButton, MenuSub, etc.
+The page-level filter bar needs to know which fields are filterable. This information lives in the table's column definitions deep in the widget tree. Two approaches were tried and abandoned:
 
-## What Needs to Change
+### Approach 1: Context bubble-up (FilterRegistryProvider) — ABANDONED
 
-1. **Add a top-level workspace bar** — the horizontal bar at the very top with workspace switcher + search + user
-2. **Add workspace-level navigation** — horizontal tabs below the top bar (Projects, Wiki, AI, Settings)
-3. **Restructure the sidebar** — it sits below the workspace nav, not full-height. Contains project-level navigation.
-4. **Update ShellContent.Header** — becomes the breadcrumb bar with project context + page actions
-5. **Ensure the shell can render a full app** with only `@rangka/ui` imports — no intermediate divs
+- `FilterRegistryProvider` at shell level, `useRegisterFilters` in `TableController`
+- **Failed**: infinite render loops. Registry state changes cascade through the tree. The provider's `value` gets a new identity → consumers re-render → effects re-fire → setState → loop.
+- All code was removed.
 
-## Approach
+### Approach 2: Static widget tree scan — NOT YET IMPLEMENTED
 
-1. Use Playwright to inspect Plane's DOM structure in detail (accessibility snapshots, not screenshots)
-2. Design the component API to match that structure
-3. Build new shell components or restructure existing ones
-4. Update the full-shell story to demonstrate the new layout
-5. Verify zero-div rendering from client perspective
+- During route rendering (in `PageRoute` or `ShellLayout`), traverse `page.widgets` to find column nodes with `props.filterable === true`
+- Resolve field metadata from `modelMeta` (available via `useMeta()` or boot payload)
+- Pass filter declarations + handlers to shell as props
+- No runtime context needed — it's a one-time read of the page definition
 
-## Token System
+## How to implement (recommended approach)
 
-Tokens are now fully wired via `@theme inline`. Components use clean Tailwind utilities (bg-popover, text-muted-foreground, shadow-md, etc.) — no var() wrappers in component code.
+1. In `buildRouteTree.tsx` or the client's `ShellLayout`, scan current page's widget tree:
+   - Find `type: 'table'` or `type: 'data'` nodes
+   - Find their column children with `props.filterable === true`
+   - Extract field names and resolve types/labels from `modelMeta`
 
-## Remaining Non-Shell Work
+2. Pass the resolved `filterFields[]` to the shell `Layout` component (add a prop to `ShellLayoutProps`)
 
-- FileUpload component (for AttachmentWidget/AttachmentsWidget)
-- DataTable (for TableWidget — biggest remaining item)
+3. The UI's `ShellLayout` renders:
+   - `FilterBar.Trigger` in `Shell.Main.Actions` (alongside page action buttons)
+   - `FilterBar.Content` (chips + popover) below `Shell.Main.Header` when expanded
+
+4. Filter handlers write to page state store — same mechanism as inline filters:
+   - `store.set('$filter.{model}.{field}__${op}', value)`
+   - `useModelQuery` picks it up automatically
+
+5. Auto CRUD generator already produces `layout: 'full'` list pages with filterable columns — no changes needed there.
+
+## Key files
+
+| File                                                                  | Status                                                          |
+| --------------------------------------------------------------------- | --------------------------------------------------------------- |
+| `packages/ui/src/data/filter-operators.ts`                            | Done                                                            |
+| `packages/ui/src/data/__tests__/filter-operators.test.ts`             | Done                                                            |
+| `packages/ui/src/widgets/data/table-filter-bar.tsx`                   | Done                                                            |
+| `packages/ui/src/widgets/data/__tests__/table-filter-bar.api.test.ts` | Done                                                            |
+| `packages/ui/src/widgets/data/table-widget.tsx`                       | Done (inline filters gated on `surface === 'card'`)             |
+| `packages/client/src/widgets/controllers/TableController.tsx`         | Done (resolves filterFields, reads activeFilters, passes to UI) |
+| `packages/client/src/router/buildRouteTree.tsx`                       | Done (SurfaceProvider wraps pages)                              |
+| `packages/core/src/boot/crud-page-generator.ts`                       | Done (sets filterable on columns)                               |
+| `packages/core/src/boot/__tests__/crud-page-generator.test.ts`        | Done (5 new tests)                                              |
+| `packages/shared/src/types/ui-kit.ts`                                 | Reverted (no filter slots)                                      |
+| `packages/client/src/shell/ShellLayout.tsx`                           | Reverted (no filter registry)                                   |
+| `packages/ui/src/shell/kit/ShellLayout.tsx`                           | Reverted (no filter slots)                                      |
+
+## Files to clean up
+
+- `packages/client/src/widgets/filter/` directory was removed
+- `packages/client/src/shell/HeaderFilterBar.tsx` was removed
+- `packages/ui/src/widgets/data/header-filter-bar-widget.tsx` was removed
+
+## Uncommitted changes
+
+Run `git diff --stat` to see current working state. The inline filter for card layout is complete and working. The full-layout page-level filter is the remaining work.

@@ -2,6 +2,7 @@ import { type ReactNode } from 'react';
 import { Table } from '../../data/table';
 import { TablePagination } from '../../data/table-pagination';
 import { renderDisplay, type CellColumn } from './cell-renderers';
+import { TableFilterBar, type FilterFieldDeclaration, type ActiveFilter } from './table-filter-bar';
 import type { WidgetComponentProps, WidgetNode } from '../types';
 
 interface ColumnDef {
@@ -32,14 +33,27 @@ export function TableWidget({ props, bind, on, childNodes }: WidgetComponentProp
   const total = (props.total as number) ?? 0;
   const sorted = props.sorted as { field: string; direction: 'asc' | 'desc' } | undefined;
 
+  const filterFields = (props.filterFields as FilterFieldDeclaration[]) ?? [];
+  const activeFilters = (props.activeFilters as ActiveFilter[]) ?? [];
+  const surface = (props.surface as 'page' | 'card') ?? 'card';
+
   const columns = resolveColumns(props.columns as ColumnDef[] | undefined, childNodes);
   const records = (bind.value as Record<string, unknown>[]) ?? [];
   const colCount = columns.length + (selectable ? 1 : 0);
 
   const showPagination = pageSize > 0 && total > 0;
+  const showInlineFilters = filterFields.length > 0 && surface === 'card';
 
   return (
     <Table variant={variant} className={bordered ? 'ring-1 ring-border' : undefined}>
+      {showInlineFilters && (
+        <TableFilterBar
+          fields={filterFields}
+          activeFilters={activeFilters}
+          onSetFilter={(field, operator, value) => on.setFilter?.(field, operator, value)}
+          onRemoveFilter={(field, operator) => on.removeFilter?.(field, operator)}
+        />
+      )}
       <Table.Content>
         <Table.Header>
           <tr>
