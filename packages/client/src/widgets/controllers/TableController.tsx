@@ -78,27 +78,38 @@ export function TableController({ props, on, childNodes }: WidgetProps) {
     ? { field: source.sort[0].field, direction: source.sort[0].direction }
     : undefined;
 
-  const resolvedColumns = columns.map((col: WidgetNode) => ({
-    field: col.bind?.field ?? '',
-    label: (col.props?.label as string) ?? '',
-    width: col.props?.width as string | undefined,
-    align: col.props?.align as 'left' | 'center' | 'right' | undefined,
-    sortable: col.props?.sortable as boolean | undefined,
-    children: col.children,
-    renderCell:
-      col.children && col.children.length > 0
-        ? (row: Record<string, unknown>, index: number) => {
-            const rowCtx = buildRowContext(row, index, ctx);
-            return (
-              <WidgetContextProvider value={rowCtx}>
-                {col.children!.map((child, ci) => (
-                  <WidgetRenderer key={child.id ?? ci} node={child} />
-                ))}
-              </WidgetContextProvider>
-            );
-          }
-        : undefined,
-  }));
+  const resolvedColumns = columns.map((col: WidgetNode) => {
+    const field = col.bind?.field ?? '';
+    const fieldDef = modelMeta?.fields.find((f) => f.name === field);
+    const fieldType = (col.props?.fieldType as string | undefined) ?? fieldDef?.type;
+    const options = fieldDef?.options
+      ? fieldDef.options.map((o) => ({ value: String(o), label: String(o) }))
+      : undefined;
+
+    return {
+      field,
+      label: (col.props?.label as string) ?? '',
+      width: col.props?.width as string | undefined,
+      align: col.props?.align as 'left' | 'center' | 'right' | undefined,
+      sortable: col.props?.sortable as boolean | undefined,
+      fieldType,
+      options,
+      children: col.children,
+      renderCell:
+        col.children && col.children.length > 0
+          ? (row: Record<string, unknown>, index: number) => {
+              const rowCtx = buildRowContext(row, index, ctx);
+              return (
+                <WidgetContextProvider value={rowCtx}>
+                  {col.children!.map((child, ci) => (
+                    <WidgetRenderer key={child.id ?? ci} node={child} />
+                  ))}
+                </WidgetContextProvider>
+              );
+            }
+          : undefined,
+    };
+  });
 
   const tableWidgetProps: WidgetProps = {
     props: {

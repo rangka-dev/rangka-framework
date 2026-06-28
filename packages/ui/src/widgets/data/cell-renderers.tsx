@@ -42,7 +42,9 @@ export function renderDisplay(
     }
 
     case 'money': {
-      const formatted = Number(value).toLocaleString(undefined, {
+      const num = Number(value);
+      if (isNaN(num)) return <span className="truncate">{String(value)}</span>;
+      const formatted = num.toLocaleString(undefined, {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       });
@@ -50,14 +52,19 @@ export function renderDisplay(
     }
 
     case 'int':
-    case 'sequence':
-      return <span className="tabular-nums">{Number(value).toLocaleString()}</span>;
+    case 'sequence': {
+      const num = Number(value);
+      if (isNaN(num)) return <span className="truncate">{String(value)}</span>;
+      return <span className="tabular-nums">{num.toLocaleString()}</span>;
+    }
 
     case 'decimal': {
       const precision = col?.precision ?? 2;
+      const num = Number(value);
+      if (isNaN(num)) return <span className="truncate">{String(value)}</span>;
       return (
         <span className="tabular-nums">
-          {Number(value).toLocaleString(undefined, {
+          {num.toLocaleString(undefined, {
             minimumFractionDigits: precision,
             maximumFractionDigits: precision,
           })}

@@ -1,6 +1,7 @@
 import { type ReactNode } from 'react';
 import { Table } from '../../data/table';
 import { TablePagination } from '../../data/table-pagination';
+import { renderDisplay, type CellColumn } from './cell-renderers';
 import type { WidgetComponentProps, WidgetNode } from '../types';
 
 interface ColumnDef {
@@ -9,6 +10,10 @@ interface ColumnDef {
   width?: string;
   align?: 'left' | 'center' | 'right';
   sortable?: boolean;
+  fieldType?: string;
+  options?: Array<{ value: string; label: string }>;
+  currency?: string;
+  precision?: number;
   children?: WidgetNode[];
   renderCell?: (row: Record<string, unknown>, index: number) => ReactNode;
 }
@@ -86,9 +91,7 @@ export function TableWidget({ props, bind, on, childNodes }: WidgetComponentProp
                   <Table.Cell key={col.field} align={col.align}>
                     {col.renderCell
                       ? col.renderCell(row, idx)
-                      : row[col.field] != null
-                        ? String(row[col.field])
-                        : ''}
+                      : renderDisplay(col.fieldType, row[col.field], toCellColumn(col))}
                   </Table.Cell>
                 ))}
               </Table.Row>
@@ -109,6 +112,16 @@ export function TableWidget({ props, bind, on, childNodes }: WidgetComponentProp
   );
 }
 
+function toCellColumn(col: ColumnDef): CellColumn {
+  return {
+    field: col.field,
+    fieldType: col.fieldType,
+    options: col.options,
+    currency: col.currency,
+    precision: col.precision,
+  };
+}
+
 function resolveColumns(
   propColumns: ColumnDef[] | undefined,
   childNodes: WidgetNode[] | undefined,
@@ -124,6 +137,10 @@ function resolveColumns(
         width: node.props?.width as string | undefined,
         align: node.props?.align as 'left' | 'center' | 'right' | undefined,
         sortable: node.props?.sortable as boolean | undefined,
+        fieldType: node.props?.fieldType as string | undefined,
+        options: node.props?.options as Array<{ value: string; label: string }> | undefined,
+        currency: node.props?.currency as string | undefined,
+        precision: node.props?.precision as number | undefined,
         children: node.children,
       }));
   }
