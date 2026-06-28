@@ -14,12 +14,15 @@ import { SYSTEM_PROMPT } from './system-prompt.js';
 import { createStudioTools } from './tools.js';
 import type { SubprocessManager } from './subprocess-manager.js';
 import type { ServerMessage, SessionInfo } from './protocol.js';
+import { getValidAccessToken } from './oauth/flow.js';
 
 export interface AgentEngineConfig {
   projectRoot: string;
   subprocess: SubprocessManager;
   apiKey?: string;
-  provider?: 'anthropic' | 'openai';
+  authMethod?: 'api-key' | 'oauth';
+  provider?: string;
+  providerType?: 'anthropic' | 'openai-compatible';
   baseUrl?: string;
   model?: string;
   onMessage: (msg: ServerMessage) => void;
@@ -145,13 +148,19 @@ export class AgentEngine {
     const authStorage = AuthStorage.create();
     const modelRegistry = ModelRegistry.create(authStorage);
 
-    if (this.config.apiKey) {
-      const provider = this.config.provider ?? 'anthropic';
+    const provider = this.config.provider ?? 'anthropic';
+    if (this.config.authMethod === 'oauth') {
+      const accessToken = await getValidAccessToken(provider);
+      if (accessToken) {
+        authStorage.setRuntimeApiKey(provider, accessToken);
+      } else {
+        throw new Error(`OAuth token not available for ${provider}. Please reconnect in Settings.`);
+      }
+    } else if (this.config.apiKey) {
       authStorage.setRuntimeApiKey(provider, this.config.apiKey);
     }
 
     if (this.config.baseUrl) {
-      const provider = this.config.provider ?? 'anthropic';
       const baseUrl = this.config.baseUrl.replace(/\/+$/, '');
       modelRegistry.registerProvider(provider, { baseUrl });
       console.log(`[studio:agent] Registered provider "${provider}" with baseUrl: ${baseUrl}`);
@@ -289,13 +298,16 @@ export class AgentEngine {
       ...studioTools.map((t) => t.name),
     ];
 
+    const apiType =
+      this.config.providerType === 'anthropic' ? 'anthropic-messages' : 'openai-completions';
+
     const selectedModel = this.config.model
       ? (modelRegistry.find(this.config.provider ?? 'anthropic', this.config.model) ??
         ({
           id: this.config.model,
           name: this.config.model,
           provider: this.config.provider ?? 'anthropic',
-          api: this.config.provider === 'openai' ? 'openai-completions' : 'anthropic-messages',
+          api: apiType,
           baseUrl: this.config.baseUrl?.replace(/\/+$/, ''),
           contextWindow: 200000,
           maxTokens: 16384,

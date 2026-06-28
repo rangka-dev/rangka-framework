@@ -15,7 +15,20 @@ import type {
   ResourceModule,
   ModelGraphData,
   FileNode,
+  StudioConfig,
+  AvailableModel,
 } from '@rangka/studio-core/protocol';
+
+export type { StudioConfig, AvailableModel };
+
+export type OAuthProviderStatus = {
+  connected: boolean;
+  expiresAt?: number;
+  waiting?: boolean;
+  error?: string;
+};
+
+export type OAuthStatus = Record<string, OAuthProviderStatus>;
 
 export interface ChatMessage {
   id: string;
@@ -41,20 +54,6 @@ export interface RuntimeStatus {
   models: number;
   pages: number;
   services: number;
-}
-
-export interface StudioConfig {
-  provider: 'anthropic' | 'openai';
-  apiKey: string;
-  model?: string;
-  selectedModels?: string[];
-  baseUrl?: string;
-}
-
-export interface AvailableModel {
-  id: string;
-  name: string;
-  provider: string;
 }
 
 interface StudioContextValue {
@@ -94,6 +93,9 @@ interface StudioContextValue {
   writeFile: (path: string, content: string) => void;
   fileSaveError: { path: string; message: string } | null;
   lastChangedFile: { path: string; key: number };
+  oauthStatus: OAuthStatus;
+  startOAuth: (providerId: string) => void;
+  disconnectOAuth: (providerId: string) => void;
 }
 
 const StudioContext = createContext<StudioContextValue | null>(null);
@@ -125,6 +127,7 @@ export function StudioProvider({ children }: { children: ReactNode }) {
     path: '',
     key: 0,
   });
+  const [oauthStatus, setOauthStatus] = useState<OAuthStatus>({});
   const [runtimeStatus, setRuntimeStatus] = useState<RuntimeStatus>({
     status: 'idle',
     models: 0,
@@ -323,11 +326,11 @@ export function StudioProvider({ children }: { children: ReactNode }) {
         }
 
         case 'settings.current':
-          setSettings((msg as unknown as { config: StudioConfig | null }).config);
+          setSettings(msg.config);
           break;
 
         case 'settings.models':
-          setAvailableModels((msg as unknown as { models: AvailableModel[] }).models);
+          setAvailableModels(msg.models);
           break;
 
         case 'session.current':
@@ -393,6 +396,67 @@ export function StudioProvider({ children }: { children: ReactNode }) {
         case 'agent.status':
           setIsAgentWorking((msg as unknown as { busy: boolean }).busy);
           break;
+
+        case 'oauth.status': {
+          const statusMsg = msg as unknown as {
+            providers: Record<string, { connected: boolean; expiresAt?: number }>;
+          };
+          setOauthStatus((prev) => {
+            const next: OAuthStatus = {};
+            for (const [id, s] of Object.entries(statusMsg.providers)) {
+              next[id] = { ...prev[id], ...s, waiting: false, error: undefined };
+            }
+            return next;
+          });
+          break;
+        }
+
+        case 'oauth.authorize': {
+          const authMsg = msg as unknown as { providerId: string; url: string };
+          setOauthStatus((prev) => ({
+            ...prev,
+            [authMsg.providerId]: {
+              ...prev[authMsg.providerId],
+              connected: false,
+              waiting: true,
+              error: undefined,
+            },
+          }));
+          window.open(authMsg.url, '_blank');
+          break;
+        }
+
+        case 'oauth.complete': {
+          const completeMsg = msg as unknown as { providerId: string };
+          setOauthStatus((prev) => ({
+            ...prev,
+            [completeMsg.providerId]: { connected: true, waiting: false, error: undefined },
+          }));
+          break;
+        }
+
+        case 'oauth.error': {
+          const errorMsg = msg as unknown as { providerId: string; message: string };
+          setOauthStatus((prev) => ({
+            ...prev,
+            [errorMsg.providerId]: {
+              ...prev[errorMsg.providerId],
+              connected: false,
+              waiting: false,
+              error: errorMsg.message,
+            },
+          }));
+          break;
+        }
+
+        case 'oauth.expired': {
+          const expiredMsg = msg as unknown as { providerId: string };
+          setOauthStatus((prev) => ({
+            ...prev,
+            [expiredMsg.providerId]: { connected: false, waiting: false, error: 'Token expired' },
+          }));
+          break;
+        }
       }
     });
 
@@ -497,6 +561,18 @@ export function StudioProvider({ children }: { children: ReactNode }) {
     connRef.current?.send({ type: 'file.write', path: filePath, content });
   }, []);
 
+  const startOAuth = useCallback((providerId: string) => {
+    connRef.current?.send({ type: 'oauth.start', providerId });
+  }, []);
+
+  const disconnectOAuth = useCallback((providerId: string) => {
+    connRef.current?.send({ type: 'oauth.disconnect', providerId });
+    setOauthStatus((prev) => ({
+      ...prev,
+      [providerId]: { connected: false, waiting: false },
+    }));
+  }, []);
+
   return (
     <StudioContext.Provider
       value={{
@@ -536,6 +612,9 @@ export function StudioProvider({ children }: { children: ReactNode }) {
         writeFile,
         fileSaveError,
         lastChangedFile,
+        oauthStatus,
+        startOAuth,
+        disconnectOAuth,
       }}
     >
       {children}

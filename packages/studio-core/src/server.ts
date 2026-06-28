@@ -4,11 +4,114 @@ import * as path from 'node:path';
 import * as http from 'node:http';
 import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
-import type { ServerMessage, ClientMessage, FileNode } from './protocol.js';
+import type {
+  ServerMessage,
+  ClientMessage,
+  FileNode,
+  KnownProvider,
+  ProviderSettings,
+} from './protocol.js';
 import { SubprocessManager } from './subprocess-manager.js';
 import { FileWatcher } from './file-watcher.js';
 import { AgentEngine } from './agent-engine.js';
 import { loadConfig, saveConfig } from './config.js';
+import { getProvider } from './providers.js';
+import { buildAuthorizationUrl, type OAuthFlowState } from './oauth/flow.js';
+import { getProviderTokens, clearProviderTokens } from './oauth/tokens.js';
+import { registerOAuthRoutes } from './oauth/routes.js';
+import { OAUTH_PROVIDERS } from './oauth/config.js';
+
+export interface FetchModelsResult {
+  models: Array<{ id: string; name: string; provider: string }>;
+  error?: string;
+}
+
+export async function fetchModelsForProvider(
+  providerId: string,
+  provider: KnownProvider,
+  settings: ProviderSettings,
+  fetchFn: typeof fetch = fetch,
+): Promise<FetchModelsResult> {
+  const baseUrl = (settings.baseUrl ?? provider.baseUrl).replace(/\/+$/, '');
+
+  // Determine the API key to use
+  let apiKey = settings.apiKey ?? '';
+  if (settings.authMethod === 'oauth') {
+    const { getValidAccessToken } = await import('./oauth/flow.js');
+    const token = await getValidAccessToken(providerId);
+    if (token) {
+      apiKey = token;
+    } else {
+      return { models: [], error: 'OAuth token expired. Please reconnect in Settings.' };
+    }
+  }
+
+  try {
+    if (providerId === 'ollama') {
+      const url = `${baseUrl}/api/tags`;
+      const response = await fetchFn(url);
+      if (!response.ok) {
+        return { models: [], error: `Ollama API returned ${response.status}` };
+      }
+      const body = (await response.json()) as { models: Array<{ name: string }> };
+      return {
+        models: (body.models ?? []).map((m) => ({
+          id: m.name,
+          name: m.name,
+          provider: providerId,
+        })),
+      };
+    }
+
+    if (provider.type === 'anthropic') {
+      const modelsUrl = baseUrl.endsWith('/v1')
+        ? `${baseUrl}/models?limit=100`
+        : `${baseUrl}/v1/models?limit=100`;
+      const headers: Record<string, string> = {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      };
+      const response = await fetchFn(modelsUrl, { headers });
+      if (!response.ok) {
+        return { models: [], error: `Anthropic API returned ${response.status}` };
+      }
+      const body = (await response.json()) as {
+        data: Array<{ id: string; display_name?: string }>;
+      };
+      return {
+        models: body.data.map((m) => ({
+          id: m.id,
+          name: m.display_name || m.id,
+          provider: providerId,
+        })),
+      };
+    }
+
+    // OpenAI-compatible strategy
+    const modelsUrl = baseUrl.endsWith('/v1') ? `${baseUrl}/models` : `${baseUrl}/v1/models`;
+    const headers: Record<string, string> = {};
+    if (apiKey) {
+      headers['Authorization'] = `Bearer ${apiKey}`;
+    }
+    const response = await fetchFn(modelsUrl, { headers });
+    if (!response.ok) {
+      return { models: [], error: `API returned ${response.status}` };
+    }
+    const body = (await response.json()) as {
+      data: Array<{ id: string; name?: string }>;
+    };
+    return {
+      models: body.data.map((m) => ({
+        id: m.id,
+        name: m.name || m.id,
+        provider: providerId,
+      })),
+    };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return { models: [], error: message };
+  }
+}
 
 export interface StudioServerConfig {
   wsPort: number;
@@ -27,6 +130,8 @@ export class StudioServer {
   private runtimeStatus: 'idle' | 'booting' | 'ready' | 'error' = 'idle';
   private activeClient: WebSocket | null = null;
   private isAgentBusy = false;
+  private pendingOAuthFlows = new Map<string, OAuthFlowState>();
+  private flowExpiryTimers = new Map<string, NodeJS.Timeout>();
 
   constructor(config: StudioServerConfig) {
     this.config = config;
@@ -104,6 +209,17 @@ export class StudioServer {
       prefix: '/',
     });
 
+    registerOAuthRoutes(this.uiApp, {
+      pendingFlows: this.pendingOAuthFlows,
+      onComplete: (providerId) => {
+        this.broadcast({ type: 'oauth.complete', providerId });
+        this.broadcastOAuthStatus();
+      },
+      onError: (providerId, message) => {
+        this.broadcast({ type: 'oauth.error', providerId, message });
+      },
+    });
+
     this.uiApp.setNotFoundHandler((_req: unknown, reply: { sendFile: (f: string) => void }) => {
       return reply.sendFile('index.html');
     });
@@ -123,15 +239,20 @@ export class StudioServer {
 
   private async initializeAgent(): Promise<void> {
     const config = loadConfig();
+    const providerId = config?.activeProvider ?? 'anthropic';
+    const providerSettings = config?.providers[providerId] ?? {};
+    const provider = getProvider(providerId);
 
     try {
       this.agentEngine = new AgentEngine({
         projectRoot: this.config.projectRoot,
         subprocess: this.subprocess,
-        apiKey: config?.apiKey,
-        provider: config?.provider,
-        baseUrl: config?.baseUrl,
-        model: config?.model,
+        apiKey: providerSettings.apiKey,
+        authMethod: providerSettings.authMethod,
+        provider: providerId,
+        providerType: provider?.type ?? 'openai-compatible',
+        baseUrl: providerSettings.baseUrl ?? provider?.baseUrl,
+        model: providerSettings.model,
         onMessage: (msg) => {
           if (this.activeClient) {
             this.send(this.activeClient, msg);
@@ -246,6 +367,7 @@ export class StudioServer {
 
     this.sendSessionCurrent(ws);
     this.send(ws, { type: 'agent.status', busy: this.isAgentBusy });
+    this.broadcastOAuthStatus();
 
     ws.on('message', (data) => {
       try {
@@ -296,7 +418,7 @@ export class StudioServer {
       case 'settings.save':
         saveConfig(msg.config);
         this.send(ws, { type: 'settings.current', config: msg.config });
-        console.log(`[studio] Settings saved for provider: ${msg.config.provider}`);
+        console.log(`[studio] Settings saved for provider: ${msg.config.activeProvider}`);
         this.reinitializeAgent();
         break;
       case 'settings.fetch_models':
@@ -305,7 +427,11 @@ export class StudioServer {
       case 'settings.set_model': {
         const currentConfig = loadConfig();
         if (currentConfig) {
-          currentConfig.model = msg.modelId;
+          const activeId = currentConfig.activeProvider;
+          if (!currentConfig.providers[activeId]) {
+            currentConfig.providers[activeId] = {};
+          }
+          currentConfig.providers[activeId].model = msg.modelId;
           saveConfig(currentConfig);
           this.send(ws, { type: 'settings.current', config: currentConfig });
           this.reinitializeAgent();
@@ -343,6 +469,12 @@ export class StudioServer {
       case 'file.write':
         this.handleFileWrite(ws, msg.path, msg.content);
         break;
+      case 'oauth.start':
+        this.handleOAuthStart(ws, msg.providerId);
+        break;
+      case 'oauth.disconnect':
+        this.handleOAuthDisconnect(ws, msg.providerId);
+        break;
     }
   }
 
@@ -361,39 +493,31 @@ export class StudioServer {
   private async handleFetchModels(ws: WebSocket): Promise<void> {
     try {
       const config = loadConfig();
-      if (!config?.apiKey) {
+      if (!config) {
         this.send(ws, { type: 'settings.models', models: [] });
         return;
       }
 
-      const baseUrl = (config.baseUrl ?? 'https://api.anthropic.com').replace(/\/+$/, '');
-      const modelsUrl = baseUrl.endsWith('/v1')
-        ? `${baseUrl}/models?limit=100`
-        : `${baseUrl}/v1/models?limit=100`;
-      const response = await fetch(modelsUrl, {
-        headers: {
-          'x-api-key': config.apiKey,
-          'anthropic-version': '2023-06-01',
-        },
-      });
-
-      if (!response.ok) {
-        console.error(`[studio] Models API returned ${response.status}`);
+      const providerId = config.activeProvider;
+      const provider = getProvider(providerId);
+      if (!provider) {
         this.send(ws, { type: 'settings.models', models: [] });
         return;
       }
 
-      const body = (await response.json()) as {
-        data: Array<{ id: string; display_name?: string }>;
-      };
+      const settings = config.providers[providerId] ?? {};
+      if (provider.requiresApiKey && !settings.apiKey) {
+        this.send(ws, { type: 'settings.models', models: [] });
+        return;
+      }
 
-      const models = body.data.map((m) => ({
-        id: m.id,
-        name: m.display_name || m.id,
-        provider: config.provider,
-      }));
+      const result = await fetchModelsForProvider(providerId, provider, settings);
 
-      this.send(ws, { type: 'settings.models', models });
+      if (result.error) {
+        console.error(`[studio] Models API error: ${result.error}`);
+      }
+
+      this.send(ws, { type: 'settings.models', models: result.models });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       console.error(`[studio] Failed to fetch models: ${message}`);
@@ -422,7 +546,16 @@ export class StudioServer {
       await this.agentEngine.dispose();
       this.agentEngine = null;
     }
-    await this.initializeAgent();
+    try {
+      await this.initializeAgent();
+    } catch {
+      const config = loadConfig();
+      const providerId = config?.activeProvider ?? 'anthropic';
+      const providerSettings = config?.providers[providerId] ?? {};
+      if (providerSettings.authMethod === 'oauth') {
+        this.broadcast({ type: 'oauth.expired', providerId });
+      }
+    }
   }
 
   private async handleChatStop(ws: WebSocket): Promise<void> {
@@ -642,6 +775,65 @@ export class StudioServer {
     }
   }
 
+  private handleOAuthStart(ws: WebSocket, providerId: string): void {
+    const config = loadConfig();
+    const providerSettings = config?.providers[providerId] ?? {};
+    const redirectUri = `http://localhost:${this.config.wsPort}/oauth/callback`;
+
+    try {
+      // Cancel any existing flow for this provider
+      for (const [state, flow] of this.pendingOAuthFlows) {
+        if (flow.providerId === providerId) {
+          this.pendingOAuthFlows.delete(state);
+          const timer = this.flowExpiryTimers.get(state);
+          if (timer) {
+            clearTimeout(timer);
+            this.flowExpiryTimers.delete(state);
+          }
+        }
+      }
+
+      const { url, flow } = buildAuthorizationUrl(providerId, redirectUri, {
+        oauthClientId: providerSettings.oauthClientId,
+      });
+
+      this.pendingOAuthFlows.set(flow.state, flow);
+
+      // Set 10 minute expiry
+      const timer = setTimeout(
+        () => {
+          this.pendingOAuthFlows.delete(flow.state);
+          this.flowExpiryTimers.delete(flow.state);
+        },
+        10 * 60 * 1000,
+      );
+      this.flowExpiryTimers.set(flow.state, timer);
+
+      this.send(ws, { type: 'oauth.authorize', providerId, url });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      this.send(ws, { type: 'oauth.error', providerId, message });
+    }
+  }
+
+  private handleOAuthDisconnect(_ws: WebSocket, providerId: string): void {
+    clearProviderTokens(providerId);
+    this.broadcastOAuthStatus();
+  }
+
+  private broadcastOAuthStatus(): void {
+    const providers: Record<string, { connected: boolean; expiresAt?: number }> = {};
+    for (const id of Object.keys(OAUTH_PROVIDERS)) {
+      const tokens = getProviderTokens(id);
+      if (tokens) {
+        providers[id] = { connected: true, expiresAt: tokens.expiresAt };
+      } else {
+        providers[id] = { connected: false };
+      }
+    }
+    this.broadcast({ type: 'oauth.status', providers });
+  }
+
   private send(ws: WebSocket, msg: ServerMessage): void {
     if (ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify(msg));
@@ -672,6 +864,11 @@ export class StudioServer {
       this.wss.close();
     }
     await this.subprocess.shutdown();
+    for (const timer of this.flowExpiryTimers.values()) {
+      clearTimeout(timer);
+    }
+    this.pendingOAuthFlows.clear();
+    this.flowExpiryTimers.clear();
     console.log(`[studio] Shut down.`);
   }
 

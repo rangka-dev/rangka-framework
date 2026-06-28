@@ -66,7 +66,12 @@ export type ServerMessage =
   | { type: 'file.content'; path: string; content: string }
   | { type: 'file.error'; path: string; message: string }
   | { type: 'file.saved'; path: string }
-  | { type: 'file.saveError'; path: string; message: string };
+  | { type: 'file.saveError'; path: string; message: string }
+  | { type: 'oauth.authorize'; providerId: string; url: string }
+  | { type: 'oauth.complete'; providerId: string }
+  | { type: 'oauth.error'; providerId: string; message: string }
+  | { type: 'oauth.expired'; providerId: string }
+  | { type: 'oauth.status'; providers: Record<string, { connected: boolean; expiresAt?: number }> };
 
 export interface AvailableModel {
   id: string;
@@ -97,7 +102,9 @@ export type ClientMessage =
   | { type: 'runtime.start' }
   | { type: 'files.list' }
   | { type: 'file.read'; path: string }
-  | { type: 'file.write'; path: string; content: string };
+  | { type: 'file.write'; path: string; content: string }
+  | { type: 'oauth.start'; providerId: string }
+  | { type: 'oauth.disconnect'; providerId: string };
 
 export interface FileNode {
   name: string;
@@ -145,10 +152,27 @@ export interface ModelGraphData {
   edges: ModelGraphEdge[];
 }
 
-export interface StudioConfig {
-  provider: 'anthropic' | 'openai';
-  apiKey: string;
-  model?: string;
-  selectedModels?: string[];
+export type ProviderType = 'anthropic' | 'openai-compatible';
+
+export interface KnownProvider {
+  id: string;
+  name: string;
+  type: ProviderType;
+  baseUrl: string;
+  requiresApiKey: boolean;
+  supportsOAuth?: boolean;
+}
+
+export interface ProviderSettings {
+  apiKey?: string;
   baseUrl?: string;
+  selectedModels?: string[];
+  model?: string;
+  authMethod?: 'api-key' | 'oauth';
+  oauthClientId?: string;
+}
+
+export interface StudioConfig {
+  activeProvider: string;
+  providers: Record<string, ProviderSettings>;
 }
