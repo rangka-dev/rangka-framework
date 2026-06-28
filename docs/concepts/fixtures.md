@@ -14,7 +14,7 @@ You write the records you need. The framework ensures they exist in the database
 ## Defining a fixture
 
 ```typescript
-// modules/sales/fixtures/seed.ts
+// fixtures/seed.ts
 import { defineFixture } from 'rangka';
 
 export default defineFixture({
@@ -53,7 +53,7 @@ defineFixture({
   key: 'name',
   records: [
     { name: 'Admin', description: 'Full system access' },
-    { name: 'Sales User', description: 'Sales module access' },
+    { name: 'Sales User', description: 'Sales app access' },
   ],
 });
 // Running this twice creates exactly 2 roles, not 4

@@ -1,7 +1,7 @@
 export { AppSidebar } from './AppSidebar';
 export type {
   AppSidebarProps,
-  AppSidebarModule,
+  AppSidebarApp,
   AppSidebarNavSection,
   AppSidebarNavItem,
   AppSidebarUser,

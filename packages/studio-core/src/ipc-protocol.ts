@@ -29,7 +29,7 @@ export interface RuntimeStatus {
   services: number;
   hooks: number;
   jobs: number;
-  modules: string[];
+  apps: string[];
 }
 
 export type DdlOperationType =
@@ -71,7 +71,7 @@ export type IntrospectType =
   | 'jobs'
   | 'fixtures'
   | 'widgets'
-  | 'modules'
+  | 'apps'
   | 'navigation';
 
 export interface ScanWarning {
@@ -108,5 +108,5 @@ export type ParentMessage =
   | { type: 'parent:sync_approve'; operationIds: string[] }
   | { type: 'parent:sync_reject'; reason?: string }
   | { type: 'parent:get_status'; requestId: string }
-  | { type: 'parent:introspect'; requestId: string; resource: IntrospectType; module?: string }
+  | { type: 'parent:introspect'; requestId: string; resource: IntrospectType; app?: string }
   | { type: 'parent:shutdown' };

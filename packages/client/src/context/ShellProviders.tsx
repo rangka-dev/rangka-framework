@@ -4,7 +4,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { UserProvider } from './UserContext.js';
 import { PermissionsProvider } from './PermissionsContext.js';
 import { MetaProvider } from './MetaContext.js';
-import { ModuleProvider } from './ModuleContext.js';
+import { AppProvider } from './ModuleContext.js';
 import { ToastProvider } from '../shell/ToastProvider.js';
 import { ConfirmProvider } from '../shell/ConfirmProvider.js';
 
@@ -20,11 +20,11 @@ export function ShellProviders({ data, children }: { data: BootResponse; childre
               models: data.models,
             }}
           >
-            <ModuleProvider navigation={data.navigation}>
+            <AppProvider navigation={data.navigation}>
               <ToastProvider>
                 <ConfirmProvider>{children}</ConfirmProvider>
               </ToastProvider>
-            </ModuleProvider>
+            </AppProvider>
           </MetaProvider>
         </PermissionsProvider>
       </UserProvider>

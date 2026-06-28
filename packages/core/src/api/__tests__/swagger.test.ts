@@ -9,7 +9,6 @@ function makeModel(): ResolvedModel {
   return {
     qualifiedName: 'sales.customer',
     app: 'test',
-    module: 'sales',
     name: 'customer',
     label: 'Customer',
     auditLog: false,

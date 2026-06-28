@@ -10,13 +10,13 @@ const ERP_APP_ROOT = path.resolve(__dirname, '../../fixtures/erp-app');
 
 export async function bootFixtureApp(options?: { server?: boolean }): Promise<BootResult> {
   const scanner = new ProjectScanner(BASIC_APP_ROOT);
-  const { app } = await scanner.scan();
+  const { app, externalApps } = await scanner.scan();
 
   const dbConfig = getTestDatabaseConfig();
 
   return boot({
     discoverySource: new MemoryDiscoverySource([]),
-    apps: [app],
+    apps: [app, ...externalApps],
     database: {
       host: dbConfig.host,
       port: dbConfig.port,
@@ -33,13 +33,13 @@ export async function bootErpApp(options?: {
   worker?: { enabled: boolean };
 }): Promise<BootResult> {
   const scanner = new ProjectScanner(ERP_APP_ROOT);
-  const { app } = await scanner.scan();
+  const { app, externalApps } = await scanner.scan();
 
   const dbConfig = getTestDatabaseConfig();
 
   return boot({
     discoverySource: new MemoryDiscoverySource([]),
-    apps: [app],
+    apps: [app, ...externalApps],
     database: {
       host: dbConfig.host,
       port: dbConfig.port,

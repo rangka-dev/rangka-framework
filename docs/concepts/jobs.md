@@ -14,7 +14,7 @@ A job is how you express that kind of work in Rangka.
 ## Defining a job
 
 ```typescript
-// modules/sales/jobs/send-confirmation.ts
+// jobs/send-confirmation.ts
 import { defineJob } from 'rangka';
 
 export default defineJob('sales.send-confirmation', {
@@ -47,7 +47,7 @@ export default defineJob('sales.send-confirmation', {
 
 ## Configuration
 
-`defineJob(name, config)` — name is the first argument (`{module}.{action}` format).
+`defineJob(name, config)` — name is the first argument (`{app}.{action}` format).
 
 | Field         | Type       | Description                                      |
 | ------------- | ---------- | ------------------------------------------------ |

@@ -108,7 +108,7 @@ export async function buildWidgets(root: string): Promise<BuildResult> {
 
     for (const component of components) {
       const hash = createHash(component.filePath);
-      const basename = `${component.module}--${path.basename(component.filePath, path.extname(component.filePath))}.${hash}`;
+      const basename = `${component.app}--${path.basename(component.filePath, path.extname(component.filePath))}.${hash}`;
       const jsFilename = `${basename}.js`;
       const cssFilename = `${basename}.css`;
       const outputPath = path.join(outDir, 'widgets', jsFilename);

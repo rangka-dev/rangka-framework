@@ -1,7 +1,7 @@
 export { field, widget, action } from '@rangka/shared';
 export {
   defineModel,
-  defineModule,
+  defineApp,
   defineHooks,
   defineExtension,
   defineService,
@@ -19,7 +19,7 @@ export type * from '@rangka/shared';
 // Validation (from @rangka/shared)
 export {
   modelSchema,
-  moduleSchema,
+  appSchema,
   fieldSchema,
   pageDefinitionSchema,
   widgetActionSchema,
@@ -32,7 +32,7 @@ export {
   jobSchema,
   extensionSchema,
   validateModel,
-  validateModule,
+  validateApp,
   validatePage,
   validateHooks,
   validateService,

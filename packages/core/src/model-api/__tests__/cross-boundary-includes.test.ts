@@ -21,7 +21,6 @@ function makeExternalModel(name: string, source: string): ResolvedModel {
   return {
     qualifiedName: name,
     app: 'test',
-    module: name.split('.')[0],
     name: name.split('.')[1],
     auditLog: false,
     traits: [],
@@ -35,7 +34,6 @@ function makeInternalModel(name: string): ResolvedModel {
   return {
     qualifiedName: name,
     app: 'test',
-    module: name.split('.')[0],
     name: name.split('.')[1],
     auditLog: false,
     traits: [],

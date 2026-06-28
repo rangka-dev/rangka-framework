@@ -43,10 +43,10 @@ Every model field type maps to a built-in renderer that handles both form (edita
 
 ## Writing a custom renderer
 
-Custom field renderers are widgets that live in `modules/{module}/widgets/`:
+Custom field renderers are widgets that live in `apps/{app}/widgets/`:
 
 ```tsx
-// modules/inventory/widgets/color-picker.tsx
+// widgets/color-picker.tsx
 import { defineWidget, registerWidget } from 'rangka';
 
 const meta = defineWidget({

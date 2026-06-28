@@ -2,7 +2,7 @@ import type { ModelConfig, ExtensionConfig } from '@rangka/shared';
 import type { DiscoveredApp } from './types.js';
 
 export interface SchemaLoadResult {
-  schemas: Array<{ app: string; module: string; schema: ModelConfig }>;
+  schemas: Array<{ app: string; schema: ModelConfig }>;
   extensions: Array<{ app: string; target: string; config: ExtensionConfig }>;
 }
 
@@ -13,8 +13,8 @@ export function loadSchemas(apps: DiscoveredApp[]): SchemaLoadResult {
   for (const app of apps) {
     const appName = app.config.name;
 
-    for (const { module, schema } of app.schemas) {
-      schemas.push({ app: appName, module, schema });
+    for (const { app: schemaApp, schema } of app.schemas) {
+      schemas.push({ app: schemaApp, schema });
     }
 
     for (const { target, config } of app.extensions ?? []) {

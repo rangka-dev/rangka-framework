@@ -384,7 +384,7 @@ export class KyselyModelOps implements ModelOps {
       const config = field.config as { model: string; foreignKey: string };
       const qualifiedChild = config.model.includes('.')
         ? config.model
-        : `${this.model.module}.${config.model}`;
+        : `${this.model.app}.${config.model}`;
       const childTable = modelToTableName(qualifiedChild);
       const childModel = this.registry.getModel(qualifiedChild);
       const isSoftDelete = childModel?.traits.includes('soft_delete');

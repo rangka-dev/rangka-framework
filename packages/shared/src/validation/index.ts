@@ -8,8 +8,8 @@ export {
 } from './schemas/model.js';
 
 export {
-  moduleSchema,
-  validateModule,
+  appSchema,
+  validateApp,
   navigationItemSchema,
   navigationSectionSchema,
   scopeDefinitionSchema,

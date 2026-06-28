@@ -53,7 +53,7 @@ function validateModelFields(
 
     switch (config.type) {
       case 'link': {
-        const targetName = resolveModelName(config.model, model.module);
+        const targetName = resolveModelName(config.model, model.app);
         if (!registry.getModel(targetName)) {
           errors.push({
             model: model.qualifiedName,
@@ -65,7 +65,7 @@ function validateModelFields(
       }
 
       case 'hasMany': {
-        const targetName = resolveModelName(config.model, model.module);
+        const targetName = resolveModelName(config.model, model.app);
         const targetModel = registry.getModel(targetName);
         if (!targetModel) {
           errors.push({
@@ -87,7 +87,7 @@ function validateModelFields(
       }
 
       case 'children': {
-        const targetName = resolveModelName(config.model, model.module);
+        const targetName = resolveModelName(config.model, model.app);
         const targetModel = registry.getModel(targetName);
         if (!targetModel) {
           errors.push({
@@ -109,7 +109,7 @@ function validateModelFields(
       }
 
       case 'manyToMany': {
-        const targetName = resolveModelName(config.model, model.module);
+        const targetName = resolveModelName(config.model, model.app);
         if (!registry.getModel(targetName)) {
           errors.push({
             model: model.qualifiedName,

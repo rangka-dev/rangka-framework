@@ -1,15 +1,15 @@
 import { Sidebar, SidebarHeader, SidebarContent, SidebarFooter } from '@/components/ui/sidebar';
-import { ModuleSwitcher } from './ModuleSwitcher';
+import { AppSwitcher } from './ModuleSwitcher';
 import { SearchMenu } from './SearchMenu';
 import { NavMain } from './NavMain';
 import { NavUser } from './NavUser';
 import type { AppSidebarProps } from './types';
 
 export function AppSidebar({
-  modules,
-  activeModule,
-  onModuleSwitch,
-  onAllModules,
+  apps,
+  activeApp,
+  onAppSwitch,
+  onAllApps,
   onSearch,
   navigation,
   currentPath,
@@ -21,11 +21,11 @@ export function AppSidebar({
   return (
     <Sidebar collapsible="offcanvas">
       <SidebarHeader>
-        <ModuleSwitcher
-          modules={modules}
-          activeModule={activeModule}
-          onModuleSwitch={onModuleSwitch}
-          onAllModules={onAllModules}
+        <AppSwitcher
+          apps={apps}
+          activeApp={activeApp}
+          onAppSwitch={onAppSwitch}
+          onAllApps={onAllApps}
         />
         {onSearch && <SearchMenu onSearch={onSearch} />}
       </SidebarHeader>

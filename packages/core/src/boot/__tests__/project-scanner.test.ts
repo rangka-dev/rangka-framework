@@ -10,7 +10,7 @@ describe('ProjectScanner', () => {
     const result = await scanner.scan();
 
     expect(result.app.schemas.length).toBeGreaterThan(0);
-    const modules = new Set(result.app.schemas.map((s) => s.module));
+    const modules = new Set(result.app.schemas.map((s) => s.app));
     expect(modules.has('sales')).toBe(true);
   });
 

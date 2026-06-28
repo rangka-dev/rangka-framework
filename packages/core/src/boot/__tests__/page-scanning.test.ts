@@ -19,7 +19,7 @@ describe('ProjectScanner - page scanning', () => {
     expect(pageKeys).toContain('sales.orders');
 
     for (const entry of result.app.pages!) {
-      expect(entry.module).toBe('sales');
+      expect(entry.app).toBe('sales');
     }
   });
 
@@ -49,13 +49,13 @@ describe('ProjectScanner - page scanning', () => {
 
 describe('detectDuplicatePageKeys', () => {
   it('emits warning for duplicate page keys', () => {
-    const pages: Array<{ module: string; page: PageDefinition }> = [
+    const pages: Array<{ app: string; page: PageDefinition }> = [
       {
-        module: 'sales',
+        app: 'sales',
         page: { key: 'sales.orders', label: 'Orders', widgets: [] },
       },
       {
-        module: 'crm',
+        app: 'crm',
         page: { key: 'sales.orders', label: 'Orders CRM', widgets: [] },
       },
     ];
@@ -67,13 +67,13 @@ describe('detectDuplicatePageKeys', () => {
   });
 
   it('no warnings when all keys are unique', () => {
-    const pages: Array<{ module: string; page: PageDefinition }> = [
+    const pages: Array<{ app: string; page: PageDefinition }> = [
       {
-        module: 'sales',
+        app: 'sales',
         page: { key: 'sales.orders', label: 'Orders', widgets: [] },
       },
       {
-        module: 'sales',
+        app: 'sales',
         page: { key: 'sales.customers', label: 'Customers', widgets: [] },
       },
     ];
@@ -87,9 +87,9 @@ describe('validatePageSources', () => {
   const knownModels = new Set(['sales.order', 'sales.customer', 'contacts.contact']);
 
   it('passes when all source models exist', () => {
-    const pages: Array<{ module: string; page: PageDefinition }> = [
+    const pages: Array<{ app: string; page: PageDefinition }> = [
       {
-        module: 'sales',
+        app: 'sales',
         page: {
           key: 'sales.orders',
           label: 'Orders',
@@ -103,9 +103,9 @@ describe('validatePageSources', () => {
   });
 
   it('warns when widget references non-existent model', () => {
-    const pages: Array<{ module: string; page: PageDefinition }> = [
+    const pages: Array<{ app: string; page: PageDefinition }> = [
       {
-        module: 'sales',
+        app: 'sales',
         page: {
           key: 'sales.broken',
           label: 'Broken',
@@ -122,9 +122,9 @@ describe('validatePageSources', () => {
   });
 
   it('warns when nested widget references non-existent model', () => {
-    const pages: Array<{ module: string; page: PageDefinition }> = [
+    const pages: Array<{ app: string; page: PageDefinition }> = [
       {
-        module: 'sales',
+        app: 'sales',
         page: {
           key: 'sales.detail',
           label: 'Detail',
@@ -146,9 +146,9 @@ describe('validatePageSources', () => {
   });
 
   it('no warnings for widgets without model sources', () => {
-    const pages: Array<{ module: string; page: PageDefinition }> = [
+    const pages: Array<{ app: string; page: PageDefinition }> = [
       {
-        module: 'reports',
+        app: 'reports',
         page: {
           key: 'reports.revenue',
           label: 'Revenue',

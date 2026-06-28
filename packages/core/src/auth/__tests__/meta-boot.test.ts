@@ -5,14 +5,13 @@ import { createMetaBootHandler } from '../../api/meta-handler.js';
 import type { MetaBootContext } from '../../api/meta-handler.js';
 import { SchemaRegistry } from '../../schema/registry.js';
 import type { ResolvedModel } from '../../schema/types.js';
-import type { ModuleConfig, PageDefinition } from '@rangka/shared';
+import type { AppConfig, PageDefinition } from '@rangka/shared';
 import { hashPassword } from '../password.js';
 import { createTestServer } from '../../__tests__/helpers.js';
 
 const orderModel: ResolvedModel = {
   qualifiedName: 'sales.order',
   app: 'sales',
-  module: 'sales',
   name: 'order',
   label: 'Sales Order',
   auditLog: false,
@@ -45,7 +44,6 @@ const orderModel: ResolvedModel = {
 const payslipModel: ResolvedModel = {
   qualifiedName: 'hr.payslip',
   app: 'hr',
-  module: 'hr',
   name: 'payslip',
   label: 'Payslip',
   auditLog: false,
@@ -64,7 +62,6 @@ const payslipModel: ResolvedModel = {
 const contactModel: ResolvedModel = {
   qualifiedName: 'contacts.contact',
   app: 'contacts',
-  module: 'contacts',
   name: 'contact',
   label: 'Contact',
   auditLog: false,
@@ -84,9 +81,9 @@ const contactModel: ResolvedModel = {
   indexes: [],
 };
 
-const pages: Array<{ module: string; page: PageDefinition }> = [
+const pages: Array<{ app: string; page: PageDefinition }> = [
   {
-    module: 'sales',
+    app: 'sales',
     page: {
       key: 'sales.orders',
       label: 'Orders',
@@ -98,7 +95,7 @@ const pages: Array<{ module: string; page: PageDefinition }> = [
     },
   },
   {
-    module: 'hr',
+    app: 'hr',
     page: {
       key: 'hr.payroll',
       label: 'Payroll',
@@ -107,7 +104,7 @@ const pages: Array<{ module: string; page: PageDefinition }> = [
     },
   },
   {
-    module: 'admin',
+    app: 'admin',
     page: {
       key: 'admin.dashboard',
       label: 'Admin Dashboard',
@@ -117,7 +114,7 @@ const pages: Array<{ module: string; page: PageDefinition }> = [
   },
 ];
 
-const modules: ModuleConfig[] = [
+const apps: AppConfig[] = [
   {
     name: 'sales',
     label: 'Sales',
@@ -233,7 +230,7 @@ function buildServer(
   const metaCtx: MetaBootContext = {
     schemaRegistry,
     pages,
-    modules,
+    apps,
   };
 
   server.get('/api/meta/boot', {
@@ -289,11 +286,11 @@ describe('GET /api/meta/boot', () => {
     expect(pageKeys).toContain('admin.dashboard');
     expect(pageKeys).not.toContain('hr.payroll');
 
-    // Navigation: sales and admin modules, NOT hr
-    const navModules = body.navigation.map((n: any) => n.module);
-    expect(navModules).toContain('sales');
-    expect(navModules).toContain('admin');
-    expect(navModules).not.toContain('hr');
+    // Navigation: sales and admin apps, NOT hr
+    const navApps = body.navigation.map((n: any) => n.app);
+    expect(navApps).toContain('sales');
+    expect(navApps).toContain('admin');
+    expect(navApps).not.toContain('hr');
 
     // Models: sales.order and contacts.contact (from overlay), NOT hr.payslip
     expect(body.models['sales.order']).toBeDefined();
@@ -396,7 +393,7 @@ describe('GET /api/meta/boot', () => {
     expect(Object.keys(body.models)).toHaveLength(0);
   });
 
-  it('empty modules/sections are omitted from navigation', async () => {
+  it('empty apps/sections are omitted from navigation', async () => {
     const permissionRegistry = new PermissionRegistry();
     permissionRegistry.registerRoles(
       {
@@ -421,13 +418,13 @@ describe('GET /api/meta/boot', () => {
     expect(res.statusCode).toBe(200);
     const body = res.json();
 
-    const navModules = body.navigation.map((n: any) => n.module);
-    expect(navModules).toContain('sales');
-    expect(navModules).toContain('admin');
-    expect(navModules).not.toContain('hr');
+    const navApps = body.navigation.map((n: any) => n.app);
+    expect(navApps).toContain('sales');
+    expect(navApps).toContain('admin');
+    expect(navApps).not.toContain('hr');
 
     // Navigation is sorted by order
-    expect(body.navigation[0].module).toBe('sales');
+    expect(body.navigation[0].app).toBe('sales');
   });
 
   it('includes widget and view metadata in boot response', async () => {
@@ -470,7 +467,7 @@ describe('GET /api/meta/boot', () => {
     const metaCtx: MetaBootContext = {
       schemaRegistry,
       pages,
-      modules,
+      apps,
       widgets: widgetDefs,
     };
 
@@ -512,7 +509,7 @@ describe('GET /api/meta/boot', () => {
     const metaCtx: MetaBootContext = {
       schemaRegistry,
       pages,
-      modules,
+      apps,
       widgets: [],
     };
 

@@ -188,19 +188,19 @@ ctx.scope — query scoping (tenant, owner).
 
 # Conventions
 
-- Files: modules/{moduleName}/{type}/{name}.ts
-  - Models: modules/sales/models/order.ts
-  - Pages: modules/sales/pages/order-list.ts
-  - Services: modules/sales/services/pricing.ts
-  - Hooks: modules/sales/hooks/order.ts
-  - Jobs: modules/sales/jobs/daily-summary.ts
-  - Fixtures: modules/sales/fixtures/currency.ts
-  - Roles: modules/sales/roles.ts
-  - Module definition: modules/sales/module.ts
+- Files: {type}/{name}.ts
+  - Models: models/order.ts
+  - Pages: pages/order-list.ts
+  - Services: services/pricing.ts
+  - Hooks: hooks/order.ts
+  - Jobs: jobs/daily-summary.ts
+  - Fixtures: fixtures/currency.ts
+  - Roles: roles.ts
+  - App definition: app.ts
 - Qualified names: dot notation (sales.order, inventory.product)
 - Database tables: double underscore (sales__order)
 - Imports: from 'rangka' (e.g., import { defineModel, field } from 'rangka')
-- New module: create module.ts first, then models, then pages
+- New app: create app.ts first, then models, then pages
 - All models get timestamped trait unless explicitly unwanted
 
 # Workflow

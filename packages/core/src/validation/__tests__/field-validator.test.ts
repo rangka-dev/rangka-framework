@@ -6,7 +6,6 @@ import type { FieldConfig } from '@rangka/shared';
 function makeModel(fields: ResolvedField[]): ResolvedModel {
   return {
     app: 'test',
-    module: 'test',
     name: 'item',
     qualifiedName: 'test.item',
     auditLog: false,

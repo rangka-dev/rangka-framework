@@ -1,10 +1,10 @@
-import type { ModuleConfig } from '@rangka/shared';
+import type { AppConfig } from '@rangka/shared';
 import { CircularDependencyError, MissingDependencyError } from './types.js';
 
-// Topological sort of app modules by their declared dependencies.
+// Topological sort of apps by their declared dependencies.
 // Core is always first; remaining apps are sorted so dependencies load before dependents.
-export function dependencySort(apps: ModuleConfig[]): ModuleConfig[] {
-  const appsByName = new Map<string, ModuleConfig>(apps.map((app) => [app.name, app]));
+export function dependencySort(apps: AppConfig[]): AppConfig[] {
+  const appsByName = new Map<string, AppConfig>(apps.map((app) => [app.name, app]));
 
   const coreApp = appsByName.get('core');
   if (!coreApp) {
@@ -18,10 +18,7 @@ export function dependencySort(apps: ModuleConfig[]): ModuleConfig[] {
   return [coreApp, ...sorted];
 }
 
-function validateDependenciesExist(
-  apps: ModuleConfig[],
-  appsByName: Map<string, ModuleConfig>,
-): void {
+function validateDependenciesExist(apps: AppConfig[], appsByName: Map<string, AppConfig>): void {
   for (const app of apps) {
     for (const dep of app.depends ?? []) {
       if (dep !== 'core' && !appsByName.has(dep)) {
@@ -32,10 +29,7 @@ function validateDependenciesExist(
 }
 
 // Kahn's algorithm — processes apps with no remaining dependencies first.
-function topologicalSort(
-  apps: ModuleConfig[],
-  appsByName: Map<string, ModuleConfig>,
-): ModuleConfig[] {
+function topologicalSort(apps: AppConfig[], appsByName: Map<string, AppConfig>): AppConfig[] {
   const inDegree = new Map<string, number>();
   const dependents = new Map<string, string[]>();
 
@@ -57,7 +51,7 @@ function topologicalSort(
     .map((app) => app.name)
     .sort();
 
-  const sorted: ModuleConfig[] = [];
+  const sorted: AppConfig[] = [];
 
   while (ready.length > 0) {
     const current = ready.shift()!;

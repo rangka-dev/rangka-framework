@@ -56,7 +56,7 @@ export default definePage({
 
 | Field     | Type         | Required | Description                                       |
 | --------- | ------------ | -------- | ------------------------------------------------- |
-| `key`     | string       | yes      | Unique identifier (`module.name`)                 |
+| `key`     | string       | yes      | Unique identifier (`app.name`)                    |
 | `label`   | string       | yes      | Display name for nav, breadcrumbs, tab title      |
 | `path`    | string       | no       | Custom route path. Auto-generated if omitted.     |
 | `layout`  | string       | no       | `'default'` or `'full'`. Defaults to `'default'`. |

@@ -133,21 +133,21 @@ Toggle with `data-theme="dark"` on the root element:
 
 Every token has a dark variant. If you use tokens consistently, dark mode works automatically. The moment you hardcode a color value, you opt out of dark mode for that element.
 
-## Per-module theming
+## Per-app theming
 
-If different modules need different accents:
+If different apps need different accents:
 
 ```css
-[data-module='hr'] {
+[data-app='hr'] {
   --color-primary: 142 72% 40%;
 }
 
-[data-module='finance'] {
+[data-app='finance'] {
   --color-primary: 220 72% 56%;
 }
 ```
 
-The shell sets `data-module` on the content area based on the current route.
+The shell sets `data-app` on the content area based on the current route.
 
 ## Tips
 

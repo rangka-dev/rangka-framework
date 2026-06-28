@@ -26,7 +26,7 @@ export interface NavigationTreeSection {
 }
 
 export interface NavigationTree {
-  module: string;
+  app: string;
   label: string;
   description?: string;
   icon?: string;

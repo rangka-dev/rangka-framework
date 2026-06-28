@@ -2,11 +2,10 @@ import { describe, it, expect } from 'vitest';
 import { SchemaRegistry } from '../registry.js';
 import type { ResolvedModel } from '../types.js';
 
-function makeModel(module: string, name: string): ResolvedModel {
+function makeModel(app: string, name: string): ResolvedModel {
   return {
-    qualifiedName: `${module}.${name}`,
-    app: 'test',
-    module,
+    qualifiedName: `${app}.${name}`,
+    app,
     name,
     auditLog: false,
     traits: [],

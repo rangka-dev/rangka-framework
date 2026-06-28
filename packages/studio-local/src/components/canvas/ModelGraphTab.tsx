@@ -18,7 +18,7 @@ import type { ModelGraphField } from '@rangka/studio-core/protocol';
 
 type ModelNodeData = {
   label: string;
-  module: string;
+  app: string;
   fields: ModelGraphField[];
   connectedHandles: Record<string, true>;
 };
@@ -66,7 +66,7 @@ function ModelNode({ id, data }: NodeProps<Node<ModelNodeData>>) {
         <div className="flex-1 min-w-0">
           <div className="text-xs font-medium truncate">{data.label}</div>
         </div>
-        <span className="text-[10px] text-muted-foreground">{data.module}</span>
+        <span className="text-[10px] text-muted-foreground">{data.app}</span>
       </div>
 
       {/* Fields */}
@@ -189,7 +189,7 @@ export function ModelGraphTab() {
       dragHandle: '.drag-handle',
       data: {
         label: node.label,
-        module: node.module,
+        module: node.app,
         fields: node.fields,
         connectedHandles,
       },
@@ -201,7 +201,7 @@ export function ModelGraphTab() {
   if (modelGraph.nodes.length === 0) {
     return (
       <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-        No models yet. Define models in your modules to see the relationship graph.
+        No models yet. Define models in your apps to see the relationship graph.
       </div>
     );
   }

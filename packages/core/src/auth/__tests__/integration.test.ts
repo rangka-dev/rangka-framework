@@ -9,12 +9,11 @@ import { createFieldWriteGuard, createFieldStripHook } from '../field-permission
 import { SchemaRegistry } from '../../schema/registry.js';
 import type { ResolvedModel } from '../../schema/types.js';
 import { hashPassword } from '../password.js';
-import type { ModuleConfig } from '@rangka/shared';
+import type { AppConfig } from '@rangka/shared';
 
 const invoiceModel: ResolvedModel = {
   qualifiedName: 'sales.invoice',
   app: 'sales',
-  module: 'sales',
   name: 'invoice',
   auditLog: false,
   traits: [],
@@ -124,7 +123,7 @@ describe('integration: auth + permissions + scopes + field stripping', () => {
     const schemaRegistry = new SchemaRegistry([invoiceModel]);
     const db = createMockDb();
 
-    const modules: ModuleConfig[] = [];
+    const modules: AppConfig[] = [];
     const scopeRegistry = new ScopeRegistry(modules, schemaRegistry);
 
     const server = Fastify();

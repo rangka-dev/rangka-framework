@@ -1,13 +1,13 @@
 ---
 status: stable
 since: 0.1.0
-last-updated: 2026-06-21
-description: Tutorial to build a working module in 15 minutes
+last-updated: 2026-06-28
+description: Tutorial to build a working app in 15 minutes
 ---
 
-# Your first module
+# Your first app
 
-Build a working Tasks module from scratch. By the end you will have a list page, a form, field validation, and auto-generated API endpoints.
+Build a working Tasks app from scratch. By the end you will have a list page, a form, field validation, and auto-generated API endpoints.
 
 ## Prerequisites
 
@@ -15,23 +15,22 @@ Build a working Tasks module from scratch. By the end you will have a list page,
 - Node.js 20+
 - No database setup needed (SQLite is used by default). For production, configure PostgreSQL.
 
-## 1. Create the module
+## 1. Define the app
 
-Create the folder structure and module definition:
+Create the folder structure and app definition:
 
 ```bash
-mkdir -p modules/tasks/{models,pages,hooks}
+mkdir -p models pages hooks
 ```
 
 ```typescript
-// modules/tasks/module.ts
-import { defineModule } from 'rangka';
+// app.ts
+import { defineApp } from 'rangka';
 
-export default defineModule({
+export default defineApp({
   name: 'tasks',
   label: 'Tasks',
   icon: 'check-square',
-  order: 10,
   navigation: [
     {
       section: 'Records',
@@ -44,7 +43,7 @@ export default defineModule({
 ## 2. Define the model
 
 ```typescript
-// modules/tasks/models/task.ts
+// models/task.ts
 import { defineModel, field } from 'rangka';
 
 export default defineModel({
@@ -67,7 +66,7 @@ The `timestamped` trait adds `created_at` and `updated_at` automatically. You do
 ## 3. Define the page
 
 ```typescript
-// modules/tasks/pages/tasks.ts
+// pages/tasks.ts
 import { definePage } from 'rangka';
 import type { WidgetNode } from 'rangka';
 
@@ -112,7 +111,7 @@ This gives you a table with sortable columns, filtering, and pagination. Clickin
 ## 4. Add a hook
 
 ```typescript
-// modules/tasks/hooks/task.ts
+// hooks/task.ts
 import { defineHooks } from 'rangka';
 
 export default defineHooks('tasks.task', {
@@ -148,7 +147,7 @@ pnpm start
 
 Open the browser. You should see:
 
-- The Tasks module in the sidebar
+- The Tasks app in the sidebar
 - A table view with columns for title, status, priority, and due date
 - A form that opens when you click a row or create a new record
 

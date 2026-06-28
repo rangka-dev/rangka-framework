@@ -1,62 +1,62 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
 import type { NavigationTree } from '@rangka/shared';
 
-const STORAGE_KEY = 'rangka:active-module';
+const STORAGE_KEY = 'rangka:active-app';
 
-interface ModuleContextValue {
-  activeModule: string | null;
-  setActiveModule: (name: string) => void;
-  clearActiveModule: () => void;
+interface AppContextValue {
+  activeApp: string | null;
+  setActiveApp: (name: string) => void;
+  clearActiveApp: () => void;
 }
 
-const ModuleContext = createContext<ModuleContextValue | null>(null);
+const AppContext = createContext<AppContextValue | null>(null);
 
-export function ModuleProvider({
+export function AppProvider({
   navigation,
   children,
 }: {
   navigation: NavigationTree[];
   children: ReactNode;
 }) {
-  const [activeModule, setActiveModuleState] = useState<string | null>(() => {
-    const pathModule = window.location.pathname.split('/').filter(Boolean)[0];
-    if (pathModule && navigation.some((n) => n.module === pathModule)) {
-      return pathModule;
+  const [activeApp, setActiveAppState] = useState<string | null>(() => {
+    const pathApp = window.location.pathname.split('/').filter(Boolean)[0];
+    if (pathApp && navigation.some((n) => n.app === pathApp)) {
+      return pathApp;
     }
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored && navigation.some((n) => n.module === stored)) {
+    if (stored && navigation.some((n) => n.app === stored)) {
       return stored;
     }
     return null;
   });
 
   useEffect(() => {
-    if (activeModule) {
-      localStorage.setItem(STORAGE_KEY, activeModule);
+    if (activeApp) {
+      localStorage.setItem(STORAGE_KEY, activeApp);
     } else {
       localStorage.removeItem(STORAGE_KEY);
     }
-  }, [activeModule]);
+  }, [activeApp]);
 
-  const setActiveModule = useCallback((name: string) => {
-    setActiveModuleState(name);
+  const setActiveApp = useCallback((name: string) => {
+    setActiveAppState(name);
   }, []);
 
-  const clearActiveModule = useCallback(() => {
-    setActiveModuleState(null);
+  const clearActiveApp = useCallback(() => {
+    setActiveAppState(null);
   }, []);
 
   return (
-    <ModuleContext.Provider value={{ activeModule, setActiveModule, clearActiveModule }}>
+    <AppContext.Provider value={{ activeApp, setActiveApp, clearActiveApp }}>
       {children}
-    </ModuleContext.Provider>
+    </AppContext.Provider>
   );
 }
 
-export function useModule(): ModuleContextValue {
-  const ctx = useContext(ModuleContext);
+export function useApp(): AppContextValue {
+  const ctx = useContext(AppContext);
   if (!ctx) {
-    throw new Error('useModule must be used within a ModuleProvider');
+    throw new Error('useApp must be used within an AppProvider');
   }
   return ctx;
 }

@@ -52,7 +52,7 @@ interface ModelConfig {
 
 | Field      | Type                          | Default     | Description                                                                                                              |
 | ---------- | ----------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `name`     | `string`                      | —           | **Required.** Model identifier. Combined with module as `module.name` for qualified name.                                |
+| `name`     | `string`                      | —           | **Required.** Model identifier. Combined with app name as `app.name` for qualified name.                                 |
 | `label`    | `string`                      | `undefined` | Human-readable name. If omitted, derived from `name`.                                                                    |
 | `naming`   | `string`                      | `undefined` | Field name to use as the record's display title.                                                                         |
 | `scope`    | `ScopeConfig`                 | `undefined` | Scope to auto-filter queries by the user's active scope value. Models without `scope` are global. See ScopeConfig below. |
@@ -422,10 +422,10 @@ interface LinkFieldConfig extends BaseFieldOptions {
 }
 ```
 
-| Option     | Type      | Default     | Description                                          |
-| ---------- | --------- | ----------- | ---------------------------------------------------- |
-| `model`    | `string`  | —           | **Required.** Qualified model name (`module.model`). |
-| `nullable` | `boolean` | `undefined` | Allow null (no foreign key constraint).              |
+| Option     | Type      | Default     | Description                                       |
+| ---------- | --------- | ----------- | ------------------------------------------------- |
+| `model`    | `string`  | —           | **Required.** Qualified model name (`app.model`). |
+| `nullable` | `boolean` | `undefined` | Allow null (no foreign key constraint).           |
 
 Foreign key to another model. Stored as the referenced record's ID.
 
@@ -524,7 +524,7 @@ Enables hierarchical queries (ancestors, descendants, subtree).
 
 ## Extensions
 
-Extensions add fields and hooks to models defined in **other** modules. Use `defineExtension()` to extend another module's model. Use `defineHooks()` to add hooks to your own model (same module).
+Extensions add fields and hooks to models defined in **other** apps. Use `defineExtension()` to extend another app's model. Use `defineHooks()` to add hooks to your own model (same app).
 
 ```typescript
 import { defineExtension } from 'rangka';

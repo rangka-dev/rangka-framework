@@ -22,8 +22,8 @@ There is no build step that generates files. No scaffolding you need to maintain
 Every piece of your application is a `define*()` call in a TypeScript file:
 
 ```
-modules/sales/
-├── module.ts            → defineModule()     # "this domain exists"
+apps/sales/
+├── app.ts            → defineApp()     # "this domain exists"
 ├── models/order.ts      → defineModel()      # "this data entity exists"
 ├── pages/orders.ts      → definePage()       # "this screen exists"
 ├── hooks/order.ts       → defineHooks()      # "run this code when data changes"
@@ -37,7 +37,7 @@ These are pure declarations. They don't execute anything on their own. They desc
 
 When you run `rangka start`, three things happen in sequence:
 
-**1. Discovery.** The framework scans your `modules/` folder and any Rangka packages in `node_modules`. It finds every `define*()` export, reads the dependency graph, and loads modules in the right order.
+**1. Discovery.** The framework scans your `apps/` folder and any Rangka packages in `node_modules`. It finds every `define*()` export, reads the dependency graph, and loads apps in the right order.
 
 **2. Validation.** Before anything runs, the framework checks that your definitions are consistent. Do all model references point to real models? Are there circular dependencies? Invalid field types? You learn about problems at startup, not at runtime when a user hits a broken screen.
 
