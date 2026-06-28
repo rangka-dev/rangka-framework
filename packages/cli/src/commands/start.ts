@@ -33,7 +33,7 @@ export const startCommand = defineCommand({
 
     try {
       const scanner = new ProjectScanner(root);
-      const { app, rangkaConfig } = await scanner.scan();
+      const { app, externalApps, rangkaConfig } = await scanner.scan();
       console.log(`[rangka] Discovered app with ${app.schemas.length} models`);
 
       const dbConfig = rangkaConfig.database;
@@ -49,7 +49,7 @@ export const startCommand = defineCommand({
 
       result = await boot({
         discoverySource: new MemoryDiscoverySource([]),
-        apps: [app],
+        apps: [app, ...externalApps],
         database: databaseConfig,
         skipAutoSync: args['no-sync'],
         server: { port: serverPort },

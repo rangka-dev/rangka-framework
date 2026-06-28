@@ -53,7 +53,6 @@ function createModel(fields: ResolvedModel['fields']): ResolvedModel {
   return {
     qualifiedName: 'sales.invoice',
     app: 'sales',
-    module: 'sales',
     name: 'invoice',
     auditLog: false,
     traits: [],

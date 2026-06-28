@@ -5,11 +5,10 @@ import type { ResolvedModel } from '../../schema/types.js';
 import type { PageDefinition } from '@rangka/shared';
 
 function makeModel(qualifiedName: string, fieldNames: string[]): ResolvedModel {
-  const [module, name] = qualifiedName.split('.');
+  const [app, name] = qualifiedName.split('.');
   return {
     qualifiedName,
-    app: 'test-app',
-    module,
+    app,
     name,
     auditLog: false,
     traits: [],
@@ -29,9 +28,9 @@ describe('validatePageBindings', () => {
   ]);
 
   it('passes when bind.field exists on source model', () => {
-    const pages: Array<{ module: string; page: PageDefinition }> = [
+    const pages: Array<{ app: string; page: PageDefinition }> = [
       {
-        module: 'sales',
+        app: 'sales',
         page: {
           key: 'sales.orders',
           label: 'Orders',
@@ -54,9 +53,9 @@ describe('validatePageBindings', () => {
   });
 
   it('warns when bind.field does not exist on source model', () => {
-    const pages: Array<{ module: string; page: PageDefinition }> = [
+    const pages: Array<{ app: string; page: PageDefinition }> = [
       {
-        module: 'sales',
+        app: 'sales',
         page: {
           key: 'sales.orders',
           label: 'Orders',
@@ -80,9 +79,9 @@ describe('validatePageBindings', () => {
   });
 
   it('warns when widget has bind but no source in scope', () => {
-    const pages: Array<{ module: string; page: PageDefinition }> = [
+    const pages: Array<{ app: string; page: PageDefinition }> = [
       {
-        module: 'sales',
+        app: 'sales',
         page: {
           key: 'sales.orphan',
           label: 'Orphan',
@@ -97,9 +96,9 @@ describe('validatePageBindings', () => {
   });
 
   it('inherits source context from ancestors', () => {
-    const pages: Array<{ module: string; page: PageDefinition }> = [
+    const pages: Array<{ app: string; page: PageDefinition }> = [
       {
-        module: 'sales',
+        app: 'sales',
         page: {
           key: 'sales.nested',
           label: 'Nested',
@@ -129,9 +128,9 @@ describe('validatePageBindings', () => {
   });
 
   it('child source overrides parent source', () => {
-    const pages: Array<{ module: string; page: PageDefinition }> = [
+    const pages: Array<{ app: string; page: PageDefinition }> = [
       {
-        module: 'sales',
+        app: 'sales',
         page: {
           key: 'sales.nested-sources',
           label: 'Nested Sources',
@@ -157,9 +156,9 @@ describe('validatePageBindings', () => {
   });
 
   it('warns when bind references parent source field in child source context', () => {
-    const pages: Array<{ module: string; page: PageDefinition }> = [
+    const pages: Array<{ app: string; page: PageDefinition }> = [
       {
-        module: 'sales',
+        app: 'sales',
         page: {
           key: 'sales.wrong-context',
           label: 'Wrong Context',
@@ -187,9 +186,9 @@ describe('validatePageBindings', () => {
   });
 
   it('skips validation for bind.expression (no field reference)', () => {
-    const pages: Array<{ module: string; page: PageDefinition }> = [
+    const pages: Array<{ app: string; page: PageDefinition }> = [
       {
-        module: 'sales',
+        app: 'sales',
         page: {
           key: 'sales.computed',
           label: 'Computed',
@@ -209,9 +208,9 @@ describe('validatePageBindings', () => {
   });
 
   it('does not warn when source model is unknown (handled by validatePageSources)', () => {
-    const pages: Array<{ module: string; page: PageDefinition }> = [
+    const pages: Array<{ app: string; page: PageDefinition }> = [
       {
-        module: 'sales',
+        app: 'sales',
         page: {
           key: 'sales.unknown-model',
           label: 'Unknown',
@@ -231,9 +230,9 @@ describe('validatePageBindings', () => {
   });
 
   it('validates multiple pages', () => {
-    const pages: Array<{ module: string; page: PageDefinition }> = [
+    const pages: Array<{ app: string; page: PageDefinition }> = [
       {
-        module: 'sales',
+        app: 'sales',
         page: {
           key: 'sales.page1',
           label: 'Page 1',
@@ -247,7 +246,7 @@ describe('validatePageBindings', () => {
         },
       },
       {
-        module: 'sales',
+        app: 'sales',
         page: {
           key: 'sales.page2',
           label: 'Page 2',

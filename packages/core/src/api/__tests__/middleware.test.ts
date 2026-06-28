@@ -9,7 +9,6 @@ function makeModel(): ResolvedModel {
   return {
     qualifiedName: 'test.item',
     app: 'test',
-    module: 'test',
     name: 'item',
     auditLog: false,
     traits: [],

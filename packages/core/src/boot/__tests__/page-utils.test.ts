@@ -113,9 +113,9 @@ describe('validatePageSources', () => {
   const knownModels = new Set(['sales.order', 'sales.customer', 'contacts.contact']);
 
   it('catches unresolved models in data widget', () => {
-    const pages: Array<{ module: string; page: PageDefinition }> = [
+    const pages: Array<{ app: string; page: PageDefinition }> = [
       {
-        module: 'sales',
+        app: 'sales',
         page: {
           key: 'sales.broken',
           label: 'Broken',
@@ -138,9 +138,9 @@ describe('validatePageSources', () => {
   });
 
   it('catches unresolved models in nested children', () => {
-    const pages: Array<{ module: string; page: PageDefinition }> = [
+    const pages: Array<{ app: string; page: PageDefinition }> = [
       {
-        module: 'sales',
+        app: 'sales',
         page: {
           key: 'sales.nested',
           label: 'Nested',
@@ -168,9 +168,9 @@ describe('validatePageSources', () => {
   });
 
   it('catches unresolved models in table source', () => {
-    const pages: Array<{ module: string; page: PageDefinition }> = [
+    const pages: Array<{ app: string; page: PageDefinition }> = [
       {
-        module: 'sales',
+        app: 'sales',
         page: {
           key: 'sales.table',
           label: 'Table',
@@ -192,9 +192,9 @@ describe('validatePageSources', () => {
   });
 
   it('passes when all models exist', () => {
-    const pages: Array<{ module: string; page: PageDefinition }> = [
+    const pages: Array<{ app: string; page: PageDefinition }> = [
       {
-        module: 'sales',
+        app: 'sales',
         page: {
           key: 'sales.orders',
           label: 'Orders',

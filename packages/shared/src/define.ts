@@ -1,5 +1,5 @@
 import type { ModelConfig } from './types/schema.js';
-import type { ModuleConfig } from './types/app.js';
+import type { AppConfig } from './types/app.js';
 import type { HooksConfig } from './types/hooks.js';
 import type { ExtensionConfig } from './types/extension.js';
 import type { ServiceConfig } from './types/service.js';
@@ -32,12 +32,12 @@ export function defineModel<T extends ModelConfig>(config: T): T {
 }
 
 /**
- * Declares a module — top-level organizational unit that groups models, pages,
+ * Declares an app — top-level organizational unit that groups models, pages,
  * services, and navigation under a namespace.
  *
  * @example
  * ```ts
- * export default defineModule({
+ * export default defineApp({
  *   name: 'sales',
  *   label: 'Sales',
  *   icon: 'shopping-cart',
@@ -47,7 +47,7 @@ export function defineModel<T extends ModelConfig>(config: T): T {
  * });
  * ```
  */
-export function defineModule<T extends ModuleConfig>(config: T): T {
+export function defineApp<T extends AppConfig>(config: T): T {
   return config;
 }
 
@@ -213,6 +213,7 @@ export function defineRoles<T extends RolesConfig>(config: T): T {
  * Framework configuration for database connection and server settings.
  */
 export interface RangkaConfig {
+  apps?: string[];
   database?:
     | {
         dialect: 'pg';

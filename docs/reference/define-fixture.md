@@ -150,10 +150,10 @@ loadFixtures(db, definitions, { force: true });
 
 ## File Discovery
 
-Fixtures are discovered from the `fixtures/` directory in each module:
+Fixtures are discovered from the `fixtures/` directory in each app:
 
 ```
-modules/accounting/
+apps/accounting/
   fixtures/
     account-type.ts     # defineFixture({ model: 'accounting.account-type', ... })
     account.ts          # defineFixture({ model: 'accounting.account', ... })
@@ -163,7 +163,7 @@ modules/accounting/
 ## Loading Order
 
 1. Sorted by dependency order via topological sort based on `depends` declarations
-2. Cross-module dependencies are resolved globally (not per-module)
+2. Cross-app dependencies are resolved globally (not per-app)
 
 ## Example: Full Fixture Set
 

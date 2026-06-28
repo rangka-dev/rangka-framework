@@ -19,42 +19,39 @@ function makeApp(overrides: Partial<DiscoveredApp> = {}): DiscoveredApp {
 describe('validateApps', () => {
   it('passes with valid definitions', () => {
     const app = makeApp({
-      schemas: [
-        { module: 'test', schema: { name: 'item', fields: { title: { type: 'string' } } } },
-      ],
-      modules: [{ name: 'test', label: 'Test Module' }],
+      schemas: [{ app: 'test', schema: { name: 'item', fields: { title: { type: 'string' } } } }],
     });
     expect(() => validateApps([app])).not.toThrow();
   });
 
   it('throws DefinitionValidationError for invalid model', () => {
     const app = makeApp({
-      schemas: [{ module: 'test', schema: { name: '', fields: {} } as any }],
+      schemas: [{ app: 'test', schema: { name: '', fields: {} } as any }],
     });
     expect(() => validateApps([app])).toThrow(DefinitionValidationError);
   });
 
-  it('throws DefinitionValidationError for reserved module name', () => {
+  it('throws DefinitionValidationError for reserved app name', () => {
     const app = makeApp({
-      modules: [{ name: 'core', label: 'Core' }],
+      config: { name: 'rangka_bad', label: 'Bad' },
     });
     expect(() => validateApps([app])).toThrow(DefinitionValidationError);
   });
 
   it('throws DefinitionValidationError for invalid page', () => {
     const app = makeApp({
-      pages: [{ module: 'test', page: { key: '', label: 'Bad', widgets: [] } as any }],
+      pages: [{ app: 'test', page: { key: '', label: 'Bad', widgets: [] } as any }],
     });
     expect(() => validateApps([app])).toThrow(DefinitionValidationError);
   });
 
   it('aggregates multiple errors across definitions', () => {
     const app = makeApp({
+      config: { name: 'rangka_bad', label: 'Bad' },
       schemas: [
-        { module: 'test', schema: { name: '', fields: {} } as any },
-        { module: 'test', schema: { name: 'valid', fields: { x: { type: 'invalid' } } } as any },
+        { app: 'rangka_bad', schema: { name: '', fields: {} } as any },
+        { app: 'rangka_bad', schema: { name: 'valid', fields: { x: { type: 'invalid' } } } as any },
       ],
-      modules: [{ name: 'rangka_bad', label: 'Bad' }],
     });
     try {
       validateApps([app]);
@@ -88,7 +85,7 @@ describe('validateApps', () => {
 
   it('includes file path in error', () => {
     const app = makeApp({
-      schemas: [{ module: 'test', schema: { name: '', fields: {} } as any }],
+      schemas: [{ app: 'test', schema: { name: '', fields: {} } as any }],
     });
     try {
       validateApps([app]);

@@ -17,14 +17,13 @@ export function mergeSchemas(loadResult: SchemaLoadResult): MergeResult {
   const modelMap = new Map<string, ResolvedModel>();
 
   // Phase 1: Build base models from schemas (trait fields + declared fields)
-  for (const { app, module, schema } of loadResult.schemas) {
-    const qualifiedName = `${module}.${schema.name}`;
+  for (const { app, schema } of loadResult.schemas) {
+    const qualifiedName = `${app}.${schema.name}`;
     const fields = buildBaseFields(app, schema);
 
     modelMap.set(qualifiedName, {
       qualifiedName,
       app,
-      module,
       name: schema.name,
       label: schema.label,
       naming: schema.naming,

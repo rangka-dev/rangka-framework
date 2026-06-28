@@ -29,7 +29,7 @@ import {
 } from './openapi-schema.js';
 import { createMetaBootHandler } from './meta-handler.js';
 import type { MetaBootContext } from './meta-handler.js';
-import type { ModuleConfig, PageDefinition, WidgetDefinitionMeta } from '@rangka/shared';
+import type { AppConfig, PageDefinition, WidgetDefinitionMeta } from '@rangka/shared';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -40,8 +40,8 @@ export interface RouteGeneratorOptions {
   eventBus?: EventBus;
   scopeRegistry?: ScopeRegistry;
   config?: Record<string, unknown>;
-  pages?: Array<{ module: string; page: PageDefinition }>;
-  modules?: ModuleConfig[];
+  pages?: Array<{ app: string; page: PageDefinition }>;
+  apps?: AppConfig[];
   widgets?: WidgetDefinitionMeta[];
   adapterRegistry?: import('../plugins/adapter-registry.js').AdapterRegistry;
   adapterCapabilities?: Record<string, import('../plugins/types.js').AdapterCapability[]>;
@@ -147,12 +147,12 @@ function registerMetaRoute(
   permissionRegistry?: PermissionRegistry,
   options?: RouteGeneratorOptions,
 ) {
-  if (!permissionRegistry || !options?.pages || !options?.modules) return;
+  if (!permissionRegistry || !options?.pages || !options?.apps) return;
 
   const metaCtx: MetaBootContext = {
     schemaRegistry: registry,
     pages: options.pages,
-    modules: options.modules,
+    apps: options.apps,
     widgets: options.widgets,
   };
 

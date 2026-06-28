@@ -47,7 +47,7 @@ interface ExternalModelConfig {
 
 | Field     | Type                          | Default             | Description                                                                                                       |
 | --------- | ----------------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `name`    | `string`                      | —                   | **Required.** Model identifier. Combined with module as `module.name`.                                            |
+| `name`    | `string`                      | —                   | **Required.** Model identifier. Combined with app name as `app.name`.                                             |
 | `label`   | `string`                      | Derived from `name` | Human-readable display name.                                                                                      |
 | `adapter` | `string`                      | —                   | **Required.** Name of a registered adapter from a plugin's `provides.adapters`.                                   |
 | `source`  | `Record<string, unknown>`     | —                   | **Required.** Adapter-specific source configuration. The framework passes this to the adapter on every operation. |
@@ -93,13 +93,13 @@ The adapter validates the source shape at boot or on first access. If the source
 
 The framework generates API routes based on what the adapter declares it can do. If an adapter only supports read operations, the model is automatically read-only.
 
-| Adapter capability | API route generated       | HTTP method |
-| ------------------ | ------------------------- | ----------- |
-| `get`              | `/api/:module/:model/:id` | GET         |
-| `list`             | `/api/:module/:model`     | GET         |
-| `create`           | `/api/:module/:model`     | POST        |
-| `update`           | `/api/:module/:model/:id` | PUT         |
-| `delete`           | `/api/:module/:model/:id` | DELETE      |
+| Adapter capability | API route generated    | HTTP method |
+| ------------------ | ---------------------- | ----------- |
+| `get`              | `/api/:app/:model/:id` | GET         |
+| `list`             | `/api/:app/:model`     | GET         |
+| `create`           | `/api/:app/:model`     | POST        |
+| `update`           | `/api/:app/:model/:id` | PUT         |
+| `delete`           | `/api/:app/:model/:id` | DELETE      |
 
 Routes for missing capabilities return `405 Method Not Allowed`.
 
@@ -200,9 +200,9 @@ The framework resolves cross-source relationships by fetching the foreign record
 External models live in the same `models/` directory as internal models.
 
 ```
-modules/
+apps/
   crm/
-    module.ts
+    app.ts
     models/
       customer.ts    ← defineExternalModel
       lead.ts        ← defineExternalModel

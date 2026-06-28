@@ -2,21 +2,21 @@
 status: stable
 since: 0.1.0
 last-updated: 2026-06-12
-description: Sidebar navigation derived from module definitions
+description: Sidebar navigation derived from app definitions
 ---
 
 # Navigation
 
-Navigation builds itself from your module definitions. The sidebar, breadcrumbs, and command palette all derive from the `navigation` arrays you write in `defineModule()`. You do not configure them separately.
+Navigation builds itself from your app definitions. The sidebar, breadcrumbs, and command palette all derive from the `navigation` arrays you write in `defineApp()`. You do not configure them separately.
 
 This means the navigation is always in sync with what actually exists. If you add a page, it appears. If a user lacks permission, it disappears. The structure reflects reality.
 
 ## How it works
 
-Each module declares sections and items:
+Each app declares sections and items:
 
 ```typescript
-defineModule({
+defineApp({
   name: 'accounting',
   label: 'Accounting',
   icon: 'calculator',
@@ -41,7 +41,7 @@ defineModule({
 });
 ```
 
-At boot the framework collects all modules, sorts them by `order`, filters items by the user's permissions, removes empty sections, and sends the result to the frontend. The shell renders it directly.
+At boot the framework collects all apps, sorts them by `order`, filters items by the user's permissions, removes empty sections, and sends the result to the frontend. The shell renders it directly.
 
 ## Structure
 
@@ -58,21 +58,21 @@ interface NavigationItem {
 }
 ```
 
-## Module ordering
+## App ordering
 
 The `order` field controls sidebar position. Lower values appear higher:
 
 ```typescript
-defineModule({ name: 'sales', order: 10 });
-defineModule({ name: 'accounting', order: 20 });
-defineModule({ name: 'inventory', order: 30 });
+defineApp({ name: 'sales', order: 10 });
+defineApp({ name: 'accounting', order: 20 });
+defineApp({ name: 'inventory', order: 30 });
 ```
 
-Modules without `order` sort alphabetically after ordered ones.
+Apps without `order` sort alphabetically after ordered ones.
 
 ## Settings pages
 
-Sections named `_settings` do not appear in the module's main navigation. They are collected into a global Settings area:
+Sections named `_settings` do not appear in the app's main navigation. They are collected into a global Settings area:
 
 ```typescript
 navigation: [
@@ -89,9 +89,9 @@ navigation: [
 
 This keeps daily-use navigation clean while configuration lives in a dedicated place.
 
-## Cross-module references
+## Cross-app references
 
-You can reference pages from other modules in your navigation:
+You can reference pages from other apps in your navigation:
 
 ```typescript
 navigation: [
@@ -126,4 +126,4 @@ For `record` type pages the breadcrumb includes the parent collection and the re
 
 ## Command palette
 
-All navigation items are indexed for Cmd+K search automatically. Users can search by label, module name, or page key.
+All navigation items are indexed for Cmd+K search automatically. Users can search by label, app name, or page key.

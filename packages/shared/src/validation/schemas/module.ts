@@ -17,21 +17,19 @@ const scopeDefinitionSchema = z.object({
   switchable: z.boolean().optional(),
 });
 
-const RESERVED_MODULE_NAMES = ['core'] as const;
+const RESERVED_APP_NAMES = ['core'] as const;
 
-export const moduleSchema = z.object({
+export const appSchema = z.object({
   name: z
     .string()
     .min(1)
     .refine(
       (name) =>
-        !RESERVED_MODULE_NAMES.includes(
-          name.toLowerCase() as (typeof RESERVED_MODULE_NAMES)[number],
-        ),
-      { error: 'Module name is reserved' },
+        !RESERVED_APP_NAMES.includes(name.toLowerCase() as (typeof RESERVED_APP_NAMES)[number]),
+      { error: 'App name is reserved' },
     )
     .refine((name) => !name.toLowerCase().startsWith('rangka'), {
-      error: 'Module names starting with "rangka" are reserved',
+      error: 'App names starting with "rangka" are reserved',
     }),
   label: z.string().min(1),
   description: z.string().optional(),
@@ -44,10 +42,10 @@ export const moduleSchema = z.object({
   navigation: z.array(navigationSectionSchema).optional(),
 });
 
-export type ModuleConfig = z.infer<typeof moduleSchema>;
+export type AppConfig = z.infer<typeof appSchema>;
 
-export function validateModule(raw: unknown) {
-  return moduleSchema.safeParse(raw);
+export function validateApp(raw: unknown) {
+  return appSchema.safeParse(raw);
 }
 
 export { navigationItemSchema, navigationSectionSchema, scopeDefinitionSchema };

@@ -12,7 +12,6 @@ import type { ResolvedPermissions } from '../types.js';
 const mockModel: ResolvedModel = {
   qualifiedName: 'sales.customer',
   app: 'sales',
-  module: 'sales',
   name: 'customer',
   auditLog: false,
   traits: [],
@@ -23,7 +22,6 @@ const mockModel: ResolvedModel = {
 const mockModelWithTimestamped: ResolvedModel = {
   qualifiedName: 'sales.order',
   app: 'sales',
-  module: 'sales',
   name: 'order',
   auditLog: false,
   traits: ['timestamped'],

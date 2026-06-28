@@ -113,7 +113,7 @@ describe('boot', () => {
         [],
         [
           {
-            module: 'auth',
+            app: 'auth',
             schema: { name: 'user', fields: { email: field.string({ required: true }) } },
           },
         ],
@@ -123,7 +123,7 @@ describe('boot', () => {
         ['core'],
         [
           {
-            module: 'sales',
+            app: 'sales',
             schema: {
               name: 'customer',
               label: 'Customer',
@@ -132,7 +132,7 @@ describe('boot', () => {
             },
           },
           {
-            module: 'sales',
+            app: 'sales',
             schema: {
               name: 'invoice',
               label: 'Sales Invoice',
@@ -150,7 +150,7 @@ describe('boot', () => {
         ['sales'],
         [
           {
-            module: 'custom',
+            app: 'custom',
             schema: { name: 'task', fields: { title: field.string() } },
           },
         ],
@@ -210,7 +210,7 @@ describe('boot', () => {
         ['core'],
         [
           {
-            module: 'sales',
+            app: 'sales',
             schema: {
               name: 'order',
               fields: { total: field.decimal() },
@@ -239,7 +239,7 @@ describe('boot', () => {
         [],
         [
           {
-            module: 'crm',
+            app: 'crm',
             schema: {
               name: 'contact',
               fields: { name: field.string({ required: true }), email: field.string() },
@@ -290,7 +290,7 @@ describe('boot', () => {
           [],
           [
             {
-              module: 'crm',
+              app: 'crm',
               schema: { name: 'lead', fields: { name: field.string() } },
             },
           ],

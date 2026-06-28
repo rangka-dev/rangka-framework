@@ -227,14 +227,14 @@ export class SubprocessManager extends EventEmitter {
 
   async introspect(
     type: IntrospectType,
-    module?: string,
+    app?: string,
   ): Promise<{ data: unknown[]; count: number }> {
     if (!this.child || this.phase !== 'serving') {
       throw new Error('Framework not running');
     }
 
     const requestId = crypto.randomUUID();
-    const msg: ParentMessage = { type: 'parent:introspect', requestId, resource: type, module };
+    const msg: ParentMessage = { type: 'parent:introspect', requestId, resource: type, app };
     return this.sendRequest(requestId, msg) as Promise<{ data: unknown[]; count: number }>;
   }
 

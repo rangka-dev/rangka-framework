@@ -20,10 +20,10 @@ If you just need to arrange built-in widgets differently, use layout widgets (`s
 
 ## Creating a custom widget
 
-Custom widgets live in your module's `widgets/` directory. Each file exports a `meta` and `component` as its default export.
+Custom widgets live in your app's `widgets/` directory. Each file exports a `meta` and `component` as its default export.
 
 ```tsx
-// modules/sales/widgets/pipeline-board.tsx
+// widgets/pipeline-board.tsx
 import { defineWidget } from '@rangka/shared';
 
 const meta = defineWidget({
@@ -228,7 +228,7 @@ Run `rangka build` to compile your widgets:
 rangka build
 ```
 
-This scans `modules/*/widgets/`, bundles each widget with its npm dependencies, generates Tailwind CSS, and outputs everything to `.rangka/`. Run this after creating or modifying a widget.
+This scans `apps/*/widgets/`, bundles each widget with its npm dependencies, generates Tailwind CSS, and outputs everything to `.rangka/`. Run this after creating or modifying a widget.
 
 At runtime, `rangka start` serves the bundles and the shell loads them on demand when a page references them.
 
@@ -250,7 +250,7 @@ The following are not yet supported:
 - **`useAction()` hook** — programmatic action dispatch from custom widgets is not available yet
 - **`useModelRecord()` hook** — single record fetch is exposed but untested with custom widgets
 - **Server-side rendering** — custom widgets are client-only
-- **Hot module replacement** — changes require a full `rangka build` + page reload
+- **Hot reload** — changes require a full `rangka build` + page reload
 - **Custom Tailwind plugins** — the build does not load a user Tailwind config
 - **`dark:` variant** — depends on how the shell applies dark mode
 - **Animations** — `animate-*` classes beyond Tailwind defaults are untested

@@ -17,14 +17,14 @@ describe('multi-module: dependency boot order', () => {
     if (bootResult.db) await bootResult.db.destroy();
   });
 
-  it('all 5 modules are loaded into registry', () => {
+  it('all 5 apps are loaded into registry', () => {
     const models = bootResult.registry.getAllModels();
-    const modules = new Set(models.map((m) => m.module));
-    expect(modules.has('sales')).toBe(true);
-    expect(modules.has('inventory')).toBe(true);
-    expect(modules.has('hr')).toBe(true);
-    expect(modules.has('accounting')).toBe(true);
-    expect(modules.has('project')).toBe(true);
+    const apps = new Set(models.map((m) => m.app));
+    expect(apps.has('sales')).toBe(true);
+    expect(apps.has('inventory')).toBe(true);
+    expect(apps.has('hr')).toBe(true);
+    expect(apps.has('accounting')).toBe(true);
+    expect(apps.has('project')).toBe(true);
   });
 
   it('sales module depends on inventory (loaded after)', () => {
@@ -43,8 +43,8 @@ describe('multi-module: dependency boot order', () => {
 
   it('core module is always included (built-in)', () => {
     const models = bootResult.registry.getAllModels();
-    const modules = new Set(models.map((m) => m.module));
-    expect(modules.has('core')).toBe(true);
+    const apps = new Set(models.map((m) => m.app));
+    expect(apps.has('core')).toBe(true);
   });
 
   it('all models have unique qualified names', () => {

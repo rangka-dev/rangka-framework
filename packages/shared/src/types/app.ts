@@ -1,4 +1,4 @@
-export type { ModuleConfig } from '../validation/schemas/module.js';
+export type { AppConfig } from '../validation/schemas/module.js';
 
 // These sub-types are inferred from Zod schemas
 import type * as z from 'zod';

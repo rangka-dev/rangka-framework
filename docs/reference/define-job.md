@@ -34,10 +34,10 @@ export default defineJob('accounting.reconcile-ledger', {
 function defineJob<T extends JobConfig>(name: string, config: T): { name: string } & T;
 ```
 
-| Parameter | Type        | Description                                                                             |
-| --------- | ----------- | --------------------------------------------------------------------------------------- |
-| `name`    | `string`    | **Required.** Unique job identifier in `{module}.{action}` format. Used when enqueuing. |
-| `config`  | `JobConfig` | **Required.** Job configuration and handler.                                            |
+| Parameter | Type        | Description                                                                          |
+| --------- | ----------- | ------------------------------------------------------------------------------------ |
+| `name`    | `string`    | **Required.** Unique job identifier in `{app}.{action}` format. Used when enqueuing. |
+| `config`  | `JobConfig` | **Required.** Job configuration and handler.                                         |
 
 ## JobConfig
 

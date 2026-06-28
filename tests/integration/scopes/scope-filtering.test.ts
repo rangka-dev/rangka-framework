@@ -14,12 +14,12 @@ let companyBId: string;
 
 async function bootScopeApp(): Promise<BootResult> {
   const scanner = new ProjectScanner(SCOPE_APP_ROOT);
-  const { app } = await scanner.scan();
+  const { app, externalApps } = await scanner.scan();
   const dbConfig = getTestDatabaseConfig();
 
   return boot({
     discoverySource: new MemoryDiscoverySource([]),
-    apps: [app],
+    apps: [app, ...externalApps],
     database: {
       host: dbConfig.host,
       port: dbConfig.port,

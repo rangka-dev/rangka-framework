@@ -25,7 +25,6 @@ function schemaToResolvedModel(schema: {
   return {
     qualifiedName: `core.${schema.name}`,
     app: 'core',
-    module: 'core',
     name: schema.name,
     label: schema.label,
     auditLog: false,
@@ -51,7 +50,7 @@ export function getCoreApp(): DiscoveredApp {
       label: 'Core',
     },
     schemas: coreSchemas.map((s) => ({
-      module: 'core',
+      app: 'core',
       schema: s,
     })),
     extensions: [],

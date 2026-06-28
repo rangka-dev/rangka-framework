@@ -12,23 +12,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import type { AppSidebarModule } from './types';
+import type { AppSidebarApp } from './types';
 
-interface ModuleSwitcherProps {
-  modules: AppSidebarModule[];
-  activeModule?: string;
-  onModuleSwitch: (name: string) => void;
-  onAllModules?: () => void;
+interface AppSwitcherProps {
+  apps: AppSidebarApp[];
+  activeApp?: string;
+  onAppSwitch: (name: string) => void;
+  onAllApps?: () => void;
 }
 
-export function ModuleSwitcher({
-  modules,
-  activeModule,
-  onModuleSwitch,
-  onAllModules,
-}: ModuleSwitcherProps) {
+export function AppSwitcher({ apps, activeApp, onAppSwitch, onAllApps }: AppSwitcherProps) {
   const { isMobile } = useSidebar();
-  const active = modules.find((m) => m.name === activeModule) ?? modules[0];
+  const active = apps.find((m) => m.name === activeApp) ?? apps[0];
 
   if (!active) return null;
 
@@ -56,10 +51,10 @@ export function ModuleSwitcher({
             side={isMobile ? 'bottom' : 'bottom'}
             sideOffset={4}
           >
-            {modules.map((mod) => (
+            {apps.map((mod) => (
               <DropdownMenuItem
                 key={mod.name}
-                onClick={() => onModuleSwitch(mod.name)}
+                onClick={() => onAppSwitch(mod.name)}
                 className="gap-2 p-2"
               >
                 <div className="flex size-6 items-center justify-center rounded-md border">
@@ -68,14 +63,14 @@ export function ModuleSwitcher({
                 {mod.label}
               </DropdownMenuItem>
             ))}
-            {onAllModules && (
+            {onAllApps && (
               <>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={onAllModules} className="gap-2 p-2">
+                <DropdownMenuItem onClick={onAllApps} className="gap-2 p-2">
                   <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
                     <LayoutGridIcon />
                   </div>
-                  All modules
+                  All apps
                 </DropdownMenuItem>
               </>
             )}

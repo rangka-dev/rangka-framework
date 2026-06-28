@@ -107,7 +107,6 @@ describe('modelToSchemaComponent', () => {
   const baseModel: ResolvedModel = {
     qualifiedName: 'sales.customer',
     app: 'basic',
-    module: 'sales',
     name: 'customer',
     label: 'Customer',
     auditLog: false,

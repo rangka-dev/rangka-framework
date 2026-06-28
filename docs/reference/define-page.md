@@ -56,7 +56,7 @@ interface PageDefinition {
 
 | Field     | Type         | Default     | Description                                                                                    |
 | --------- | ------------ | ----------- | ---------------------------------------------------------------------------------------------- |
-| `key`     | string       | —           | Unique identifier. Format: `module.name`.                                                      |
+| `key`     | string       | —           | Unique identifier. Format: `app.name`.                                                         |
 | `label`   | string       | —           | Page title. Displayed in breadcrumbs and tab title.                                            |
 | `path`    | string       | auto        | Custom URL path. Auto-generated from key if omitted.                                           |
 | `layout`  | enum         | `'default'` | Page layout mode. `default` adds padding. `full` removes all padding for edge-to-edge content. |
@@ -173,7 +173,7 @@ See [Widget Builder reference](/reference/widget-builder) for the full `widget` 
 
 The framework validates pages at startup:
 
-- Warns about duplicate page keys across modules.
+- Warns about duplicate page keys across apps.
 - Warns about source models that do not exist in the schema registry.
 - Warns about bind.field references that do not exist on the source model in scope.
 

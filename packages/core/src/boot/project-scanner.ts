@@ -1,7 +1,7 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import type {
-  ModuleConfig,
+  AppConfig,
   ModelConfig,
   HooksConfig,
   ExtensionConfig,
@@ -19,6 +19,7 @@ import { validatePageSources, detectDuplicatePageKeys } from './page-utils.js';
 
 export interface ProjectScanResult {
   app: DiscoveredApp;
+  externalApps: DiscoveredApp[];
   rangkaConfig: RangkaConfig;
   warnings: ScanWarning[];
 }
@@ -42,58 +43,105 @@ export class ProjectScanner {
   constructor(private readonly root: string) {}
 
   /**
-   * Scans the project root and returns a fully-assembled DiscoveredApp
-   * along with the rangka.config.ts settings.
+   * Scans the project root and returns the local app plus any external
+   * apps found in the apps/ directory (as listed in rangka.config.ts).
    */
   async scan(): Promise<ProjectScanResult> {
     const rangkaConfig = await this.loadRangkaConfig();
-    const modules = await this.scanModules();
+    const warnings: ScanWarning[] = [];
 
-    // Collect artifacts from every module
+    // Scan the local (root) app
+    const localApp = await this.scanApp(this.root, warnings);
+
+    // Scan external apps from apps/ directory
+    const externalApps: DiscoveredApp[] = [];
+    const configuredApps = rangkaConfig.apps ?? [];
+
+    for (const appName of configuredApps) {
+      const appDir = path.join(this.root, 'apps', appName);
+      if (!(await this.dirExists(appDir))) {
+        warnings.push({
+          file: `apps/${appName}`,
+          message: `App "${appName}" listed in config but not found in apps/ directory`,
+        });
+        continue;
+      }
+      const externalApp = await this.scanApp(appDir, warnings);
+      externalApps.push(externalApp);
+    }
+
+    return { app: localApp, externalApps, rangkaConfig, warnings };
+  }
+
+  // ---------- App scanning ----------
+
+  /**
+   * Scans a single app directory (root or external) for app.ts and all artifacts.
+   */
+  private async scanApp(appDir: string, warnings: ScanWarning[]): Promise<DiscoveredApp> {
+    const appConfig = await this.loadAppConfig(appDir);
+    const appName = appConfig.name;
+
     const schemas: DiscoveredApp['schemas'] = [];
     const hooks: NonNullable<DiscoveredApp['hooks']> = [];
     const roles: NonNullable<DiscoveredApp['roles']> = [];
     const services: ServiceDefinition[] = [];
     const jobs: Array<{ name: string; config: JobConfig }> = [];
     const fixtures: FixtureDefinition[] = [];
-    const pages: Array<{ module: string; page: PageDefinition }> = [];
-    const warnings: ScanWarning[] = [];
+    const pages: Array<{ app: string; page: PageDefinition }> = [];
 
-    for (const moduleConfig of modules) {
-      await this.collectModuleArtifacts(moduleConfig, {
-        schemas,
-        hooks,
-        roles,
-        services,
-        jobs,
-        fixtures,
-        pages,
-        warnings,
-      });
+    // Models
+    const models = await this.scanModels(appDir);
+    for (const { schema, file } of models) {
+      schemas.push({ app: appName, schema, file });
     }
 
-    const extensions = await this.scanExtensions();
+    // Hooks
+    hooks.push(...(await this.scanHooksDirectory(appDir, appName)));
 
+    // Roles
+    const rolesConfig = await this.scanRoles(appDir);
+    if (rolesConfig) {
+      roles.push({ config: rolesConfig, app: appName });
+    }
+
+    // Services, jobs, fixtures, pages
+    services.push(...(await this.scanServices(appDir)));
+    jobs.push(...(await this.scanJobs(appDir)));
+    fixtures.push(...(await this.scanFixtures(appDir)));
+
+    const { pages: scannedPages, warnings: pageWarnings } = await this.scanPages(appDir, appName);
+    pages.push(...scannedPages);
+    warnings.push(...pageWarnings);
+
+    // Extensions
+    const extensions = await this.scanExtensions(appDir);
+
+    // Page validation
     this.warnAboutPageIssues(pages, schemas);
 
-    const app = this.buildDiscoveredApp(modules, {
+    const packageInfo: RangkaPackageInfo = {
+      packageName: appName,
+      path: appDir,
+      rangka: { type: 'app', entrypoint: './app.ts' },
+    };
+
+    return {
+      packageInfo,
+      config: appConfig,
       schemas,
       extensions,
-      modules,
-      hooks,
-      roles,
-      jobs,
-      services,
-      fixtures,
-      pages,
-    });
-
-    return { app, rangkaConfig, warnings };
+      hooks: hooks.length > 0 ? hooks : undefined,
+      roles: roles.length > 0 ? roles : undefined,
+      jobs: jobs.length > 0 ? jobs : undefined,
+      services: services.length > 0 ? services : undefined,
+      fixtures: fixtures.length > 0 ? fixtures : undefined,
+      pages: pages.length > 0 ? pages : undefined,
+    };
   }
 
   // ---------- Top-level loading ----------
 
-  /** Loads rangka.config.ts from the project root. */
   private async loadRangkaConfig(): Promise<RangkaConfig> {
     const configPath = path.join(this.root, 'rangka.config.ts');
     await this.assertFileExists(configPath, 'No rangka.config.ts found');
@@ -101,80 +149,17 @@ export class ProjectScanner {
     return mod.default;
   }
 
-  /** Discovers all sub-modules under the modules/ directory. */
-  private async scanModules(): Promise<ModuleConfig[]> {
-    const modulesDir = path.join(this.root, 'modules');
-    if (!(await this.dirExists(modulesDir))) return [];
-
-    const entries = await fs.readdir(modulesDir, { withFileTypes: true });
-    const modules: ModuleConfig[] = [];
-
-    for (const entry of entries) {
-      if (!entry.isDirectory()) continue;
-
-      const moduleFile = path.join(modulesDir, entry.name, 'module.ts');
-      if (!(await this.fileExists(moduleFile))) continue;
-
-      const mod = await this.importFile(moduleFile);
-      modules.push(mod.default);
-    }
-
-    return modules;
+  private async loadAppConfig(appDir: string): Promise<AppConfig> {
+    const appFile = path.join(appDir, 'app.ts');
+    await this.assertFileExists(appFile, `No app.ts found in ${appDir}`);
+    const mod = await this.importFile(appFile);
+    return mod.default;
   }
 
-  // ---------- Per-module artifact collection ----------
+  // ---------- Model scanning ----------
 
-  /**
-   * Scans a single module's subdirectories and pushes discovered
-   * artifacts into the corresponding accumulator arrays.
-   */
-  private async collectModuleArtifacts(
-    moduleConfig: ModuleConfig,
-    accumulators: {
-      schemas: DiscoveredApp['schemas'];
-      hooks: NonNullable<DiscoveredApp['hooks']>;
-      roles: NonNullable<DiscoveredApp['roles']>;
-      services: ServiceDefinition[];
-      jobs: Array<{ name: string; config: JobConfig }>;
-      fixtures: FixtureDefinition[];
-      pages: Array<{ module: string; page: PageDefinition }>;
-      warnings: ScanWarning[];
-    },
-  ): Promise<void> {
-    const moduleName = moduleConfig.name;
-
-    // Models — flat .ts files in models/
-    const models = await this.scanModels(moduleName);
-    for (const { schema, file } of models) {
-      accumulators.schemas.push({ module: moduleName, schema, file });
-    }
-
-    // Hooks — separate hooks/ directory
-    accumulators.hooks.push(...(await this.scanHooksDirectory(moduleName)));
-
-    // Roles — per-module roles.ts file
-    const roles = await this.scanRoles(moduleName);
-    if (roles) {
-      accumulators.roles.push({ config: roles, app: moduleName });
-    }
-
-    // Services, jobs, fixtures, pages
-    accumulators.services.push(...(await this.scanServices(moduleName)));
-    accumulators.jobs.push(...(await this.scanJobs(moduleName)));
-    accumulators.fixtures.push(...(await this.scanFixtures(moduleName)));
-
-    const { pages: scannedPages, warnings: pageWarnings } = await this.scanPages(moduleName);
-    accumulators.pages.push(...scannedPages);
-    accumulators.warnings.push(...pageWarnings);
-  }
-
-  // ---------- Model scanning (flat files) ----------
-
-  /** Scans .ts files in modules/<name>/models/ for model definitions. */
-  private async scanModels(
-    moduleName: string,
-  ): Promise<Array<{ schema: ModelConfig; file: string }>> {
-    const modelsDir = path.join(this.root, 'modules', moduleName, 'models');
+  private async scanModels(appDir: string): Promise<Array<{ schema: ModelConfig; file: string }>> {
+    const modelsDir = path.join(appDir, 'models');
     if (!(await this.dirExists(modelsDir))) return [];
 
     const entries = await fs.readdir(modelsDir, { withFileTypes: true });
@@ -191,16 +176,13 @@ export class ProjectScanner {
     return results;
   }
 
-  // ---------- Hooks scanning (separate directory) ----------
+  // ---------- Hooks scanning ----------
 
-  /**
-   * Scans .ts files in modules/<name>/hooks/ for hook definitions.
-   * Each file exports defineHooks(model, config) which returns { model, ...config }.
-   */
   private async scanHooksDirectory(
-    moduleName: string,
+    appDir: string,
+    appName: string,
   ): Promise<Array<{ model: string; hooks: HooksConfig; file?: string }>> {
-    const hooksDir = path.join(this.root, 'modules', moduleName, 'hooks');
+    const hooksDir = path.join(appDir, 'hooks');
     if (!(await this.dirExists(hooksDir))) return [];
 
     const entries = await fs.readdir(hooksDir, { withFileTypes: true });
@@ -212,12 +194,12 @@ export class ProjectScanner {
         const mod = await this.importFile(path.join(hooksDir, entry.name));
         if (mod.default) {
           const { model, ...hooksConfig } = mod.default;
-          const qualifiedModel = model.includes('.') ? model : `${moduleName}.${model}`;
+          const qualifiedModel = model.includes('.') ? model : `${appName}.${model}`;
           result.push({ model: qualifiedModel, hooks: hooksConfig, file: entry.name });
         }
       } catch (err) {
         console.warn(
-          `[rangka] Failed to import hook file modules/${moduleName}/hooks/${entry.name}: ${(err as Error).message}`,
+          `[rangka] Failed to import hook file ${appName}/hooks/${entry.name}: ${(err as Error).message}`,
         );
       }
     }
@@ -225,11 +207,10 @@ export class ProjectScanner {
     return result;
   }
 
-  // ---------- Roles scanning (per-module file) ----------
+  // ---------- Roles scanning ----------
 
-  /** Loads modules/<name>/roles.ts if it exists. Returns the RolesConfig or null. */
-  private async scanRoles(moduleName: string): Promise<RolesConfig | null> {
-    const rolesFile = path.join(this.root, 'modules', moduleName, 'roles.ts');
+  private async scanRoles(appDir: string): Promise<RolesConfig | null> {
+    const rolesFile = path.join(appDir, 'roles.ts');
     if (!(await this.fileExists(rolesFile))) return null;
 
     const mod = await this.importFile(rolesFile);
@@ -238,50 +219,47 @@ export class ProjectScanner {
 
   // ---------- Other artifact scanners ----------
 
-  /** Scans .ts files in modules/<name>/services/ for service definitions. */
   private async scanServices(
-    moduleName: string,
+    appDir: string,
   ): Promise<Array<ServiceDefinition & { file?: string }>> {
-    const servicesDir = path.join(this.root, 'modules', moduleName, 'services');
+    const servicesDir = path.join(appDir, 'services');
     const items = await this.scanTsFilesWithFile<ServiceDefinition>(servicesDir);
     return items.map(({ value, file }) => ({ ...value, file }));
   }
 
-  /** Scans .ts files in modules/<name>/jobs/ for job definitions. */
   private async scanJobs(
-    moduleName: string,
+    appDir: string,
   ): Promise<Array<{ name: string; config: JobConfig; file?: string }>> {
-    const jobsDir = path.join(this.root, 'modules', moduleName, 'jobs');
+    const jobsDir = path.join(appDir, 'jobs');
     const items = await this.scanTsFilesWithFile<{ name: string } & JobConfig>(jobsDir);
     return items.map(({ value: { name, ...config }, file }) => ({ name, config, file }));
   }
 
-  /** Scans .ts files in modules/<name>/fixtures/ for fixture definitions. */
   private async scanFixtures(
-    moduleName: string,
+    appDir: string,
   ): Promise<Array<FixtureDefinition & { file?: string }>> {
-    const fixturesDir = path.join(this.root, 'modules', moduleName, 'fixtures');
+    const fixturesDir = path.join(appDir, 'fixtures');
     const items = await this.scanTsFilesWithFile<FixtureDefinition>(fixturesDir);
     return items.map(({ value, file }) => ({ ...value, file }));
   }
 
-  /** Scans .ts files in modules/<name>/pages/ for page definitions (with error handling). */
   private async scanPages(
-    moduleName: string,
+    appDir: string,
+    appName: string,
   ): Promise<{
-    pages: Array<{ module: string; page: PageDefinition; file?: string }>;
+    pages: Array<{ app: string; page: PageDefinition; file?: string }>;
     warnings: ScanWarning[];
   }> {
-    const pagesDir = path.join(this.root, 'modules', moduleName, 'pages');
+    const pagesDir = path.join(appDir, 'pages');
     if (!(await this.dirExists(pagesDir))) return { pages: [], warnings: [] };
 
     const entries = await fs.readdir(pagesDir, { withFileTypes: true });
-    const pages: Array<{ module: string; page: PageDefinition; file?: string }> = [];
+    const pages: Array<{ app: string; page: PageDefinition; file?: string }> = [];
     const warnings: ScanWarning[] = [];
 
     for (const entry of entries) {
       if (!entry.isFile() || !entry.name.endsWith('.ts')) continue;
-      const filePath = `modules/${moduleName}/pages/${entry.name}`;
+      const filePath = `${appName}/pages/${entry.name}`;
       try {
         const mod = await this.importFile(path.join(pagesDir, entry.name));
         if (mod.default) {
@@ -307,7 +285,7 @@ export class ProjectScanner {
             }
           }
 
-          pages.push({ module: moduleName, page, file: entry.name });
+          pages.push({ app: appName, page, file: entry.name });
         }
       } catch (err) {
         const msg = `Failed to import: ${(err as Error).message}`;
@@ -343,9 +321,8 @@ export class ProjectScanner {
     return issues;
   }
 
-  /** Scans extensions/ directory for extension definitions. */
-  private async scanExtensions(): Promise<DiscoveredApp['extensions']> {
-    const extensionsDir = path.join(this.root, 'extensions');
+  private async scanExtensions(appDir: string): Promise<DiscoveredApp['extensions']> {
+    const extensionsDir = path.join(appDir, 'extensions');
     if (!(await this.dirExists(extensionsDir))) return [];
 
     const entries = await fs.readdir(extensionsDir, { withFileTypes: true });
@@ -365,14 +342,13 @@ export class ProjectScanner {
 
   // ---------- Validation ----------
 
-  /** Emits console warnings for invalid page sources or duplicate page keys. */
   private warnAboutPageIssues(
-    pages: Array<{ module: string; page: PageDefinition }>,
+    pages: Array<{ app: string; page: PageDefinition }>,
     schemas: DiscoveredApp['schemas'],
   ): void {
     if (pages.length === 0) return;
 
-    const knownModels = new Set(schemas.map((s) => `${s.module}.${s.schema.name}`));
+    const knownModels = new Set(schemas.map((s) => `${s.app}.${s.schema.name}`));
     const sourceWarnings = validatePageSources(pages, knownModels);
     const duplicateWarnings = detectDuplicatePageKeys(pages);
 
@@ -381,60 +357,13 @@ export class ProjectScanner {
     }
   }
 
-  // ---------- Assembly ----------
-
-  /** Builds the final DiscoveredApp object, omitting empty optional arrays. */
-  private buildDiscoveredApp(
-    modules: ModuleConfig[],
-    parts: {
-      schemas: DiscoveredApp['schemas'];
-      extensions: DiscoveredApp['extensions'];
-      modules: ModuleConfig[];
-      hooks: NonNullable<DiscoveredApp['hooks']>;
-      roles: NonNullable<DiscoveredApp['roles']>;
-      jobs: Array<{ name: string; config: JobConfig }>;
-      services: ServiceDefinition[];
-      fixtures: FixtureDefinition[];
-      pages: Array<{ module: string; page: PageDefinition }>;
-    },
-  ): DiscoveredApp {
-    const appName = modules[0]?.name ?? 'app';
-
-    const packageInfo: RangkaPackageInfo = {
-      packageName: appName,
-      path: this.root,
-      rangka: { type: 'app', entrypoint: './rangka.config.ts' },
-    };
-
-    const config: ModuleConfig = {
-      name: appName,
-      label: appName,
-    };
-
-    return {
-      packageInfo,
-      config,
-      schemas: parts.schemas,
-      extensions: parts.extensions,
-      modules: parts.modules.length > 0 ? parts.modules : undefined,
-      hooks: parts.hooks.length > 0 ? parts.hooks : undefined,
-      roles: parts.roles.length > 0 ? parts.roles : undefined,
-      jobs: parts.jobs.length > 0 ? parts.jobs : undefined,
-      services: parts.services.length > 0 ? parts.services : undefined,
-      fixtures: parts.fixtures.length > 0 ? parts.fixtures : undefined,
-      pages: parts.pages.length > 0 ? parts.pages : undefined,
-    };
-  }
-
   // ---------- Filesystem utilities ----------
 
-  /** Dynamically imports a TypeScript file by path. */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async importFile(filePath: string): Promise<any> {
     return import(`file://${filePath}?t=${Date.now()}`);
   }
 
-  /** Returns true if the path exists and is a regular file. */
   private async fileExists(filePath: string): Promise<boolean> {
     try {
       const stat = await fs.stat(filePath);
@@ -444,7 +373,6 @@ export class ProjectScanner {
     }
   }
 
-  /** Returns true if the path exists and is a directory. */
   private async dirExists(dirPath: string): Promise<boolean> {
     try {
       const stat = await fs.stat(dirPath);
@@ -454,31 +382,10 @@ export class ProjectScanner {
     }
   }
 
-  /** Throws if the file does not exist. */
   private async assertFileExists(filePath: string, message: string): Promise<void> {
     if (!(await this.fileExists(filePath))) {
       throw new Error(`${message}: ${filePath}`);
     }
-  }
-
-  /**
-   * Generic helper: reads all .ts files in a directory and collects
-   * their default exports into an array. Skips files without a default export.
-   * Returns an empty array if the directory doesn't exist.
-   */
-  private async scanTsFilesWithDefault<T>(dirPath: string): Promise<T[]> {
-    if (!(await this.dirExists(dirPath))) return [];
-
-    const entries = await fs.readdir(dirPath, { withFileTypes: true });
-    const results: T[] = [];
-
-    for (const entry of entries) {
-      if (!entry.isFile() || !entry.name.endsWith('.ts')) continue;
-      const mod = await this.importFile(path.join(dirPath, entry.name));
-      if (mod.default) results.push(mod.default);
-    }
-
-    return results;
   }
 
   private async scanTsFilesWithFile<T>(

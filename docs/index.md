@@ -49,7 +49,7 @@ pnpm install
 pnpm start
 ```
 
-This scaffolds a project with a `rangka.config.ts`, a starter module, a model, and a page. Open the browser and you have a working application shell with navigation and a module ready to build on.
+This scaffolds a project with a `rangka.config.ts`, a starter app, a model, and a page. Open the browser and you have a working application shell with navigation and an app ready to build on.
 
 You can also use `npm create rangka` or `yarn create rangka`. The scaffolder detects your package manager automatically.
 
@@ -59,18 +59,18 @@ You can also use `npm create rangka` or `yarn create rangka`. The scaffolder det
 my-erp/
 ├── package.json
 ├── rangka.config.ts
-└── modules/
+└── apps/
     ├── core/              # Users, companies, settings
     ├── sales/             # Customers, orders, invoices
     ├── inventory/         # Items, warehouses, stock
     └── accounting/        # Journal entries, ledgers
 ```
 
-Each module is one business domain. They declare dependencies on each other.
+Each app is one business domain. They declare dependencies on each other.
 
 ## Next steps
 
-- [Your First Module](/guides/your-first-module): build a working module in 15 minutes
+- [Your First App](/guides/your-first-app): build a working app in 15 minutes
 - [How It Works](/concepts/how-it-works): understand the lifecycle from definition to running app
 - [Models](/concepts/models): the core building block
 - [Widgets](/concepts/widgets): the universal UI building block

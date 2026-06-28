@@ -27,7 +27,7 @@ const INTROSPECT_TYPES = [
   'jobs',
   'fixtures',
   'widgets',
-  'modules',
+  'apps',
   'navigation',
 ] as const;
 
@@ -42,7 +42,7 @@ export function createStudioTools(
       description: 'Delete a file from the project. The path must be within the project root.',
       parameters: Type.Object({
         path: Type.String({
-          description: 'Relative path to the file to delete (e.g. modules/sales/models/order.ts)',
+          description: 'Relative path to the file to delete (e.g. apps/sales/models/order.ts)',
         }),
       }),
       execute: async (_toolCallId: string, params: { path: string }) => {
@@ -86,7 +86,7 @@ export function createStudioTools(
         '(.ts, .tsx, .js, .jsx, .json, .yaml, .yml, .md, .css, .html).',
       parameters: Type.Object({
         path: Type.String({
-          description: 'Relative path to the file (e.g. modules/sales/models/order.ts)',
+          description: 'Relative path to the file (e.g. apps/sales/models/order.ts)',
         }),
         content: Type.String({
           description: 'Full file content to write',
@@ -156,17 +156,17 @@ export function createStudioTools(
       name: 'introspect',
       label: 'Introspect',
       description:
-        'Inspect the current state of the running framework. Supports types: models, pages, services, hooks, roles, jobs, fixtures, widgets, modules, navigation. Optionally filter by module.',
+        'Inspect the current state of the running framework. Supports types: models, pages, services, hooks, roles, jobs, fixtures, widgets, apps, navigation. Optionally filter by app.',
       parameters: Type.Object({
         type: Type.Union(
           INTROSPECT_TYPES.map((t) => Type.Literal(t)),
           { description: 'The resource type to introspect' },
         ),
-        module: Type.Optional(Type.String({ description: 'Filter by module name' })),
+        app: Type.Optional(Type.String({ description: 'Filter by app name' })),
       }),
-      execute: async (_toolCallId: string, params: { type: IntrospectType; module?: string }) => {
+      execute: async (_toolCallId: string, params: { type: IntrospectType; app?: string }) => {
         try {
-          const result = await subprocess.introspect(params.type, params.module);
+          const result = await subprocess.introspect(params.type, params.app);
           return {
             content: [{ type: 'text' as const, text: JSON.stringify(result.data, null, 2) }],
             details: { count: result.count },
@@ -476,8 +476,8 @@ export function createStudioTools(
             lines.push(
               `Models: ${status.runtime.models}, Pages: ${status.runtime.pages}, Services: ${status.runtime.services}, Hooks: ${status.runtime.hooks}, Jobs: ${status.runtime.jobs}`,
             );
-            if (status.runtime.modules.length > 0) {
-              lines.push(`Modules: ${status.runtime.modules.join(', ')}`);
+            if (status.runtime.apps.length > 0) {
+              lines.push(`Apps: ${status.runtime.apps.join(', ')}`);
             }
           }
 
@@ -512,7 +512,7 @@ export function createStudioTools(
       name: 'build_widgets',
       label: 'Build Widgets',
       description:
-        'Compile custom widgets in modules/*/widgets/ into browser-ready bundles. ' +
+        'Compile custom widgets in apps/*/widgets/ into browser-ready bundles. ' +
         'Call this after writing or modifying widget files. ' +
         'Outputs bundles and manifest to .rangka/, then signals preview reload.',
       parameters: Type.Object({}),

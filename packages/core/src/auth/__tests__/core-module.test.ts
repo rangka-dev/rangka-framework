@@ -30,7 +30,7 @@ describe('core module', () => {
       for (const m of models) {
         expect(m.qualifiedName).toMatch(/^core\./);
         expect(m.app).toBe('core');
-        expect(m.module).toBe('core');
+        expect(m.app).toBe('core');
       }
     });
 

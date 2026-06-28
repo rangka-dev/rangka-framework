@@ -11,7 +11,7 @@ This document explains how custom widgets are compiled, served, and loaded at ru
 
 ## Overview
 
-Custom widgets are React components that app developers write in `modules/<module>/widgets/`. The framework compiles them into standalone ES module bundles with scoped CSS, serves them as static files, and loads them on demand in the browser via dynamic `import()`.
+Custom widgets are React components that app developers write in `apps/<module>/widgets/`. The framework compiles them into standalone ES module bundles with scoped CSS, serves them as static files, and loads them on demand in the browser via dynamic `import()`.
 
 The pipeline has three stages: build, serve, load.
 
@@ -24,11 +24,11 @@ The build logic lives in `packages/cli/src/build-widgets.ts` and is exported as 
 The scanner (`packages/cli/src/ui-scanner.ts`) finds widgets by convention:
 
 ```
-modules/*/widgets/*.tsx
-modules/*/widgets/*.ts
+apps/*/widgets/*.tsx
+apps/*/widgets/*.ts
 ```
 
-Each file produces a registry key in the format `<module>.<kebab-name>`. For example, `modules/sales/widgets/PipelineBoard.tsx` becomes `sales.pipeline-board`.
+Each file produces a registry key in the format `<app>.<kebab-name>`. For example, `widgets/PipelineBoard.tsx` becomes `sales.pipeline-board`.
 
 ### JS bundling
 
@@ -101,8 +101,8 @@ Entries are either a string (JS only) or an object with `js` and `css` paths. Th
 ```
 .rangka/
 ├── widgets/
-│   ├── <module>--<name>.<hash>.js
-│   └── <module>--<name>.<hash>.css   (if the widget has styles)
+│   ├── <app>--<name>.<hash>.js
+│   └── <app>--<name>.<hash>.css   (if the widget has styles)
 └── manifest.json
 ```
 
@@ -127,12 +127,12 @@ When the `WidgetRenderer` encounters an unknown widget type, it renders a `LazyW
 1. `LazyWidget` calls `ensureWidget(name)`
 2. `ensureWidget` checks the manifest cache for the widget key
 3. If found, it injects the CSS (via a `<link>` element) and dynamically imports the JS bundle
-4. The imported module's default export (`{ meta, component }`) is registered in the widget registry
+4. The imported app's default export (`{ meta, component }`) is registered in the widget registry
 5. `LazyWidget` re-renders with the loaded component
 
 While loading, a pulsing placeholder is shown. If loading fails, an error placeholder renders. The rest of the page continues working regardless.
 
-### Widget module contract
+### Widget app contract
 
 Custom widgets export a default object:
 

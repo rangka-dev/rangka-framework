@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-export interface AppSidebarModule {
+export interface AppSidebarApp {
   name: string;
   label: string;
   icon?: ReactNode;
@@ -24,10 +24,10 @@ export interface AppSidebarUser {
 }
 
 export interface AppSidebarProps {
-  modules: AppSidebarModule[];
-  activeModule?: string;
-  onModuleSwitch: (name: string) => void;
-  onAllModules?: () => void;
+  apps: AppSidebarApp[];
+  activeApp?: string;
+  onAppSwitch: (name: string) => void;
+  onAllApps?: () => void;
   onSearch?: () => void;
   navigation: AppSidebarNavSection[];
   currentPath: string;

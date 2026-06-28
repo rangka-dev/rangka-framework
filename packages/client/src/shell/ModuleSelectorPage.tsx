@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Icon } from '@/components/Icon';
 import { useMeta } from '../context/MetaContext.js';
-import { useModule } from '../context/ModuleContext.js';
+import { useApp } from '../context/ModuleContext.js';
 import { useRouter } from '@tanstack/react-router';
 import type { NavigationTree } from '@rangka/shared';
 
@@ -16,16 +16,16 @@ export function ModuleSelectorPage() {
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
   const { navigation } = useMeta();
-  const { setActiveModule } = useModule();
+  const { setActiveApp } = useApp();
   const router = useRouter();
 
-  const modulesWithPages = navigation.filter(
+  const appsWithPages = navigation.filter(
     (mod: NavigationTree) =>
       mod.sections.length > 0 && mod.sections.some((s) => s.items.length > 0),
   );
 
   const filtered = useMemo(() => {
-    let result = modulesWithPages;
+    let result = appsWithPages;
 
     if (activeTab === 'internal') {
       result = result.filter((mod: NavigationTree) => mod.type !== 'external');
@@ -33,8 +33,8 @@ export function ModuleSelectorPage() {
       result = result.filter((mod: NavigationTree) => mod.type === 'external');
     } else if (activeTab === 'favorite') {
       result = result.filter((mod: NavigationTree) => {
-        const favorites = JSON.parse(localStorage.getItem('rangka:favorite-modules') || '[]');
-        return favorites.includes(mod.module);
+        const favorites = JSON.parse(localStorage.getItem('rangka:favorite-apps') || '[]');
+        return favorites.includes(mod.app);
       });
     }
 
@@ -45,9 +45,9 @@ export function ModuleSelectorPage() {
     }
 
     return result;
-  }, [modulesWithPages, activeTab, search]);
+  }, [appsWithPages, activeTab, search]);
 
-  const moduleColors: Record<string, string> = {
+  const appColors: Record<string, string> = {
     blue: 'bg-blue-500/10 text-blue-600 ring-blue-500/20',
     green: 'bg-green-500/10 text-green-600 ring-green-500/20',
     purple: 'bg-purple-500/10 text-purple-600 ring-purple-500/20',
@@ -59,18 +59,18 @@ export function ModuleSelectorPage() {
   };
 
   const getColorClasses = (color?: string) =>
-    moduleColors[color ?? ''] ?? 'bg-primary/10 text-primary ring-primary/20';
+    appColors[color ?? ''] ?? 'bg-primary/10 text-primary ring-primary/20';
 
-  const handleModuleSelect = useCallback(
-    (moduleName: string) => {
-      setActiveModule(moduleName);
-      const mod = navigation.find((n: NavigationTree) => n.module === moduleName);
+  const handleAppSelect = useCallback(
+    (appName: string) => {
+      setActiveApp(appName);
+      const mod = navigation.find((n: NavigationTree) => n.app === appName);
       const firstPage = mod?.sections[0]?.items[0]?.page;
       if (firstPage) {
         router.navigate({ to: '/' + firstPage.replace('.', '/') });
       }
     },
-    [navigation, router, setActiveModule],
+    [navigation, router, setActiveApp],
   );
 
   return (
@@ -98,7 +98,7 @@ export function ModuleSelectorPage() {
         <div className="relative">
           <SearchIcon className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search modules..."
+            placeholder="Search apps..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="bg-card pl-9 ring-1 ring-foreground/10"
@@ -107,15 +107,11 @@ export function ModuleSelectorPage() {
       </div>
 
       {filtered.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No modules found</p>
+        <p className="text-sm text-muted-foreground">No apps found</p>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filtered.map((mod: NavigationTree) => (
-            <Card
-              key={mod.module}
-              className="cursor-pointer"
-              onClick={() => handleModuleSelect(mod.module)}
-            >
+            <Card key={mod.app} className="cursor-pointer" onClick={() => handleAppSelect(mod.app)}>
               <CardHeader>
                 <div className="flex items-center gap-3">
                   <div

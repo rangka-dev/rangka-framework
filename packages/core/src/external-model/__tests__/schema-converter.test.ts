@@ -15,44 +15,43 @@ describe('externalModelToResolved', () => {
   };
 
   it('produces correct qualifiedName', () => {
-    const { model } = externalModelToResolved(baseConfig, 'billing-app', 'billing');
+    const { model } = externalModelToResolved(baseConfig, 'billing');
     expect(model.qualifiedName).toBe('billing.Customer');
   });
 
   it('sets source from config', () => {
-    const { model } = externalModelToResolved(baseConfig, 'billing-app', 'billing');
+    const { model } = externalModelToResolved(baseConfig, 'billing');
     expect(model.source).toBe('stripe');
   });
 
-  it('sets app and module', () => {
-    const { model } = externalModelToResolved(baseConfig, 'billing-app', 'billing');
-    expect(model.app).toBe('billing-app');
-    expect(model.module).toBe('billing');
+  it('sets app', () => {
+    const { model } = externalModelToResolved(baseConfig, 'billing');
+    expect(model.app).toBe('billing');
   });
 
   it('sets name and label', () => {
-    const { model } = externalModelToResolved(baseConfig, 'billing-app', 'billing');
+    const { model } = externalModelToResolved(baseConfig, 'billing');
     expect(model.name).toBe('Customer');
     expect(model.label).toBe('Stripe Customer');
   });
 
   it('has empty traits', () => {
-    const { model } = externalModelToResolved(baseConfig, 'billing-app', 'billing');
+    const { model } = externalModelToResolved(baseConfig, 'billing');
     expect(model.traits).toEqual([]);
   });
 
   it('has empty indexes', () => {
-    const { model } = externalModelToResolved(baseConfig, 'billing-app', 'billing');
+    const { model } = externalModelToResolved(baseConfig, 'billing');
     expect(model.indexes).toEqual([]);
   });
 
   it('sets auditLog to false', () => {
-    const { model } = externalModelToResolved(baseConfig, 'billing-app', 'billing');
+    const { model } = externalModelToResolved(baseConfig, 'billing');
     expect(model.auditLog).toBe(false);
   });
 
   it('converts fields to ResolvedField array', () => {
-    const { model } = externalModelToResolved(baseConfig, 'billing-app', 'billing');
+    const { model } = externalModelToResolved(baseConfig, 'billing');
     expect(model.fields).toHaveLength(3);
 
     const idField = model.fields.find((f) => f.name === 'id');
@@ -72,13 +71,13 @@ describe('externalModelToResolved', () => {
       },
     };
 
-    const { model } = externalModelToResolved(config, 'app', 'billing');
+    const { model } = externalModelToResolved(config, 'billing');
     const amountField = model.fields.find((f) => f.name === 'amount');
     expect(amountField?.config).toEqual({ type: 'decimal', label: 'Amount', required: true });
   });
 
   it('sets provenance to base for all fields', () => {
-    const { model } = externalModelToResolved(baseConfig, 'billing-app', 'billing');
+    const { model } = externalModelToResolved(baseConfig, 'billing');
     for (const field of model.fields) {
       expect(field.provenance).toEqual({ source: 'base' });
     }
@@ -91,13 +90,13 @@ describe('externalModelToResolved', () => {
       fields: { id: { type: 'string' } },
     };
 
-    const { model } = externalModelToResolved(config, 'app', 'store');
+    const { model } = externalModelToResolved(config, 'store');
     expect(model.label).toBeUndefined();
   });
 
   describe('relationships', () => {
     it('returns empty relationships when no relationship fields', () => {
-      const { relationships } = externalModelToResolved(baseConfig, 'billing-app', 'billing');
+      const { relationships } = externalModelToResolved(baseConfig, 'billing');
       expect(relationships).toEqual([]);
     });
 
@@ -115,7 +114,7 @@ describe('externalModelToResolved', () => {
         },
       };
 
-      const { relationships } = externalModelToResolved(config, 'app', 'billing');
+      const { relationships } = externalModelToResolved(config, 'billing');
       expect(relationships).toHaveLength(1);
       expect(relationships[0]).toEqual({
         type: 'link',
@@ -139,7 +138,7 @@ describe('externalModelToResolved', () => {
         },
       };
 
-      const { relationships } = externalModelToResolved(config, 'app', 'billing');
+      const { relationships } = externalModelToResolved(config, 'billing');
       expect(relationships).toHaveLength(1);
       expect(relationships[0]).toEqual({
         type: 'hasMany',
@@ -167,7 +166,7 @@ describe('externalModelToResolved', () => {
         },
       };
 
-      const { relationships } = externalModelToResolved(config, 'app', 'billing');
+      const { relationships } = externalModelToResolved(config, 'billing');
       expect(relationships).toHaveLength(2);
     });
   });

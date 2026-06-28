@@ -1,5 +1,5 @@
 import type {
-  ModuleConfig,
+  AppConfig,
   ModelConfig,
   ExtensionConfig,
   HooksConfig,
@@ -23,17 +23,16 @@ export interface RangkaPackageInfo {
 
 export interface DiscoveredApp {
   packageInfo: RangkaPackageInfo;
-  config: ModuleConfig;
-  schemas: Array<{ module: string; schema: ModelConfig; file?: string }>;
+  config: AppConfig;
+  schemas: Array<{ app: string; schema: ModelConfig; file?: string }>;
   extensions: Array<{ target: string; config: ExtensionConfig }>;
-  modules?: ModuleConfig[];
   hooks?: Array<{ model: string; hooks: HooksConfig; file?: string }>;
   roles?: Array<{ config: RolesConfig; app: string }>;
   jobs?: Array<{ name: string; config: JobConfig; file?: string }>;
   services?: Array<ServiceDefinition & { file?: string }>;
   apiDefinitions?: ApiDefinition[];
   fixtures?: Array<FixtureDefinition & { file?: string }>;
-  pages?: Array<{ module: string; page: PageDefinition; file?: string }>;
+  pages?: Array<{ app: string; page: PageDefinition; file?: string }>;
   widgets?: WidgetDefinitionMeta[];
 }
 

@@ -147,10 +147,10 @@ If no widget is registered and no manifest entry exists for a given type, the re
 
 ## File location
 
-Custom widgets live in your module's `widgets/` directory:
+Custom widgets live in your app's `widgets/` directory:
 
 ```
-modules/sales/
+apps/sales/
 └── widgets/
     └── pipeline-board.tsx
 ```
@@ -205,7 +205,7 @@ Packages that import their own CSS (like `@xyflow/react/dist/style.css`) are sup
 ## Example
 
 ```typescript
-// modules/sales/widgets/pipeline-board.tsx
+// widgets/pipeline-board.tsx
 import { defineWidget } from '@rangka/shared';
 
 const meta = defineWidget({

@@ -58,7 +58,7 @@ export type ServerMessage =
         toolCalls?: Array<{ name: string; input: Record<string, unknown> }>;
       }>;
     }
-  | { type: 'resources.data'; modules: ResourceModule[] }
+  | { type: 'resources.data'; apps: ResourceModule[] }
   | { type: 'models.data'; graph: ModelGraphData }
   | { type: 'schema.applied'; operationIds: string[] }
   | { type: 'schema.error'; message: string; operationIds: string[] }
@@ -127,7 +127,7 @@ export interface ModelGraphField {
 export interface ModelGraphNode {
   id: string;
   label: string;
-  module: string;
+  app: string;
   fields: ModelGraphField[];
 }
 

@@ -15,7 +15,6 @@ export interface ResolvedField {
 export interface ResolvedModel {
   qualifiedName: string;
   app: string;
-  module: string;
   name: string;
   label?: string;
   naming?: ModelConfig['naming'];

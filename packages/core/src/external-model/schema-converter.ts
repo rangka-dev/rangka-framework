@@ -9,9 +9,8 @@ export interface ExternalModelConversionResult {
 export function externalModelToResolved(
   config: ExternalModelConfig,
   app: string,
-  module: string,
 ): ExternalModelConversionResult {
-  const qualifiedName = `${module}.${config.name}`;
+  const qualifiedName = `${app}.${config.name}`;
 
   const fields: ResolvedField[] = Object.entries(config.fields).map(([name, fieldConfig]) => ({
     name,
@@ -39,7 +38,6 @@ export function externalModelToResolved(
   const model: ResolvedModel = {
     qualifiedName,
     app,
-    module,
     name: config.name,
     label: config.label,
     auditLog: false,

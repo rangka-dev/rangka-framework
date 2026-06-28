@@ -498,6 +498,6 @@ function resolveLinkedTableName(modelRef: string, currentModel: ResolvedModel): 
   if (modelRef.includes('.')) {
     return modelToTableName(modelRef);
   }
-  const qualifiedName = `${currentModel.module}.${modelRef}`;
+  const qualifiedName = `${currentModel.app}.${modelRef}`;
   return modelToTableName(qualifiedName);
 }

@@ -33,11 +33,11 @@ function fieldToRelationship(
 
   switch (config.type) {
     case 'link': {
-      const targetModel = resolveModelName(config.model, sourceModel.module, allModels);
+      const targetModel = resolveModelName(config.model, sourceModel.app, allModels);
       return { type: 'link', from, field: fieldName, to: targetModel };
     }
     case 'hasMany': {
-      const targetModel = resolveModelName(config.model, sourceModel.module, allModels);
+      const targetModel = resolveModelName(config.model, sourceModel.app, allModels);
       return {
         type: 'hasMany',
         from,
@@ -47,7 +47,7 @@ function fieldToRelationship(
       };
     }
     case 'children': {
-      const targetModel = resolveModelName(config.model, sourceModel.module, allModels);
+      const targetModel = resolveModelName(config.model, sourceModel.app, allModels);
       return {
         type: 'children',
         from,
@@ -57,8 +57,8 @@ function fieldToRelationship(
       };
     }
     case 'manyToMany': {
-      const targetModel = resolveModelName(config.model, sourceModel.module, allModels);
-      const throughModel = resolveModelName(config.through, sourceModel.module, allModels);
+      const targetModel = resolveModelName(config.model, sourceModel.app, allModels);
+      const throughModel = resolveModelName(config.through, sourceModel.app, allModels);
       return { type: 'manyToMany', from, field: fieldName, to: targetModel, through: throughModel };
     }
     case 'dynamicLink': {

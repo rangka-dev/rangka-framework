@@ -12,7 +12,7 @@ import {
   validatePageBindings,
 } from '@rangka/core';
 import type { BootResult, CoreDdlOperation } from '@rangka/core';
-import type { ModuleConfig } from '@rangka/shared';
+import type { AppConfig } from '@rangka/shared';
 import fastifyStatic from '@fastify/static';
 import { sql } from 'kysely';
 import * as path from 'node:path';
@@ -45,8 +45,8 @@ let pendingOps: SerializedDdlOperation[] = [];
 let serverPort: number | null = null;
 let lastError: string | null = null;
 let dbConfig: DatabaseConfig | null = null;
-let pages: Array<{ module: string; page: unknown }> = [];
-let modules: ModuleConfig[] = [];
+let pages: Array<{ app: string; page: unknown }> = [];
+let apps: AppConfig[] = [];
 let hooks: Array<{ model: string }> = [];
 
 function send(msg: ChildMessage): void {
@@ -66,7 +66,7 @@ process.on('message', (msg: ParentMessage) => {
       handleGetStatus(msg.requestId);
       break;
     case 'parent:introspect':
-      handleIntrospect(msg.requestId, msg.resource, msg.module);
+      handleIntrospect(msg.requestId, msg.resource, msg.app);
       break;
     case 'parent:shutdown':
       handleShutdown();
@@ -94,7 +94,7 @@ function handleGetStatus(requestId: string): void {
 
 function getRuntimeStatus(): RuntimeStatus {
   if (!bootResult) {
-    return { models: 0, pages: 0, services: 0, hooks: 0, jobs: 0, modules: [] };
+    return { models: 0, pages: 0, services: 0, hooks: 0, jobs: 0, apps: [] };
   }
   return {
     models: bootResult.registry.getAllModels().length,
@@ -102,18 +102,18 @@ function getRuntimeStatus(): RuntimeStatus {
     services: bootResult.serviceRegistry?.getAll?.()?.length ?? 0,
     hooks: hooks.length,
     jobs: bootResult.jobRegistry?.getAll?.()?.length ?? 0,
-    modules: modules.map((m) => m.name),
+    apps: apps.map((m) => m.name),
   };
 }
 
-function handleIntrospect(requestId: string, type: IntrospectType, module?: string): void {
+function handleIntrospect(requestId: string, type: IntrospectType, app?: string): void {
   if (!bootResult) {
     send({ type: 'child:introspect_error', requestId, error: 'Framework not booted yet.' });
     return;
   }
 
   try {
-    const result = introspectResource(type, module);
+    const result = introspectResource(type, app);
     if ('error' in result) {
       send({ type: 'child:introspect_error', requestId, error: result.error });
     } else {
@@ -132,20 +132,20 @@ function handleIntrospect(requestId: string, type: IntrospectType, module?: stri
 
 function introspectResource(
   type: IntrospectType,
-  module?: string,
+  app?: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): { data: any[]; count: number } | { error: string } {
   if (!bootResult) return { error: 'Framework not booted yet.' };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const filterByModule = (items: any[], key = 'module') =>
-    module ? items.filter((i) => i[key] === module) : items;
+  const filterByApp = (items: any[], key = 'app') =>
+    app ? items.filter((i) => i[key] === app) : items;
 
   switch (type) {
     case 'models': {
       const allModels = bootResult.registry.getAllModels();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const filtered = filterByModule(allModels as any[]);
+      const filtered = filterByApp(allModels as any[]);
 
       const resolveTarget = (name: string, currentModule: string): string => {
         if (name.includes('.')) return name;
@@ -160,7 +160,7 @@ function introspectResource(
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const data = filtered.map((model: any) => ({
-        qualifiedName: `${model.module}.${model.name}`,
+        qualifiedName: `${model.app}.${model.name}`,
         label: model.label ?? model.name,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         fields: model.fields.map((f: any) => {
@@ -171,17 +171,17 @@ function introspectResource(
           };
           const cfg = f.config;
           if (cfg) {
-            if (cfg.type === 'link') base.target = resolveTarget(cfg.model, model.module);
+            if (cfg.type === 'link') base.target = resolveTarget(cfg.model, model.app);
             if (cfg.type === 'hasMany') {
-              base.target = resolveTarget(cfg.model, model.module);
+              base.target = resolveTarget(cfg.model, model.app);
               base.foreignKey = cfg.foreignKey;
             }
             if (cfg.type === 'children') {
-              base.target = resolveTarget(cfg.model, model.module);
+              base.target = resolveTarget(cfg.model, model.app);
               base.foreignKey = cfg.foreignKey;
             }
             if (cfg.type === 'manyToMany') {
-              base.target = resolveTarget(cfg.model, model.module);
+              base.target = resolveTarget(cfg.model, model.app);
               base.through = cfg.through;
             }
             if (cfg.type === 'dynamicLink') base.modelField = cfg.modelField;
@@ -196,11 +196,11 @@ function introspectResource(
 
     case 'pages': {
       const allPages = bootResult.pages ?? [];
-      const filtered = filterByModule(allPages);
+      const filtered = filterByApp(allPages);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const data = filtered.map((p: any) => ({
-        key: p.page?.key ?? `${p.module}.${p.page?.name}`,
-        module: p.module,
+        key: p.page?.key ?? `${p.app}.${p.page?.name}`,
+        module: p.app,
         type: p.page?.type,
         model: p.page?.model,
         label: p.page?.label ?? p.page?.title,
@@ -211,20 +211,20 @@ function introspectResource(
     case 'services': {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const services = (bootResult.serviceRegistry as any)?.getAll?.() ?? [];
-      const data = services.map((s: { name: string; module?: string }) => ({
+      const data = services.map((s: { name: string; app?: string }) => ({
         name: s.name,
-        module: s.module,
+        app: s.app,
       }));
-      const filtered = filterByModule(data);
+      const filtered = filterByApp(data);
       return { data: filtered, count: filtered.length };
     }
 
     case 'hooks': {
       const hookItems = hooks.map((h) => {
         const parts = h.model.split('.');
-        return { model: h.model, module: parts.length > 1 ? parts[0] : 'core' };
+        return { model: h.model, app: parts.length > 1 ? parts[0] : 'core' };
       });
-      const filtered = filterByModule(hookItems);
+      const filtered = filterByApp(hookItems);
       return { data: filtered, count: filtered.length };
     }
 
@@ -254,10 +254,10 @@ function introspectResource(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const data = jobs.map((j: any) => ({
         name: j.name,
-        module: j.module,
+        module: j.app,
         schedule: j.schedule,
       }));
-      const filtered = filterByModule(data);
+      const filtered = filterByApp(data);
       return { data: filtered, count: filtered.length };
     }
 
@@ -271,10 +271,10 @@ function introspectResource(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const data = fixtures.map((f: any) => ({
         model: f.model,
-        module: f.module,
+        module: f.app,
         recordCount: f.records?.length ?? 0,
       }));
-      const filtered = filterByModule(data);
+      const filtered = filterByApp(data);
       return { data: filtered, count: filtered.length };
     }
 
@@ -294,8 +294,8 @@ function introspectResource(
       return { data, count: data.length };
     }
 
-    case 'modules': {
-      const data = modules.map((m) => ({
+    case 'apps': {
+      const data = apps.map((m) => ({
         name: m.name,
         label: m.label ?? m.name,
         icon: m.icon,
@@ -305,9 +305,9 @@ function introspectResource(
     }
 
     case 'navigation': {
-      const filtered = module ? modules.filter((m) => m.name === module) : modules;
+      const filtered = app ? apps.filter((m) => m.name === app) : apps;
       const data = filtered.map((m) => ({
-        module: m.name,
+        app: m.name,
         navigation: m.navigation,
       }));
       return { data, count: data.length };
@@ -363,7 +363,7 @@ async function main(): Promise<void> {
     const { app, rangkaConfig, warnings: scanWarnings } = await scanner.scan();
 
     pages = app.pages ?? [];
-    modules = app.modules ?? [];
+    apps = app.config ? [app.config] : [];
     hooks = (app.hooks ?? []).map((h) => ({ model: h.model }));
 
     const rawDbConfig = rangkaConfig.database;
@@ -406,7 +406,7 @@ async function main(): Promise<void> {
     if (pages.length > 0) {
       const bindWarnings = validatePageBindings(
         pages as Array<{
-          module: string;
+          app: string;
           page: import('@rangka/shared').PageDefinition;
           file?: string;
         }>,

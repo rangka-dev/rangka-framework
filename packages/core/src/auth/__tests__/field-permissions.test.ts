@@ -10,7 +10,6 @@ import type { ResolvedModel } from '../../schema/types.js';
 const mockModel: ResolvedModel = {
   qualifiedName: 'sales.invoice',
   app: 'sales',
-  module: 'sales',
   name: 'invoice',
   auditLog: false,
   traits: [],
