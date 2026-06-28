@@ -85,11 +85,11 @@ function DataListMode({
     if (data && data.length > 0) on.load?.({ records: data });
   }, [data, on]);
 
-  if (isLoading || !data || data.length === 0) return null;
+  if (isLoading) return null;
 
   const ctx: WidgetContext = {
-    record: data[0],
-    records: data,
+    record: data?.[0] ?? {},
+    records: data ?? [],
     model,
     mode: 'view',
     parent: parentCtx,

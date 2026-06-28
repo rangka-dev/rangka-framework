@@ -7,6 +7,7 @@ const SIDEBAR_DEFAULT_WIDTH = 250;
 const SIDEBAR_MIN_WIDTH = 200;
 const SIDEBAR_MAX_WIDTH = 400;
 const SIDEBAR_KEYBOARD_SHORTCUT = 'b';
+const RAIL_STORAGE_KEY = 'rangka-rail-docked';
 
 export type ShellProviderProps = ComponentProps<'div'> & {
   /** Default sidebar expanded state */
@@ -17,6 +18,8 @@ export type ShellProviderProps = ComponentProps<'div'> & {
   onSidebarOpenChange?: (open: boolean) => void;
   /** Default sidebar width in pixels */
   defaultSidebarWidth?: number;
+  /** Default rail docked state */
+  defaultRailDocked?: boolean;
 };
 
 export const ShellProvider = forwardRef<HTMLDivElement, ShellProviderProps>(
@@ -26,6 +29,7 @@ export const ShellProvider = forwardRef<HTMLDivElement, ShellProviderProps>(
       sidebarOpen: sidebarOpenProp,
       onSidebarOpenChange,
       defaultSidebarWidth = SIDEBAR_DEFAULT_WIDTH,
+      defaultRailDocked,
       className,
       style,
       children,
@@ -37,6 +41,24 @@ export const ShellProvider = forwardRef<HTMLDivElement, ShellProviderProps>(
     const [sidebarMobileOpen, setSidebarMobileOpen] = useState(false);
     const [_sidebarOpen, _setSidebarOpen] = useState(defaultSidebarOpen);
     const [sidebarWidth, setSidebarWidth] = useState(defaultSidebarWidth);
+    const [railDocked, setRailDockedState] = useState(() => {
+      if (defaultRailDocked !== undefined) return defaultRailDocked;
+      try {
+        const stored = localStorage.getItem(RAIL_STORAGE_KEY);
+        return stored !== null ? stored === 'true' : true;
+      } catch {
+        return true;
+      }
+    });
+
+    const setRailDocked = useCallback((docked: boolean) => {
+      setRailDockedState(docked);
+      try {
+        localStorage.setItem(RAIL_STORAGE_KEY, String(docked));
+      } catch {
+        /* localStorage unavailable */
+      }
+    }, []);
 
     const sidebarOpen = sidebarOpenProp ?? _sidebarOpen;
 
@@ -82,8 +104,19 @@ export const ShellProvider = forwardRef<HTMLDivElement, ShellProviderProps>(
         setSidebarMobileOpen,
         isMobile,
         toggleSidebar,
+        railDocked,
+        setRailDocked,
       }),
-      [sidebarOpen, setSidebarOpen, clampedWidth, sidebarMobileOpen, isMobile, toggleSidebar],
+      [
+        sidebarOpen,
+        setSidebarOpen,
+        clampedWidth,
+        sidebarMobileOpen,
+        isMobile,
+        toggleSidebar,
+        railDocked,
+        setRailDocked,
+      ],
     );
 
     return (

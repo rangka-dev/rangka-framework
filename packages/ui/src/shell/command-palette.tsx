@@ -197,19 +197,26 @@ CommandPaletteGroup.displayName = 'CommandPalette.Group';
 export type CommandPaletteItemProps = ComponentProps<typeof Command.Item>;
 
 const CommandPaletteItem = forwardRef<HTMLDivElement, CommandPaletteItemProps>(
-  ({ className, ...props }, ref) => (
-    <Command.Item
-      ref={ref}
-      data-slot="command-palette-item"
-      className={cn(
-        'flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-2xs text-foreground/80 outline-none transition-colors',
-        'data-[selected=true]:bg-foreground/6 data-[selected=true]:text-foreground',
-        '[&>svg]:size-4 [&>svg]:shrink-0',
-        className,
-      )}
-      {...props}
-    />
-  ),
+  ({ className, onSelect, ...props }, ref) => {
+    const { setOpen } = useCommandPalette();
+    return (
+      <Command.Item
+        ref={ref}
+        data-slot="command-palette-item"
+        className={cn(
+          'flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-2xs text-foreground/80 outline-none transition-colors',
+          'data-[selected=true]:bg-foreground/6 data-[selected=true]:text-foreground',
+          '[&>svg]:size-4 [&>svg]:shrink-0',
+          className,
+        )}
+        onSelect={(value) => {
+          onSelect?.(value);
+          setOpen(false);
+        }}
+        {...props}
+      />
+    );
+  },
 );
 CommandPaletteItem.displayName = 'CommandPalette.Item';
 

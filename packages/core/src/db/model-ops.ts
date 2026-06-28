@@ -25,6 +25,20 @@ function toFieldArray(val: string | string[] | undefined): string[] {
   return Array.isArray(val) ? val : [val];
 }
 
+function serializeForSqlite(data: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(data)) {
+    if (typeof value === 'boolean') {
+      out[key] = value ? 1 : 0;
+    } else if (value !== null && typeof value === 'object') {
+      out[key] = JSON.stringify(value);
+    } else {
+      out[key] = value;
+    }
+  }
+  return out;
+}
+
 function extractAggValues(row: any, spec: AggregateSpec): AggregateResult {
   const result: AggregateResult = {};
   if (spec.count !== undefined) result.count = Number(row.__count ?? 0);
@@ -141,9 +155,11 @@ export class KyselyModelOps implements ModelOps {
     data.id ??= randomUUID();
     await this.assignSequenceValues(data);
 
+    const values = this.dialect === 'sqlite' ? serializeForSqlite(data) : data;
+
     const record = await this.db
       .insertInto(this.tableName)
-      .values(data)
+      .values(values)
       .returningAll()
       .executeTakeFirstOrThrow();
 
@@ -157,9 +173,11 @@ export class KyselyModelOps implements ModelOps {
   ): Promise<Record<string, unknown>> {
     await this.getOrThrow(id);
 
+    const values = this.dialect === 'sqlite' ? serializeForSqlite(data) : data;
+
     const record = await this.db
       .updateTable(this.tableName)
-      .set(data)
+      .set(values)
       .where('id', '=', id)
       .returningAll()
       .executeTakeFirstOrThrow();

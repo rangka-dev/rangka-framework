@@ -9,6 +9,8 @@ export type ShellContextValue = {
   setSidebarMobileOpen: (open: boolean) => void;
   isMobile: boolean;
   toggleSidebar: () => void;
+  railDocked: boolean;
+  setRailDocked: (docked: boolean) => void;
 };
 
 export const ShellContext = createContext<ShellContextValue | null>(null);
