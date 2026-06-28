@@ -1,4 +1,5 @@
 import type { WidgetAction, WidgetNode } from './widget.js';
+import type { Condition } from '../validation/schemas/widget.js';
 
 export interface ActionItem {
   label: string;
@@ -12,6 +13,7 @@ export interface Action {
   icon?: string;
   variant?: 'primary' | 'secondary' | 'ghost';
   action?: WidgetAction;
+  visible?: Condition | Condition[];
   items?: ActionItem[];
 }
 

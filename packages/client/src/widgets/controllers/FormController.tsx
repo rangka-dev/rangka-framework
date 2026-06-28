@@ -1,14 +1,34 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import type { WidgetProps } from '../types.js';
 import { useWidgetContext } from '../hooks/useWidgetContext.js';
 import { useWidgetComponent } from '../../ui/UIProvider.js';
+import { usePageState, useStateVersion } from '../hooks/usePageState.js';
 import { FormProvider } from '../form/FormProvider.js';
 
-export function FormController({ bind, on, children }: WidgetProps) {
+export function FormController({ props, bind, on, children }: WidgetProps) {
   const ctx = useWidgetContext();
   const modelName = ctx.model;
   const id = bind.id ?? undefined;
   const UIForm = useWidgetComponent('form');
+  const state = usePageState();
+  const stateVersion = useStateVersion();
+
+  const resolvedMode = useMemo((): 'create' | 'edit' | 'view' | undefined => {
+    const modeValue = props.mode as string | undefined;
+    if (!modeValue) return undefined;
+
+    if (modeValue.startsWith('$state.')) {
+      const key = modeValue.slice(7);
+      const stateVal = state.get(key);
+      return stateVal ? 'edit' : 'view';
+    }
+
+    if (modeValue === 'create' || modeValue === 'edit' || modeValue === 'view') {
+      return modeValue;
+    }
+
+    return undefined;
+  }, [props.mode, state, stateVersion]);
 
   const handleSuccess = useCallback(
     (record: Record<string, unknown>, mode: 'create' | 'edit') => {
@@ -35,7 +55,13 @@ export function FormController({ bind, on, children }: WidgetProps) {
   );
 
   return (
-    <FormProvider model={modelName} id={id} onSuccess={handleSuccess} onError={handleError}>
+    <FormProvider
+      model={modelName}
+      id={id}
+      mode={resolvedMode}
+      onSuccess={handleSuccess}
+      onError={handleError}
+    >
       {content}
     </FormProvider>
   );

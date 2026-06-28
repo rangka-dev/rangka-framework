@@ -239,8 +239,7 @@ describe('generateCrudPages', () => {
       const pages = generateCrudPages(registry, new Set());
 
       const createPage = pages.find((p) => p.page.key === 'sales.invoice.new')!;
-      const dataWrapper = createPage.page.widgets[0];
-      const form = dataWrapper.children![0];
+      const form = createPage.page.widgets[0];
       const allBindFields = extractBindFields(form);
       expect(allBindFields).toEqual(['name']);
     });
@@ -255,8 +254,7 @@ describe('generateCrudPages', () => {
       const pages = generateCrudPages(registry, new Set());
 
       const createPage = pages.find((p) => p.page.key === 'sales.invoice.new')!;
-      const dataWrapper = createPage.page.widgets[0];
-      const form = dataWrapper.children![0];
+      const form = createPage.page.widgets[0];
       const basicSection = form.children!.find((c) => c.props?.label === 'Basic Info');
       expect(basicSection).toBeDefined();
       const basicFields = extractBindFields(basicSection!);
@@ -274,8 +272,7 @@ describe('generateCrudPages', () => {
       const pages = generateCrudPages(registry, new Set());
 
       const createPage = pages.find((p) => p.page.key === 'sales.invoice.new')!;
-      const dataWrapper = createPage.page.widgets[0];
-      const form = dataWrapper.children![0];
+      const form = createPage.page.widgets[0];
       const detailsSection = form.children!.find((c) => c.props?.label === 'Details');
       expect(detailsSection).toBeDefined();
       const detailFields = extractBindFields(detailsSection!);
@@ -293,8 +290,7 @@ describe('generateCrudPages', () => {
       const pages = generateCrudPages(registry, new Set());
 
       const createPage = pages.find((p) => p.page.key === 'sales.invoice.new')!;
-      const dataWrapper = createPage.page.widgets[0];
-      const form = dataWrapper.children![0];
+      const form = createPage.page.widgets[0];
       const additionalSection = form.children!.find((c) => c.props?.label === 'Additional');
       expect(additionalSection).toBeDefined();
       const wideFields = extractBindFields(additionalSection!);
@@ -317,8 +313,7 @@ describe('generateCrudPages', () => {
       const pages = generateCrudPages(registry, new Set());
 
       const editPage = pages.find((p) => p.page.key === 'sales.invoice.edit')!;
-      const dataWrapper = editPage.page.widgets[0];
-      const form = dataWrapper.children![0];
+      const form = editPage.page.widgets[0];
       const systemSection = form.children!.find((c) => c.props?.label === 'System');
       expect(systemSection).toBeDefined();
       expect(systemSection!.props!.collapsible).toBe(true);
@@ -345,7 +340,7 @@ describe('generateCrudPages', () => {
       expect(systemSection).toBeUndefined();
     });
 
-    it('edit page wraps form in widget.data with $route.id', () => {
+    it('edit page uses standalone form with source.id', () => {
       const model = makeModel('sales', 'invoice', [
         makeField('name', { type: 'string', required: true }),
       ]);
@@ -353,13 +348,13 @@ describe('generateCrudPages', () => {
       const pages = generateCrudPages(registry, new Set());
 
       const editPage = pages.find((p) => p.page.key === 'sales.invoice.edit')!;
-      const dataWrapper = editPage.page.widgets[0];
-      expect(dataWrapper.type).toBe('data');
-      expect(dataWrapper.source).toEqual({ model: 'sales.invoice', id: '$route.id' });
-      expect(dataWrapper.children![0].type).toBe('form');
+      const form = editPage.page.widgets[0];
+      expect(form.type).toBe('form');
+      expect(form.source).toEqual({ model: 'sales.invoice', id: '$route.id' });
+      expect(form.props!.mode).toBe('$state.editing');
     });
 
-    it('create page has no data wrapper', () => {
+    it('create page uses standalone form with source model', () => {
       const model = makeModel('sales', 'invoice', [
         makeField('name', { type: 'string', required: true }),
       ]);
@@ -367,10 +362,9 @@ describe('generateCrudPages', () => {
       const pages = generateCrudPages(registry, new Set());
 
       const createPage = pages.find((p) => p.page.key === 'sales.invoice.new')!;
-      const dataWrapper = createPage.page.widgets[0];
-      expect(dataWrapper.type).toBe('data');
-      expect(dataWrapper.source).toEqual({ model: 'sales.invoice' });
-      expect(dataWrapper.children![0].type).toBe('form');
+      const form = createPage.page.widgets[0];
+      expect(form.type).toBe('form');
+      expect(form.source).toEqual({ model: 'sales.invoice' });
     });
   });
 
@@ -485,6 +479,66 @@ describe('generateCrudPages', () => {
 
       const listPage = pages.find((p) => p.page.key === 'sales.invoice')!;
       expect(listPage.page.label).toBe('Invoices');
+    });
+  });
+
+  describe('filterable columns', () => {
+    it('sets filterable on enum columns', () => {
+      const model = makeModel('sales', 'invoice', [
+        makeField('status', { type: 'enum', options: ['draft', 'sent'], required: true }),
+      ]);
+      const registry = new SchemaRegistry([model]);
+      const pages = generateCrudPages(registry, new Set());
+
+      const listPage = pages.find((p) => p.page.key === 'sales.invoice')!;
+      const col = listPage.page.widgets[0].children![0];
+      expect(col.props!.filterable).toBe(true);
+    });
+
+    it('sets filterable on boolean columns', () => {
+      const model = makeModel('sales', 'invoice', [makeField('is_paid', { type: 'boolean' })]);
+      const registry = new SchemaRegistry([model]);
+      const pages = generateCrudPages(registry, new Set());
+
+      const listPage = pages.find((p) => p.page.key === 'sales.invoice')!;
+      const col = listPage.page.widgets[0].children![0];
+      expect(col.props!.filterable).toBe(true);
+    });
+
+    it('sets filterable on date columns', () => {
+      const model = makeModel('sales', 'invoice', [
+        makeField('due_date', { type: 'date', required: true }),
+      ]);
+      const registry = new SchemaRegistry([model]);
+      const pages = generateCrudPages(registry, new Set());
+
+      const listPage = pages.find((p) => p.page.key === 'sales.invoice')!;
+      const col = listPage.page.widgets[0].children![0];
+      expect(col.props!.filterable).toBe(true);
+    });
+
+    it('sets filterable on numeric columns', () => {
+      const model = makeModel('sales', 'invoice', [
+        makeField('total', { type: 'money', required: true }),
+      ]);
+      const registry = new SchemaRegistry([model]);
+      const pages = generateCrudPages(registry, new Set());
+
+      const listPage = pages.find((p) => p.page.key === 'sales.invoice')!;
+      const col = listPage.page.widgets[0].children![0];
+      expect(col.props!.filterable).toBe(true);
+    });
+
+    it('does not set filterable on string columns', () => {
+      const model = makeModel('sales', 'invoice', [
+        makeField('name', { type: 'string', required: true }),
+      ]);
+      const registry = new SchemaRegistry([model]);
+      const pages = generateCrudPages(registry, new Set());
+
+      const listPage = pages.find((p) => p.page.key === 'sales.invoice')!;
+      const col = listPage.page.widgets[0].children![0];
+      expect(col.props!.filterable).toBeUndefined();
     });
   });
 });

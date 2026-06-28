@@ -33,7 +33,7 @@ export function generateCrudPages(
   const pages: Array<{ app: string; page: PageDefinition }> = [];
 
   for (const model of registry.getAllModels()) {
-    if (!model.crud) continue;
+    if (model.crud === false) continue;
 
     const listKey = model.qualifiedName;
     const createKey = `${model.qualifiedName}.new`;
@@ -137,28 +137,27 @@ function generateCreatePage(model: ResolvedModel): PageDefinition {
       },
     ],
     widgets: [
-      widget.data(model.qualifiedName, [
-        widget.form(
-          {
-            on: {
-              success: action.sequence([
-                action.toast('Record created', 'success'),
-                action.navigate(`${basePath}/{{id}}`),
-              ]),
-            },
-          },
-          [
-            ...sections,
-            widget.group({ direction: 'row', gap: 'sm', justify: 'end' }, [
-              widget.button('Cancel', {
-                variant: 'ghost',
-                on: { click: action.navigate(basePath) },
-              }),
-              widget.button('Save', { variant: 'primary', on: { click: action.submit() } }),
+      widget.form(
+        model.qualifiedName,
+        {
+          on: {
+            success: action.sequence([
+              action.toast('Record created', 'success'),
+              action.navigate(`${basePath}/{{id}}`),
             ]),
-          ],
-        ),
-      ]),
+          },
+        },
+        [
+          ...sections,
+          widget.group({ direction: 'row', gap: 'sm', justify: 'end' }, [
+            widget.button('Cancel', {
+              variant: 'ghost',
+              on: { click: action.navigate(basePath) },
+            }),
+            widget.button('Save', { variant: 'primary', on: { click: action.submit() } }),
+          ]),
+        ],
+      ),
     ],
   };
 }
@@ -181,27 +180,45 @@ function generateEditPage(model: ResolvedModel): PageDefinition {
         variant: 'ghost',
         action: action.navigate(basePath),
       },
+      {
+        type: 'button',
+        label: 'Edit',
+        icon: 'pencil',
+        variant: 'secondary',
+        visible: { field: '$state.editing', operator: 'neq', value: true },
+        action: action.setValue('$state.editing', true),
+      },
+      {
+        type: 'button',
+        label: 'Cancel',
+        variant: 'ghost',
+        visible: { field: '$state.editing', operator: 'eq', value: true },
+        action: action.sequence([action.reset(), action.setValue('$state.editing', false)]),
+      },
+      {
+        type: 'button',
+        label: 'Save',
+        icon: 'check',
+        variant: 'primary',
+        visible: { field: '$state.editing', operator: 'eq', value: true },
+        action: action.submit(),
+      },
     ],
     widgets: [
-      widget.data(model.qualifiedName, { id: '$route.id' }, [
-        widget.form(
-          {
-            on: {
-              success: action.toast('Changes saved', 'success'),
-            },
-          },
-          [
-            ...sections,
-            widget.group({ direction: 'row', gap: 'sm', justify: 'end' }, [
-              widget.button('Cancel', {
-                variant: 'ghost',
-                on: { click: action.navigate(basePath) },
-              }),
-              widget.button('Save', { variant: 'primary', on: { click: action.submit() } }),
+      widget.form(
+        model.qualifiedName,
+        {
+          id: '$route.id',
+          mode: '$state.editing',
+          on: {
+            success: action.sequence([
+              action.toast('Changes saved', 'success'),
+              action.setValue('$state.editing', false),
             ]),
-          ],
-        ),
-      ]),
+          },
+        },
+        sections,
+      ),
     ],
   };
 }
@@ -267,8 +284,18 @@ function getListColumns(model: ResolvedModel): import('@rangka/shared').WidgetNo
     const label = getLabel(field);
     const sortable = isSearchable(field.config) || isRequired(field.config);
     const align = isNumericType(field.config.type) ? ('right' as const) : undefined;
+    const filterable = isFilterableType(field.config.type);
+    const width = getColumnWidth(field);
 
-    columns.push(widget.column(field.name, { label, sortable: sortable || undefined, align }));
+    columns.push(
+      widget.column(field.name, {
+        label,
+        sortable: sortable || undefined,
+        align,
+        filterable: filterable || undefined,
+        width,
+      }),
+    );
   }
 
   return columns;
@@ -426,6 +453,41 @@ function isSearchable(config: FieldConfig): boolean {
 
 function isNumericType(type: string): boolean {
   return type === 'money' || type === 'decimal' || type === 'int';
+}
+
+function getColumnWidth(field: ResolvedField): string | undefined {
+  switch (field.config.type) {
+    case 'boolean':
+      return '80px';
+    case 'date':
+      return '120px';
+    case 'datetime':
+      return '160px';
+    case 'int':
+      return '100px';
+    case 'decimal':
+    case 'money':
+      return '120px';
+    case 'enum':
+      return '140px';
+    case 'sequence':
+      return '140px';
+    default:
+      return undefined;
+  }
+}
+
+function isFilterableType(type: string): boolean {
+  return (
+    type === 'enum' ||
+    type === 'boolean' ||
+    type === 'link' ||
+    type === 'date' ||
+    type === 'datetime' ||
+    type === 'int' ||
+    type === 'decimal' ||
+    type === 'money'
+  );
 }
 
 function getLabel(field: ResolvedField): string {

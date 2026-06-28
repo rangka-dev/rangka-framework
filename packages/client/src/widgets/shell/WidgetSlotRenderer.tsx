@@ -1,9 +1,9 @@
 import React, { useState, useCallback, useMemo, useRef } from 'react';
 import type { WidgetNode } from '@rangka/shared';
 import { SlotRenderer } from '../renderer/SlotRenderer.js';
-import { StateStore } from '../state/store.js';
 import { createRootContext } from '../context/builder.js';
 import { useActionHandlers } from './useActionHandlers.js';
+import { usePageState } from '../hooks/usePageState.js';
 import type { UseActionHandlersOptions } from './useActionHandlers.js';
 import type { FieldMeta } from '../binding/resolver.js';
 
@@ -29,7 +29,7 @@ export function WidgetSlotRenderer({
   const [record, setRecord] = useState<Record<string, unknown>>(initialRecord ?? {});
   const recordRef = useRef(record);
   recordRef.current = record;
-  const state = useMemo(() => new StateStore(), []);
+  const state = usePageState();
 
   const handlerOptions: UseActionHandlersOptions = useMemo(
     () => ({ model, sourceQueryKey }),

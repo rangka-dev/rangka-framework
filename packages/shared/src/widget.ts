@@ -399,15 +399,24 @@ export const widget = Object.assign(
     },
 
     form(
+      model: string,
       optsOrChildren:
-        | { visible?: Condition | Condition[]; on?: Record<string, WidgetAction | WidgetAction[]> }
+        | {
+            id?: string;
+            mode?: string;
+            visible?: Condition | Condition[];
+            on?: Record<string, WidgetAction | WidgetAction[]>;
+          }
         | WidgetNode[],
       maybeChildren?: WidgetNode[],
     ): WidgetNode {
       const isOpts = !Array.isArray(optsOrChildren);
       const opts = isOpts ? optsOrChildren : undefined;
       const children = isOpts ? maybeChildren! : optsOrChildren;
-      const node: WidgetNode = { type: 'form', children };
+      const source: WidgetSource = { model };
+      if (opts?.id) source.id = opts.id;
+      const node: WidgetNode = { type: 'form', source, children };
+      if (opts?.mode) node.props = { ...node.props, mode: opts.mode };
       if (opts?.visible) node.visible = opts.visible;
       if (opts?.on) node.on = opts.on;
       return node;

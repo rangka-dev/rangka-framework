@@ -6,7 +6,11 @@ import { useApp } from '../context/ModuleContext.js';
 import { useBootContext } from '../boot/BootProvider.js';
 import { useRouter, useRouterState } from '@tanstack/react-router';
 import { useBreadcrumbs } from './useBreadcrumbs.js';
-import type { NavigationTree, WidgetAction } from '@rangka/shared';
+import { usePageState, useStateVersion } from '../widgets/hooks/usePageState.js';
+import { useActionHandlers } from '../widgets/shell/useActionHandlers.js';
+import { dispatch as dispatchAction } from '../widgets/action/dispatcher.js';
+import { evaluateConditions } from '../widgets/condition/index.js';
+import type { NavigationTree, WidgetAction, Action } from '@rangka/shared';
 
 export function ShellLayout({ children }: { children: ReactNode }) {
   const { Layout } = useShellComponents();
@@ -16,17 +20,31 @@ export function ShellLayout({ children }: { children: ReactNode }) {
   const { activeApp, setActiveApp, clearActiveApp } = useApp();
   const { state } = useBootContext();
   const crumbs = useBreadcrumbs(currentPath, navigation, pages);
+  const pageState = usePageState();
+  const stateVersion = useStateVersion();
+  const handlers = useActionHandlers();
 
   const currentPage = useMemo(() => {
     return pages.find((p) => {
       const pagePath = p.path ?? '/' + p.key.replace(/\./g, '/');
-      if (pagePath.includes(':')) {
-        const regex = new RegExp('^' + pagePath.replace(/:[^/]+/g, '[^/]+') + '$');
+      if (pagePath.includes('$') || pagePath.includes(':')) {
+        const regex = new RegExp('^' + pagePath.replace(/[:$][^/]+/g, '[^/]+') + '$');
         return regex.test(currentPath);
       }
       return pagePath === currentPath;
     });
   }, [pages, currentPath]);
+
+  const visibleActions = useMemo(() => {
+    if (!currentPage?.actions) return undefined;
+    const stateSnapshot: Record<string, unknown> = {
+      $state: Object.fromEntries(pageState.keys().map((k) => [k, pageState.get(k)])),
+    };
+    return currentPage.actions.filter((act: Action) => {
+      if (!act.visible) return true;
+      return evaluateConditions(act.visible, stateSnapshot);
+    });
+  }, [currentPage?.actions, pageState, stateVersion]);
 
   useEffect(() => {
     const pathApp = currentPath.split('/').filter(Boolean)[0];
@@ -71,11 +89,21 @@ export function ShellLayout({ children }: { children: ReactNode }) {
 
   const handleAction = useCallback(
     (action: WidgetAction) => {
-      if (action.type === 'navigate') {
-        router.navigate({ to: (action as { path: string }).path });
+      if (action.type === 'form.submit') {
+        document.dispatchEvent(new CustomEvent('rangka:form.submit'));
+        return;
       }
+      if (action.type === 'form.reset') {
+        document.dispatchEvent(new CustomEvent('rangka:form.reset'));
+        return;
+      }
+      const actionCtx = {
+        widgetContext: { record: {}, model: '', mode: 'view' as const },
+        state: pageState,
+      };
+      dispatchAction(action, actionCtx, handlers);
     },
-    [router],
+    [pageState, handlers],
   );
 
   const user =
@@ -90,7 +118,7 @@ export function ShellLayout({ children }: { children: ReactNode }) {
       activeApp={activeApp ?? null}
       breadcrumbs={crumbs}
       currentPath={currentPath}
-      pageActions={currentPage?.actions}
+      pageActions={visibleActions}
       onAction={handleAction}
       onNavigate={handleNavigate}
       onAppSwitch={handleAppSwitch}

@@ -27,21 +27,25 @@ export function SlotRenderer({
   setValue,
 }: SlotRendererProps) {
   const ctx = context ?? createRootContext({}, '', 'view');
-  const store = useMemo(() => state ?? new StateStore(), [state]);
+  const fallbackStore = useMemo(() => new StateStore(), []);
 
-  return (
-    <PageStateProvider value={store}>
-      <WidgetContextProvider value={ctx}>
-        {nodes.map((node, index) => (
-          <WidgetRenderer
-            key={node.id ?? index}
-            node={node}
-            handlers={handlers}
-            fieldMeta={fieldMeta}
-            setValue={setValue}
-          />
-        ))}
-      </WidgetContextProvider>
-    </PageStateProvider>
+  const content = (
+    <WidgetContextProvider value={ctx}>
+      {nodes.map((node, index) => (
+        <WidgetRenderer
+          key={node.id ?? index}
+          node={node}
+          handlers={handlers}
+          fieldMeta={fieldMeta}
+          setValue={setValue}
+        />
+      ))}
+    </WidgetContextProvider>
   );
+
+  if (state) {
+    return content;
+  }
+
+  return <PageStateProvider value={fallbackStore}>{content}</PageStateProvider>;
 }

@@ -61,7 +61,7 @@ export function useFormSubmit(options: UseFormSubmitOptions): UseFormSubmitResul
       }
 
       const url = mode === 'edit' ? `${basePath}/${id}` : basePath;
-      const method = mode === 'edit' ? 'PATCH' : 'POST';
+      const method = mode === 'edit' ? 'PUT' : 'POST';
 
       const response = await apiClient(url, {
         method,
@@ -77,7 +77,8 @@ export function useFormSubmit(options: UseFormSubmitOptions): UseFormSubmitResul
         return;
       }
 
-      const record = await response.json();
+      const body = await response.json();
+      const record = body.data ?? body;
       queryClient.invalidateQueries({ queryKey: ['model', model] });
       initValues(record);
       onSuccess?.(record, mode);
