@@ -1,8 +1,10 @@
 import type { PageDefinition } from '@rangka/shared';
 import { createRootRoute, createRoute, Outlet, type AnyRoute } from '@tanstack/react-router';
-import { PageOutlet } from '../shell/PageOutlet.js';
 import { ShellLayout } from '../shell/ShellLayout.js';
 import { ModuleSelectorPage } from '../shell/ModuleSelectorPage.js';
+import { useShellComponents } from '../ui/UIProvider.js';
+import { WidgetSlotRenderer } from '../widgets/shell/WidgetSlotRenderer.js';
+import { useMeta } from '../context/MetaContext.js';
 
 function RootLayout() {
   return (
@@ -10,6 +12,25 @@ function RootLayout() {
       <Outlet />
     </ShellLayout>
   );
+}
+
+function PageRoute({ pageKey }: { pageKey: string }) {
+  const { PageOutlet, NotFound } = useShellComponents();
+  const { pages } = useMeta();
+  const page = pages.find((p) => p.key === pageKey);
+
+  if (!page) return <NotFound />;
+
+  return (
+    <PageOutlet pageKey={pageKey} layout={page.layout} actions={page.actions}>
+      <WidgetSlotRenderer nodes={page.widgets} model="" />
+    </PageOutlet>
+  );
+}
+
+function NotFoundRoute() {
+  const { NotFound } = useShellComponents();
+  return <NotFound />;
 }
 
 function pageKeyToPath(key: string): string {
@@ -36,7 +57,7 @@ export function buildRouteTree(pages: PageDefinition[]) {
       return createRoute({
         getParentRoute: () => rootRoute,
         path,
-        component: () => PageOutlet({ pageKey }),
+        component: () => <PageRoute pageKey={pageKey} />,
       });
     }),
   );
@@ -44,20 +65,11 @@ export function buildRouteTree(pages: PageDefinition[]) {
   const notFoundRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '*',
-    component: NotFound,
+    component: NotFoundRoute,
   });
 
   childRoutes.push(notFoundRoute);
   rootRoute.addChildren(childRoutes);
 
   return rootRoute;
-}
-
-function NotFound() {
-  return (
-    <div role="alert">
-      <h1>Page not found</h1>
-      <p>The page you are looking for does not exist.</p>
-    </div>
-  );
 }

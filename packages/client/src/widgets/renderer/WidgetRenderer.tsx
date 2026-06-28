@@ -1,7 +1,8 @@
 import React, { useMemo } from 'react';
 import type { WidgetNode } from '@rangka/shared';
 import type { ActionHandlers } from '../action/dispatcher.js';
-import { getWidget } from '../registry.js';
+import { useWidgetComponent } from '../../ui/UIProvider.js';
+import { widgetControllers } from '../controllers/index.js';
 import { useCondition } from '../hooks/useCondition.js';
 import { useBind } from '../hooks/useBind.js';
 import { useTriggerHandlers } from '../hooks/useAction.js';
@@ -71,9 +72,10 @@ export function WidgetRenderer({ node, handlers = {}, fieldMeta, setValue }: Wid
     [propsWithVisibleField, layoutProps],
   );
 
-  if (!visible) return null;
+  const UIComponent = useWidgetComponent(node.type);
+  const Component = widgetControllers[node.type] ?? UIComponent;
 
-  const widgetEntry = getWidget(node.type);
+  if (!visible) return null;
 
   const widgetProps: WidgetProps = {
     props: extractedWidgetProps,
@@ -107,11 +109,9 @@ export function WidgetRenderer({ node, handlers = {}, fieldMeta, setValue }: Wid
     ) : undefined,
   };
 
-  if (!widgetEntry) {
+  if (!Component) {
     return <LazyWidget name={node.type} {...widgetProps} />;
   }
-
-  const Component = widgetEntry.component;
 
   const dataAttrs: Record<string, string | undefined> = {
     'data-rangka-widget': node.type,

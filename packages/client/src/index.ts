@@ -8,6 +8,8 @@ export { usePermissions, type PermissionsApi } from './context/PermissionsContex
 export { useMeta, type MetaData } from './context/MetaContext.js';
 export { useShell, type ShellAPI, type ToastType } from './shell/ShellContext.js';
 export { App } from './App.js';
+export { createApp } from './createApp.js';
+export { UIProvider, useUIKit, useWidgetComponent, useShellComponents } from './ui/UIProvider.js';
 export {
   WidgetSlotRenderer,
   useActionHandlers,

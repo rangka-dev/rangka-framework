@@ -1,10 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
 import './index.css';
-import { App } from './App.js';
-import { registerBuiltInWidgets } from './widgets/components/register.js';
+import { createApp } from './createApp.js';
+import { defaultKit } from '@rangka/ui';
 import { usePageState } from './widgets/hooks/usePageState.js';
 import { useWidgetContext } from './widgets/hooks/useWidgetContext.js';
 import { useShell } from './shell/ShellContext.js';
@@ -25,13 +23,7 @@ import { useModelQuery } from './widgets/data/useModelQuery.js';
   useModelQuery,
 };
 
-registerBuiltInWidgets();
-
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
+createApp({ ui: defaultKit });
 
 if (window.parent !== window) {
   import('./studio/index.js');

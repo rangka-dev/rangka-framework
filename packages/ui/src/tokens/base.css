@@ -1,0 +1,18 @@
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply text-base font-sans;
+  }
+  button,
+  a,
+  [role='button'],
+  [role='menuitem'],
+  [role='option'] {
+    cursor: pointer;
+  }
+}

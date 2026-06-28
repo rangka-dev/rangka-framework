@@ -38,7 +38,9 @@ const CardHeader = forwardRef<HTMLDivElement, CardHeaderProps>(({ className, ...
 CardHeader.displayName = 'Card.Header';
 
 const CardTitle = forwardRef<HTMLHeadingElement, CardTitleProps>(({ className, ...props }, ref) => {
-  return <h3 ref={ref} className={cn('font-semibold tracking-tight', className)} {...props} />;
+  return (
+    <h3 ref={ref} className={cn('text-sm font-medium tracking-tight', className)} {...props} />
+  );
 });
 CardTitle.displayName = 'Card.Title';
 

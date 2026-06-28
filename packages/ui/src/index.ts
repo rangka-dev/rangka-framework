@@ -7,3 +7,5 @@ export * from './feedback';
 export * from './form';
 export * from './widgets';
 export { cn } from './lib/cn';
+export { defaultKit } from './kit';
+export type { UIKit } from '@rangka/shared';

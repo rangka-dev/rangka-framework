@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
+import { Button } from '@rangka/ui';
+import { Card } from '@rangka/ui';
+import { Field } from '@rangka/ui';
+import { Input } from '@rangka/ui';
 
 export interface SetupFormProps {
   onSetup: (data: { name: string; email: string; password: string }) => void | Promise<void>;
@@ -21,56 +21,52 @@ export function SetupForm({ onSetup, error, loading }: SetupFormProps) {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>Setup</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit}>
-            <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor="name">Name</FieldLabel>
-                <Input
-                  id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Your name"
-                  required
-                  autoFocus
-                />
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="email">Email</FieldLabel>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  required
-                />
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="password">Password</FieldLabel>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </Field>
-              {error && <FieldError>{error}</FieldError>}
-              <Field>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? 'Setting up...' : 'Complete setup'}
-                </Button>
-              </Field>
-            </FieldGroup>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+    <Card>
+      <Card.Header>
+        <Card.Title>Setup</Card.Title>
+      </Card.Header>
+      <Card.Content>
+        <form onSubmit={handleSubmit}>
+          <Field>
+            <Field.Label htmlFor="name">Name</Field.Label>
+            <Input
+              id="name"
+              value={name}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
+              placeholder="Your name"
+              required
+              autoFocus
+            />
+          </Field>
+          <Field>
+            <Field.Label htmlFor="email">Email</Field.Label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              required
+            />
+          </Field>
+          <Field>
+            <Field.Label htmlFor="password">Password</Field.Label>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+              required
+            />
+          </Field>
+          {error && <Field.Error>{error}</Field.Error>}
+          <Field>
+            <Button type="submit" disabled={loading}>
+              {loading ? 'Setting up...' : 'Complete setup'}
+            </Button>
+          </Field>
+        </form>
+      </Card.Content>
+    </Card>
   );
 }
