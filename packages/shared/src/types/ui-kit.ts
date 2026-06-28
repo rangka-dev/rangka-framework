@@ -42,6 +42,8 @@ export interface ShellLayoutProps {
   activeApp: string | null;
   breadcrumbs: { label: string; path?: string }[];
   currentPath: string;
+  pageActions?: Action[];
+  onAction?: (action: WidgetAction) => void;
   onNavigate: (path: string) => void;
   onAppSwitch: (app: string) => void;
   onAllApps: () => void;

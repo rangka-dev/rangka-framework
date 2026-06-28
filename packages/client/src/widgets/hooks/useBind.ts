@@ -18,17 +18,28 @@ export function useBind(
 
   return useMemo(() => {
     const result = resolveBinding(bind, ctx, fieldMeta, setValue, state);
-    if (!result || !bind?.field || !form) return result;
+    if (!result) return result;
 
-    const error = form.getError(bind.field);
-    return {
-      value: form.getValue(bind.field),
-      setValue: (val: unknown) => {
-        form.setValue(bind.field!, val);
-        form.setTouched(bind.field!);
-      },
-      meta: result.meta ?? form.getFieldMeta(bind.field),
-      error,
-    };
+    const isViewMode = ctx.mode === 'view' && !form;
+
+    if (bind?.field && form) {
+      const error = form.getError(bind.field);
+      return {
+        value: form.getValue(bind.field),
+        setValue: (val: unknown) => {
+          form.setValue(bind.field!, val);
+          form.setTouched(bind.field!);
+        },
+        meta: result.meta ?? form.getFieldMeta(bind.field),
+        error,
+      };
+    }
+
+    if (isViewMode) {
+      const meta = result.meta ?? { type: 'string', label: '', required: false, readOnly: true };
+      return { ...result, meta: { ...meta, readOnly: true } };
+    }
+
+    return result;
   }, [bind, ctx, fieldMeta, setValue, state, stateVersion, form, form?.errors, form?.touched]);
 }

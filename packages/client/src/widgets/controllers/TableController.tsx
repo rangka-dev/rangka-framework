@@ -5,7 +5,6 @@ import { useWidgetComponent } from '../../ui/UIProvider.js';
 import { useWidgetContext, WidgetContextProvider } from '../hooks/useWidgetContext.js';
 import { usePageState } from '../hooks/usePageState.js';
 import { useModelQuery } from '../data/useModelQuery.js';
-import { useSurfaceContext } from '../hooks/useSurfaceContext.js';
 import { buildRowContext } from '../context/builder.js';
 import { useModelMeta } from '../../data/useModelMeta.js';
 import { WidgetRenderer } from '../renderer/WidgetRenderer.js';
@@ -13,7 +12,6 @@ import { WidgetRenderer } from '../renderer/WidgetRenderer.js';
 export function TableController({ props, on, childNodes }: WidgetProps) {
   const ctx = useWidgetContext();
   const store = usePageState();
-  const surface = useSurfaceContext();
   const Table = useWidgetComponent('table');
 
   const model = ctx.model;
@@ -21,8 +19,7 @@ export function TableController({ props, on, childNodes }: WidgetProps) {
   const pageSize = (props.pageSize as number | undefined) ?? 20;
   const smartMode = Boolean(model);
 
-  const variant =
-    (props.variant as 'card' | 'flat' | undefined) ?? (surface === 'card' ? 'flat' : 'card');
+  const variant = (props.variant as 'card' | 'flat' | undefined) ?? 'flat';
 
   const source = useModelQuery({
     model: model || '',

@@ -13,6 +13,7 @@ function makeModel(overrides: Partial<ResolvedModel> & { qualifiedName: string }
     app: overrides.app ?? 'test',
     name: overrides.qualifiedName.split('.')[1],
     auditLog: false,
+    crud: true,
     traits: [],
     fields: [],
     indexes: [],

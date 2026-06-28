@@ -36,6 +36,7 @@ export interface ActionHandlers {
   duplicateRow?: (field: string) => void;
   formSubmit?: () => Promise<void>;
   formReset?: () => void;
+  toast?: (message: string, variant?: string) => void;
 }
 
 export async function dispatch(
@@ -90,6 +91,9 @@ export async function dispatch(
       return;
     case 'form.reset':
       handlers.formReset?.();
+      return;
+    case 'toast':
+      handlers.toast?.(action.message, action.variant);
       return;
     case 'sequence':
       return handleSequence(action.actions, actionCtx, handlers);

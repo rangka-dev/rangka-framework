@@ -20,6 +20,7 @@ export interface ResolvedModel {
   naming?: ModelConfig['naming'];
   scope?: ScopeConfig;
   auditLog: boolean;
+  crud: boolean;
   traits: string[];
   fields: ResolvedField[];
   indexes: ModelConfig['indexes'];

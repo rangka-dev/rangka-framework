@@ -5,7 +5,10 @@ import { useModelRecord } from '../data/useModelRecord.js';
 import { useModelQuery } from '../data/useModelQuery.js';
 import { useWidgetContext, WidgetContextProvider } from '../hooks/useWidgetContext.js';
 import { WidgetRenderer } from '../renderer/WidgetRenderer.js';
+import { useActionHandlers } from '../shell/useActionHandlers.js';
+import { useModelMeta } from '../../data/useModelMeta.js';
 import type { WidgetContext } from '../context/types.js';
+import type { FieldMeta } from '../binding/resolver.js';
 
 export function DataController({ bind, props, on, childNodes }: WidgetProps) {
   const ctx = useWidgetContext();
@@ -103,12 +106,36 @@ function DataListMode({
 }
 
 function DataChildren({ childNodes }: { childNodes?: WidgetNode[] }) {
+  const handlers = useActionHandlers();
+  const ctx = useWidgetContext();
+  const { modelMeta } = useModelMeta(ctx.model);
+
+  const fieldMeta = React.useMemo<Record<string, FieldMeta> | undefined>(() => {
+    if (!modelMeta) return undefined;
+    const map: Record<string, FieldMeta> = {};
+    for (const f of modelMeta.fields) {
+      map[f.name] = {
+        type: f.type,
+        label: f.label ?? f.name,
+        required: !!f.required,
+        readOnly: false,
+        options: f.options as unknown[] | undefined,
+      };
+    }
+    return map;
+  }, [modelMeta]);
+
   if (!childNodes || childNodes.length === 0) return null;
 
   return (
     <>
       {childNodes.map((child, i) => (
-        <WidgetRenderer key={child.id ?? i} node={child} />
+        <WidgetRenderer
+          key={child.id ?? i}
+          node={child}
+          handlers={handlers}
+          fieldMeta={fieldMeta}
+        />
       ))}
     </>
   );

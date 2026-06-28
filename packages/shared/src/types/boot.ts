@@ -18,6 +18,7 @@ export interface NavigationTreeItem {
   page: string;
   label: string;
   icon?: string;
+  path: string;
 }
 
 export interface NavigationTreeSection {

@@ -46,9 +46,9 @@ export function ModuleSelectorPage() {
     (appName: string) => {
       setActiveApp(appName);
       const mod = navigation.find((n: NavigationTree) => n.app === appName);
-      const firstPage = mod?.sections[0]?.items[0]?.page;
-      if (firstPage) {
-        router.navigate({ to: '/' + firstPage.replace('.', '/') });
+      const firstItem = mod?.sections[0]?.items[0];
+      if (firstItem) {
+        router.navigate({ to: firstItem.path });
       }
     },
     [navigation, router, setActiveApp],

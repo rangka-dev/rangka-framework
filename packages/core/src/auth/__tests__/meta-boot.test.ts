@@ -15,6 +15,7 @@ const orderModel: ResolvedModel = {
   name: 'order',
   label: 'Sales Order',
   auditLog: false,
+  crud: true,
   traits: [],
   fields: [
     {
@@ -47,6 +48,7 @@ const payslipModel: ResolvedModel = {
   name: 'payslip',
   label: 'Payslip',
   auditLog: false,
+  crud: true,
   traits: [],
   fields: [
     {
@@ -65,6 +67,7 @@ const contactModel: ResolvedModel = {
   name: 'contact',
   label: 'Contact',
   auditLog: false,
+  crud: true,
   traits: [],
   fields: [
     {

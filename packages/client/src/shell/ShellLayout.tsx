@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { useShellComponents } from '../ui/UIProvider.js';
 import { useMeta } from '../context/MetaContext.js';
@@ -6,7 +6,7 @@ import { useApp } from '../context/ModuleContext.js';
 import { useBootContext } from '../boot/BootProvider.js';
 import { useRouter, useRouterState } from '@tanstack/react-router';
 import { useBreadcrumbs } from './useBreadcrumbs.js';
-import type { NavigationTree } from '@rangka/shared';
+import type { NavigationTree, WidgetAction } from '@rangka/shared';
 
 export function ShellLayout({ children }: { children: ReactNode }) {
   const { Layout } = useShellComponents();
@@ -16,6 +16,17 @@ export function ShellLayout({ children }: { children: ReactNode }) {
   const { activeApp, setActiveApp, clearActiveApp } = useApp();
   const { state } = useBootContext();
   const crumbs = useBreadcrumbs(currentPath, navigation, pages);
+
+  const currentPage = useMemo(() => {
+    return pages.find((p) => {
+      const pagePath = p.path ?? '/' + p.key.replace(/\./g, '/');
+      if (pagePath.includes(':')) {
+        const regex = new RegExp('^' + pagePath.replace(/:[^/]+/g, '[^/]+') + '$');
+        return regex.test(currentPath);
+      }
+      return pagePath === currentPath;
+    });
+  }, [pages, currentPath]);
 
   useEffect(() => {
     const pathApp = currentPath.split('/').filter(Boolean)[0];
@@ -37,9 +48,9 @@ export function ShellLayout({ children }: { children: ReactNode }) {
     (appName: string) => {
       setActiveApp(appName);
       const mod = navigation.find((n: NavigationTree) => n.app === appName);
-      const firstPage = mod?.sections[0]?.items[0]?.page;
-      if (firstPage) {
-        router.navigate({ to: '/' + firstPage.replace('.', '/') });
+      const firstItem = mod?.sections[0]?.items[0];
+      if (firstItem) {
+        router.navigate({ to: firstItem.path });
       }
     },
     [navigation, router, setActiveApp],
@@ -58,6 +69,15 @@ export function ShellLayout({ children }: { children: ReactNode }) {
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }));
   }, []);
 
+  const handleAction = useCallback(
+    (action: WidgetAction) => {
+      if (action.type === 'navigate') {
+        router.navigate({ to: (action as { path: string }).path });
+      }
+    },
+    [router],
+  );
+
   const user =
     state.status === 'ready'
       ? { id: state.data.user.id, name: state.data.user.name, email: state.data.user.email }
@@ -70,6 +90,8 @@ export function ShellLayout({ children }: { children: ReactNode }) {
       activeApp={activeApp ?? null}
       breadcrumbs={crumbs}
       currentPath={currentPath}
+      pageActions={currentPage?.actions}
+      onAction={handleAction}
       onNavigate={handleNavigate}
       onAppSwitch={handleAppSwitch}
       onAllApps={handleAllApps}

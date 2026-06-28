@@ -10,6 +10,7 @@ function makeModel(qualifiedName: string, traits: string[] = []): ResolvedModel 
     app: 'test',
     name: qualifiedName.split('.')[1],
     auditLog: false,
+    crud: true,
     traits,
     fields: [
       { name: 'id', config: { type: 'uuid' }, provenance: { source: 'base' } },

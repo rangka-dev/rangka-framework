@@ -46,7 +46,8 @@ export type WidgetAction =
   | SequenceAction
   | ConditionalAction
   | FormSubmitAction
-  | FormResetAction;
+  | FormResetAction
+  | ToastAction;
 
 export interface SetValueAction {
   type: 'setValue';
@@ -164,4 +165,10 @@ export interface FormSubmitAction {
 
 export interface FormResetAction {
   type: 'form.reset';
+}
+
+export interface ToastAction {
+  type: 'toast';
+  message: string;
+  variant?: 'info' | 'success' | 'warning' | 'error';
 }

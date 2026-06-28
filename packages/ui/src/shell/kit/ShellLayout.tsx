@@ -56,6 +56,8 @@ export function ShellLayout({
   activeApp,
   breadcrumbs,
   currentPath,
+  pageActions,
+  onAction,
   onNavigate,
   onAppSwitch,
   onAllApps: _onAllApps,
@@ -69,7 +71,7 @@ export function ShellLayout({
       title: section.section,
       items: section.items.map((item) => ({
         label: item.label,
-        path: '/' + item.page.replace('.', '/'),
+        path: item.path,
         icon: item.icon,
       })),
     })),
@@ -85,6 +87,8 @@ export function ShellLayout({
           breadcrumbs={breadcrumbs}
           currentPath={currentPath}
           sidebarSections={sidebarSections}
+          pageActions={pageActions}
+          onAction={onAction}
           onNavigate={onNavigate}
           onAppSwitch={onAppSwitch}
           onLogout={onLogout}
@@ -99,10 +103,7 @@ export function ShellLayout({
           {navigation.flatMap((mod) =>
             mod.sections.flatMap((section) =>
               section.items.map((item) => (
-                <CommandPalette.Item
-                  key={item.page}
-                  onSelect={() => onNavigate('/' + item.page.replace('.', '/'))}
-                >
+                <CommandPalette.Item key={item.page} onSelect={() => onNavigate(item.path)}>
                   {item.label}
                 </CommandPalette.Item>
               )),
@@ -122,6 +123,8 @@ function ShellLayoutInner({
   breadcrumbs,
   currentPath,
   sidebarSections,
+  pageActions,
+  onAction,
   onNavigate,
   onAppSwitch,
   onLogout,
@@ -137,6 +140,8 @@ function ShellLayoutInner({
     title: string;
     items: Array<{ label: string; path: string; icon?: string }>;
   }>;
+  pageActions: ShellLayoutProps['pageActions'];
+  onAction: ShellLayoutProps['onAction'];
   onNavigate: (path: string) => void;
   onAppSwitch: (app: string) => void;
   onLogout: () => void;
@@ -281,6 +286,21 @@ function ShellLayoutInner({
                   })}
                 </Breadcrumb.List>
               </Breadcrumb>
+              {pageActions && pageActions.length > 0 && (
+                <Shell.Main.Actions>
+                  {pageActions.map((act, i) => (
+                    <Button
+                      key={i}
+                      variant={act.variant ?? 'secondary'}
+                      size="xs"
+                      onClick={() => act.action && onAction?.(act.action)}
+                    >
+                      {act.icon && <DynamicIcon name={act.icon} size="sm" />}
+                      {act.label && <span>{act.label}</span>}
+                    </Button>
+                  ))}
+                </Shell.Main.Actions>
+              )}
             </Shell.Main.Header>
 
             <Shell.Main.Body>{children}</Shell.Main.Body>

@@ -29,6 +29,7 @@ export function mergeSchemas(loadResult: SchemaLoadResult): MergeResult {
       naming: schema.naming,
       scope: schema.scope,
       auditLog: schema.auditLog !== false,
+      crud: schema.crud !== false,
       traits: schema.traits ?? [],
       fields,
       indexes: schema.indexes,

@@ -12,6 +12,7 @@ const mockModel: ResolvedModel = {
   app: 'sales',
   name: 'invoice',
   auditLog: false,
+  crud: true,
   traits: [],
   fields: [
     { name: 'id', config: { type: 'string' } as any, provenance: { source: 'base' } },

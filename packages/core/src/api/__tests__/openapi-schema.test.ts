@@ -49,7 +49,7 @@ describe('fieldToJsonSchema', () => {
 
   it('maps json field', () => {
     const result = fieldToJsonSchema({ type: 'json' } as FieldConfig);
-    expect(result).toEqual({ type: 'object' });
+    expect(result).toEqual({ oneOf: [{ type: 'object' }, { type: 'array' }] });
   });
 
   it('maps link field as string reference', () => {
@@ -110,6 +110,7 @@ describe('modelToSchemaComponent', () => {
     name: 'customer',
     label: 'Customer',
     auditLog: false,
+    crud: true,
     traits: [],
     fields: [
       {
