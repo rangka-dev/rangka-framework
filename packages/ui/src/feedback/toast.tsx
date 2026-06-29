@@ -5,14 +5,14 @@ import { cn } from '../lib/cn';
 import { Icon } from '../primitives/icon';
 
 const toastVariants = cva(
-  'pointer-events-auto flex items-center gap-2 rounded-md border px-3 py-2 text-sm shadow-sm',
+  'pointer-events-auto flex items-center gap-3 rounded-lg border border-l-[3px] px-4 py-3 text-sm shadow-md animate-in slide-in-from-bottom-2 fade-in duration-200',
   {
     variants: {
       variant: {
-        info: 'border-info-border bg-info-bg text-info-foreground',
-        success: 'border-success-border bg-success-bg text-success-foreground',
-        warning: 'border-warning-border bg-warning-bg text-warning-foreground',
-        error: 'border-error-border bg-error-bg text-error-foreground',
+        info: 'border-border border-l-blue-500 bg-surface text-foreground',
+        success: 'border-border border-l-green-500 bg-surface text-foreground',
+        warning: 'border-border border-l-amber-500 bg-surface text-foreground',
+        error: 'border-border border-l-red-500 bg-surface text-foreground',
       },
     },
     defaultVariants: {
@@ -83,7 +83,7 @@ ToastRoot.displayName = 'Toast';
 const ToastIcon = forwardRef<HTMLSpanElement, ToastIconProps>(
   ({ className, icon, ...props }, ref) => {
     return (
-      <span ref={ref} className={cn('shrink-0', className)} {...props}>
+      <span ref={ref} className={cn('shrink-0 [&_svg]:size-4', className)} {...props}>
         {icon ?? <Icon icon={InfoIcon} size="sm" />}
       </span>
     );

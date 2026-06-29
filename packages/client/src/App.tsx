@@ -31,16 +31,18 @@ function AppInner() {
   }, [state]);
 
   return (
-    <BootGate>
-      {state.status === 'ready' && router && (
-        <ShellProviders data={state.data}>
-          <QueryProvider client={queryClient}>
-            <RouterProvider router={router} />
-            <ToastRenderer />
-          </QueryProvider>
-        </ShellProviders>
-      )}
-    </BootGate>
+    <>
+      <BootGate>
+        {state.status === 'ready' && router && (
+          <ShellProviders data={state.data}>
+            <QueryProvider client={queryClient}>
+              <RouterProvider router={router} />
+            </QueryProvider>
+          </ShellProviders>
+        )}
+      </BootGate>
+      <ToastRenderer />
+    </>
   );
 }
 

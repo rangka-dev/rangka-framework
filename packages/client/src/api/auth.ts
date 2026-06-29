@@ -1,4 +1,3 @@
-import { apiClient } from './client.js';
 import { setToken } from './token.js';
 
 export interface LoginCredentials {
@@ -13,8 +12,9 @@ export interface SetupCredentials {
 }
 
 export async function login(credentials: LoginCredentials): Promise<Response> {
-  const response = await apiClient('/api/core/session', {
+  const response = await fetch('/api/core/session', {
     method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(credentials),
   });
 
@@ -27,8 +27,9 @@ export async function login(credentials: LoginCredentials): Promise<Response> {
 }
 
 export async function setup(credentials: SetupCredentials): Promise<Response> {
-  const response = await apiClient('/api/core/setup', {
+  const response = await fetch('/api/core/setup', {
     method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(credentials),
   });
 

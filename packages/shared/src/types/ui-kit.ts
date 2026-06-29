@@ -49,6 +49,14 @@ export interface WidgetProps {
 
 export type WidgetComponentMap = Record<string, ComponentType<WidgetProps>>;
 
+// --- Login screen contract ---
+
+export interface LoginScreenProps {
+  logo?: ReactNode;
+  appName?: string;
+  children: ReactNode;
+}
+
 // --- Shell contract ---
 
 export interface ShellLayoutProps {
@@ -102,6 +110,7 @@ export interface ModuleSelectorProps {
 
 export interface ShellComponents {
   Layout: ComponentType<ShellLayoutProps>;
+  LoginScreen: ComponentType<LoginScreenProps>;
   PageOutlet: ComponentType<PageOutletProps>;
   Toast: ComponentType<ToastProps>;
   ConfirmDialog: ComponentType<ConfirmDialogProps>;

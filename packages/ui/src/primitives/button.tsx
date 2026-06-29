@@ -1,9 +1,11 @@
 import { cva, type VariantProps } from 'class-variance-authority';
 import { forwardRef, type ComponentProps } from 'react';
 import { cn } from '../lib/cn';
+import { Loader2 } from 'lucide-react';
+import { Icon } from './icon';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all duration-150 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {
@@ -39,12 +41,23 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, loading, children, ...props }, ref) => {
     return (
       <button
-        className={cn(buttonVariants({ variant, size, className }))}
+        className={cn(
+          buttonVariants({ variant, size, className }),
+          loading && 'relative !opacity-100',
+        )}
         ref={ref}
         disabled={loading || props.disabled}
+        aria-busy={loading || undefined}
         {...props}
       >
-        {children}
+        {loading && (
+          <span className="absolute inset-0 flex items-center justify-center">
+            <Icon icon={Loader2} size="sm" className="animate-spin" />
+          </span>
+        )}
+        <span className={cn('inline-flex items-center gap-2', loading && 'invisible')}>
+          {children}
+        </span>
       </button>
     );
   },

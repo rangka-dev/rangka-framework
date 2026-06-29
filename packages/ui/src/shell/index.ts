@@ -51,6 +51,8 @@ export {
   type BreadcrumbEllipsisProps,
 } from './breadcrumb';
 
+export { LoginScreen, type LoginScreenRootProps } from './kit/LoginScreen';
+
 export { useIsMobile } from './use-mobile';
 
 export { PageContainer, pageContainerVariants, type PageContainerProps } from './page-container';
