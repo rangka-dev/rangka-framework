@@ -127,7 +127,7 @@ function buildNavigationTree(
   for (const mod of apps) {
     if (!mod.navigation) continue;
 
-    const sections = buildAccessibleSections(mod.navigation, accessiblePageKeys);
+    const sections = buildAccessibleSections(mod.navigation, accessiblePageKeys, accessiblePages);
     if (sections.length === 0) continue;
 
     tree.push({
@@ -150,8 +150,10 @@ function buildNavigationTree(
 function buildAccessibleSections(
   navigation: NonNullable<AppConfig['navigation']>,
   accessiblePageKeys: Set<string>,
+  accessiblePages: Array<{ app: string; page: PageDefinition }>,
 ): NavigationTreeSection[] {
   const sections: NavigationTreeSection[] = [];
+  const pageMap = new Map(accessiblePages.map((p) => [p.page.key, p.page]));
 
   for (const section of navigation) {
     const visibleItems = section.items.filter((item) => accessiblePageKeys.has(item.page));
@@ -159,11 +161,16 @@ function buildAccessibleSections(
 
     sections.push({
       section: section.section,
-      items: visibleItems.map((item) => ({
-        page: item.page,
-        label: item.label,
-        icon: item.icon,
-      })),
+      items: visibleItems.map((item) => {
+        const pageDef = pageMap.get(item.page);
+        const path = pageDef?.path ?? '/' + item.page.replace('.', '/');
+        return {
+          page: item.page,
+          label: item.label,
+          icon: item.icon,
+          path,
+        };
+      }),
     });
   }
 
@@ -196,6 +203,7 @@ function buildModelMeta(
     result[name] = {
       qualifiedName: model.qualifiedName,
       label: model.label,
+      naming: model.naming ?? undefined,
       fields: model.fields.map((field) => resolvedFieldToMeta(field)),
     };
   }

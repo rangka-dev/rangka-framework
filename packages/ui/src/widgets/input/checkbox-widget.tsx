@@ -15,8 +15,8 @@ export function CheckboxWidget({ props, bind, on }: WidgetComponentProps) {
     <Field orientation="horizontal" data-invalid={!!bind.error || undefined}>
       <Checkbox
         checked={bind.value as boolean | undefined}
-        onCheckedChange={handleChange}
-        aria-disabled={disabled}
+        onCheckedChange={disabled ? undefined : handleChange}
+        disabled={disabled}
       />
       {label && <Field.Label>{label}</Field.Label>}
       {bind.error && <Field.Error>{bind.error}</Field.Error>}

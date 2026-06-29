@@ -1,13 +1,13 @@
 ---
 status: stable
 since: 0.1.0
-last-updated: 2026-06-10
+last-updated: 2026-06-29
 description: defineFixture() API — seed data format and loading order
 ---
 
 # defineFixture
 
-Declares seed data — records loaded into the database for initial setup, demos, or testing.
+Declares seed data. Records loaded into the database for initial setup, demos, or testing.
 
 See [Fixtures concept](../concepts/fixtures.md) for usage patterns.
 
@@ -71,12 +71,12 @@ interface FixtureConfig {
 
 ## Variants
 
-| Variant                  | When Loaded                                                                      |
-| ------------------------ | -------------------------------------------------------------------------------- |
-| `undefined` (no variant) | Always loaded — required for app to function (config, defaults, system records). |
-| `'demo'`                 | Loaded when running with demo data (development, staging).                       |
-| `'test'`                 | Loaded for automated tests only.                                                 |
-| Custom string            | Loaded only when explicitly requested by name.                                   |
+| Variant                  | When Loaded                                                                     |
+| ------------------------ | ------------------------------------------------------------------------------- |
+| `undefined` (no variant) | Always loaded. Required for app to function (config, defaults, system records). |
+| `'demo'`                 | Loaded when running with demo data (development, staging).                      |
+| `'test'`                 | Loaded for automated tests only.                                                |
+| Custom string            | Loaded only when explicitly requested by name.                                  |
 
 ## References
 
@@ -168,7 +168,7 @@ apps/accounting/
 ## Example: Full Fixture Set
 
 ```typescript
-// fixtures/currency.ts — no dependencies, no variant (always loaded)
+// fixtures/currency.ts - no dependencies, no variant (always loaded)
 export default defineFixture({
   model: 'accounting.currency',
   key: 'code',
@@ -179,7 +179,7 @@ export default defineFixture({
   ],
 });
 
-// fixtures/demo-invoices.ts — demo variant, depends on customer fixture
+// fixtures/demo-invoices.ts - demo variant, depends on customer fixture
 export default defineFixture({
   model: 'sales.invoice',
   key: 'name',

@@ -1,6 +1,8 @@
-import { type ReactNode } from 'react';
+import { type ReactNode, useMemo } from 'react';
 import { Table } from '../../data/table';
 import { TablePagination } from '../../data/table-pagination';
+import { renderDisplay, type CellColumn } from './cell-renderers';
+import { TableFilterBar, type FilterFieldDeclaration, type ActiveFilter } from './table-filter-bar';
 import type { WidgetComponentProps, WidgetNode } from '../types';
 
 interface ColumnDef {
@@ -9,6 +11,11 @@ interface ColumnDef {
   width?: string;
   align?: 'left' | 'center' | 'right';
   sortable?: boolean;
+  fieldType?: string;
+  options?: Array<{ value: string; label: string }>;
+  currency?: string;
+  precision?: number;
+  namingField?: string;
   children?: WidgetNode[];
   renderCell?: (row: Record<string, unknown>, index: number) => ReactNode;
 }
@@ -27,14 +34,29 @@ export function TableWidget({ props, bind, on, childNodes }: WidgetComponentProp
   const total = (props.total as number) ?? 0;
   const sorted = props.sorted as { field: string; direction: 'asc' | 'desc' } | undefined;
 
+  const filterFields = (props.filterFields as FilterFieldDeclaration[]) ?? [];
+  const activeFilters = (props.activeFilters as ActiveFilter[]) ?? [];
+  const surface = (props.surface as 'page' | 'card') ?? 'card';
+
   const columns = resolveColumns(props.columns as ColumnDef[] | undefined, childNodes);
   const records = (bind.value as Record<string, unknown>[]) ?? [];
   const colCount = columns.length + (selectable ? 1 : 0);
 
+  const cellColumns = useMemo(() => columns.map(toCellColumn), [columns]);
+
   const showPagination = pageSize > 0 && total > 0;
+  const showInlineFilters = filterFields.length > 0 && surface === 'card';
 
   return (
     <Table variant={variant} className={bordered ? 'ring-1 ring-border' : undefined}>
+      {showInlineFilters && (
+        <TableFilterBar
+          fields={filterFields}
+          activeFilters={activeFilters}
+          onSetFilter={on.setFilter}
+          onRemoveFilter={on.removeFilter}
+        />
+      )}
       <Table.Content>
         <Table.Header>
           <tr>
@@ -82,13 +104,11 @@ export function TableWidget({ props, bind, on, childNodes }: WidgetComponentProp
                     onSelectChange={(checked) => on.select?.(row, checked)}
                   />
                 )}
-                {columns.map((col) => (
+                {columns.map((col, colIdx) => (
                   <Table.Cell key={col.field} align={col.align}>
                     {col.renderCell
                       ? col.renderCell(row, idx)
-                      : row[col.field] != null
-                        ? String(row[col.field])
-                        : ''}
+                      : renderDisplay(col.fieldType, row[col.field], cellColumns[colIdx])}
                   </Table.Cell>
                 ))}
               </Table.Row>
@@ -109,6 +129,17 @@ export function TableWidget({ props, bind, on, childNodes }: WidgetComponentProp
   );
 }
 
+function toCellColumn(col: ColumnDef): CellColumn {
+  return {
+    field: col.field,
+    fieldType: col.fieldType,
+    options: col.options,
+    currency: col.currency,
+    precision: col.precision,
+    namingField: col.namingField,
+  };
+}
+
 function resolveColumns(
   propColumns: ColumnDef[] | undefined,
   childNodes: WidgetNode[] | undefined,
@@ -124,6 +155,10 @@ function resolveColumns(
         width: node.props?.width as string | undefined,
         align: node.props?.align as 'left' | 'center' | 'right' | undefined,
         sortable: node.props?.sortable as boolean | undefined,
+        fieldType: node.props?.fieldType as string | undefined,
+        options: node.props?.options as Array<{ value: string; label: string }> | undefined,
+        currency: node.props?.currency as string | undefined,
+        precision: node.props?.precision as number | undefined,
         children: node.children,
       }));
   }

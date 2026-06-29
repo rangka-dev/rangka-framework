@@ -30,10 +30,10 @@ export type SheetCloseProps = ComponentProps<'button'>;
 export type SheetOverlayProps = ComponentProps<'div'>;
 
 const sideStyles = {
-  left: 'fixed inset-y-0 left-0 w-72 border-r',
-  right: 'fixed inset-y-0 right-0 w-72 border-l',
-  top: 'fixed inset-x-0 top-0 h-auto border-b',
-  bottom: 'fixed inset-x-0 bottom-0 h-auto border-t',
+  left: 'fixed inset-y-0 left-0 w-72 border-r border-border',
+  right: 'fixed inset-y-0 right-0 w-72 border-l border-border',
+  top: 'fixed inset-x-0 top-0 h-auto border-b border-border',
+  bottom: 'fixed inset-x-0 bottom-0 h-auto border-t border-border',
 } as const;
 
 const SheetRoot = ({ open, defaultOpen, onOpenChange, children }: SheetProps) => {
@@ -81,13 +81,15 @@ const SheetContent = forwardRef<HTMLDivElement, SheetContentProps>(
     return (
       <BaseDrawer.Portal>
         <BaseDrawer.Backdrop className="fixed inset-0 z-50 bg-backdrop" />
-        <BaseDrawer.Popup
-          ref={ref}
-          className={cn('z-50 border-border bg-card p-6 shadow-lg', sideStyles[side], className)}
-          {...props}
-        >
-          {children}
-        </BaseDrawer.Popup>
+        <BaseDrawer.Viewport>
+          <BaseDrawer.Popup
+            ref={ref}
+            className={cn('z-50 bg-card p-6 shadow-lg outline-none', sideStyles[side], className)}
+            {...props}
+          >
+            {children}
+          </BaseDrawer.Popup>
+        </BaseDrawer.Viewport>
       </BaseDrawer.Portal>
     );
   },

@@ -1,17 +1,17 @@
 ---
 status: stable
 since: 0.2.0
-last-updated: 2026-06-15
+last-updated: 2026-06-29
 description: Mental model bridge for Excel and spreadsheet users
 ---
 
 # Coming from Excel
 
-If you build spreadsheets for your business, you already understand how Rangka works. The concepts map directly. This page translates what you know into Rangka terms.
+If you build spreadsheets for your business, you already understand how Rangka works. The concepts map directly.
 
 ## The core idea is the same
 
-In Excel, you put data in cells, write formulas that reference other cells, and everything updates automatically when you change a value. You never manually recalculate. You declare relationships and the system maintains them.
+In Excel you put data in cells, write formulas that reference other cells, and everything updates automatically when you change a value. You never manually recalculate. You declare relationships and the system maintains them.
 
 Rangka works the same way. You declare what data to show, how to show it, and what happens when someone interacts. The framework keeps everything in sync.
 
@@ -61,9 +61,9 @@ The syntax is different but the idea is identical. You reference fields by name 
 
 ## How sheets become pages
 
-In Excel, you organize related data into worksheets. Each worksheet shows a different view of your data. You might have an "Orders" sheet, a "Customers" sheet, and a "Dashboard" sheet.
+In Excel you organize related data into worksheets. Each worksheet shows a different view.
 
-In Rangka, each of those is a page. A page shows data from your models (like tables in a database) arranged with widgets.
+In Rangka each of those is a page. A page shows data from your models arranged with widgets.
 
 ```
 Excel workbook           →  Rangka application
@@ -74,9 +74,9 @@ Excel workbook           →  Rangka application
 
 ## How filtering works
 
-In Excel, you click the filter arrow on a column header and pick values. The rows that do not match disappear.
+In Excel you click the filter arrow on a column header and pick values. Rows that do not match disappear.
 
-In Rangka, you set a filter variable. The table reacts by showing only matching rows.
+In Rangka you set a filter variable. The table reacts by showing only matching rows.
 
 ```typescript
 // Like clicking the Status filter and selecting "Draft"
@@ -93,9 +93,9 @@ The table watches these variables and re-queries automatically. No refresh butto
 
 ## How buttons work
 
-In Excel with VBA, you create a button and assign a macro. The macro runs code that changes cells, shows messages, or interacts with other systems.
+In Excel with VBA you create a button and assign a macro. The macro runs code that changes cells or interacts with other systems.
 
-In Rangka, you create a button widget and wire it to an action. The action is not code you write. It is a declaration of what should happen.
+In Rangka you create a button widget and wire it to an action. The action is a declaration of what should happen.
 
 ```typescript
 // Excel: Button → macro that sets status to "Submitted"
@@ -106,13 +106,13 @@ In Rangka, you create a button widget and wire it to an action. The action is no
 
 ## The key difference
 
-In Excel, you are both the builder and the user. You design the sheet and you use it.
+In Excel you are both the builder and the user. You design the sheet and you use it.
 
-In Rangka, you design the application once and many users use it. The framework handles multiple users, permissions (who can see what), data storage, and concurrent access. Your declarations become a multi-user application without you managing any of that complexity.
+In Rangka you design the application once and many users use it. The framework handles multiple users, permissions, data storage, and concurrent access. Your declarations become a multi-user application without you managing any of that complexity.
 
 ## What you do not need to know
 
 - Programming languages (TypeScript is used but page definitions are structured data)
 - How databases work (the framework manages storage)
-- How web browsers render pages (the framework handles all of that)
-- How to build forms or tables (declare what fields to show, the framework renders them)
+- How web browsers render pages (the framework handles that)
+- How to build forms or tables (declare what fields to show and the framework renders them)

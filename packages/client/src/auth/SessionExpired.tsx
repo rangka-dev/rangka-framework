@@ -1,5 +1,5 @@
-import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Button } from '@rangka/ui';
+import { Card } from '@rangka/ui';
 
 export interface SessionExpiredProps {
   onReLogin: () => void;
@@ -7,18 +7,14 @@ export interface SessionExpiredProps {
 
 export function SessionExpired({ onReLogin }: SessionExpiredProps) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <Card className="w-full max-w-sm text-center">
-        <CardHeader>
-          <CardTitle>Session Expired</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col items-center gap-4">
-          <p className="text-sm text-muted-foreground">
-            Your session has expired. Please sign in again to continue.
-          </p>
-          <Button onClick={onReLogin}>Sign in</Button>
-        </CardContent>
-      </Card>
-    </div>
+    <Card>
+      <Card.Header>
+        <Card.Title>Session Expired</Card.Title>
+      </Card.Header>
+      <Card.Content>
+        <p>Your session has expired. Please sign in again to continue.</p>
+        <Button onClick={onReLogin}>Sign in</Button>
+      </Card.Content>
+    </Card>
   );
 }

@@ -1,15 +1,13 @@
 ---
 status: stable
 since: 0.1.0
-last-updated: 2026-06-21
+last-updated: 2026-06-29
 description: What Rangka is, who it's for, and how to get started
 ---
 
 # Rangka
 
-Most frameworks ask you to build things piece by piece. Write the migration, the model, the controller, the routes, the serializer, the list component, the form component, the sidebar config. Ten files to get one entity working.
-
-Rangka asks a different question: what if you just described what you want?
+The TypeScript framework for business applications. Define models, get everything else.
 
 ```typescript
 import { defineModel, field } from 'rangka';
@@ -28,17 +26,17 @@ export default defineModel({
 });
 ```
 
-From this single file, Rangka gives you a database table, REST API with filtering and pagination, a form with a customer picker and date input, a list view with sortable columns, and permission gates. You didn't build any of that. You described what exists, and the framework figured out the rest.
+From this one file you get: a database table, REST API with filtering and pagination, a form with linked record pickers and date inputs, a list view with sortable columns, and permission gates. You described what exists. The framework handles the rest.
 
-## The idea
+## How it works
 
-Rangka is a metadata-driven framework. You write declarations (models, pages, actions, permissions) and the framework interprets them into a running application. The same model definition drives your database, your API, your UI, and your access control. Change it once, everything updates together.
+Rangka is metadata-driven. You write declarations. Models, pages, actions, permissions. The framework interprets them into a running application at runtime.
 
-This isn't code generation. There's no scaffold to maintain. The framework reads your definitions at runtime and renders accordingly. Add a field to a model, and the form gains an input, the API accepts the new value, and the database gets a column. No glue code.
+This is not code generation. There is no scaffold to maintain. Add a field to a model and the form gains an input, the API accepts the new value, and the database gets a column. One change, everything updates.
 
 ## Who it's for
 
-Rangka is for building internal business applications. ERPs, admin panels, operational tools. The kind of software where 80% of screens are lists, forms, and data operations, and the remaining 20% is genuinely custom logic. You write that 20%. Rangka handles the rest.
+Internal business applications. ERPs, admin panels, operational tools. Software where 80% of screens are lists, forms, and data operations. You write the remaining 20% of custom logic. Rangka handles the rest.
 
 ## Quick start
 
@@ -49,11 +47,9 @@ pnpm install
 pnpm start
 ```
 
-This scaffolds a project with a `rangka.config.ts`, a starter app, a model, and a page. Open the browser and you have a working application shell with navigation and an app ready to build on.
+Open the browser. You have a working application shell with navigation, a starter model, and a page ready to build on.
 
-You can also use `npm create rangka` or `yarn create rangka`. The scaffolder detects your package manager automatically.
-
-## What a typical project looks like
+## Project structure
 
 ```
 my-erp/
@@ -66,12 +62,12 @@ my-erp/
     └── accounting/        # Journal entries, ledgers
 ```
 
-Each app is one business domain. They declare dependencies on each other.
+Each app is one business domain. Apps declare dependencies on each other.
 
 ## Next steps
 
-- [Your First App](/guides/your-first-app): build a working app in 15 minutes
-- [How It Works](/concepts/how-it-works): understand the lifecycle from definition to running app
-- [Models](/concepts/models): the core building block
-- [Widgets](/concepts/widgets): the universal UI building block
-- [Pages](/concepts/pages): composing widgets into screens
+- [Your First App](/guides/your-first-app) — build a working app in 15 minutes
+- [How It Works](/concepts/how-it-works) — the lifecycle from definition to running app
+- [Models](/concepts/models) — the core building block
+- [Widgets](/concepts/widgets) — the universal UI building block
+- [Pages](/concepts/pages) — composing widgets into screens

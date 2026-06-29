@@ -1,7 +1,7 @@
 ---
 status: stable
 since: 0.1.0
-last-updated: 2026-06-12
+last-updated: 2026-06-29
 description: Sidebar navigation derived from app definitions
 ---
 
@@ -9,7 +9,7 @@ description: Sidebar navigation derived from app definitions
 
 Navigation builds itself from your app definitions. The sidebar, breadcrumbs, and command palette all derive from the `navigation` arrays you write in `defineApp()`. You do not configure them separately.
 
-This means the navigation is always in sync with what actually exists. If you add a page, it appears. If a user lacks permission, it disappears. The structure reflects reality.
+If you add a page it appears. If a user lacks permission it disappears. The structure reflects reality.
 
 ## How it works
 
@@ -72,7 +72,7 @@ Apps without `order` sort alphabetically after ordered ones.
 
 ## Settings pages
 
-Sections named `_settings` do not appear in the app's main navigation. They are collected into a global Settings area:
+Sections named `_settings` do not appear in the main navigation. They are collected into a global Settings area:
 
 ```typescript
 navigation: [
@@ -87,7 +87,7 @@ navigation: [
 ]
 ```
 
-This keeps daily-use navigation clean while configuration lives in a dedicated place.
+Daily-use navigation stays clean. Configuration pages live in a dedicated place.
 
 ## Cross-app references
 
@@ -109,7 +109,7 @@ The referenced pages must exist and the user must have permission to view them.
 
 ## Permission filtering
 
-The sidebar is permission-aware. If a user's roles do not grant access to a page, that item is excluded from the boot response. Users only see pages they can actually visit.
+The sidebar is permission-aware. If a user's roles do not grant access to a page, that item is excluded from the boot response. Users only see pages they can visit.
 
 A Sales User might see three items. A Sales Manager sees six. An Admin sees everything. Same definition, different visibility.
 
@@ -122,8 +122,8 @@ Home > Sales > Sales Orders
 Home > Sales > Sales Orders > ORD-001
 ```
 
-For `record` type pages the breadcrumb includes the parent collection and the record title.
+Record pages include the parent collection and the record title in the breadcrumb.
 
 ## Command palette
 
-All navigation items are indexed for Cmd+K search automatically. Users can search by label, app name, or page key.
+All navigation items are indexed for Cmd+K search. Users search by label, app name, or page key.

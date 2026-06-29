@@ -11,6 +11,7 @@ function makeModel(qualifiedName: string, fieldNames: string[]): ResolvedModel {
     app,
     name,
     auditLog: false,
+    crud: true,
     traits: [],
     fields: fieldNames.map((f) => ({
       name: f,

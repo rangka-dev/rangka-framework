@@ -46,6 +46,10 @@ src/
 
 Every widget follows the same architecture. Understand this before creating or modifying any widget.
 
+### Controller pattern
+
+Data-container widgets (`data`, `form`, `table`, `repeat`, `datagrid`, `modal`, `drawer`) have a controller in `widgets/controllers/`. The WidgetRenderer dispatches to the controller instead of the UIKit component. Controllers fetch data, build WidgetContext, and delegate rendering. See `docs/architecture/widget-system.md`.
+
 ### WidgetProps contract
 
 All widgets receive a single `WidgetProps` object. This is the public API. Never add custom props outside this interface.
@@ -225,7 +229,7 @@ pnpm --filter @rangka/client test    # Run tests
 - Don't use inline styles — use Tailwind classes
 - Don't fetch data without hooks — use useSource/useRecord/useMutation
 - Don't import from `@rangka/core` — this is a browser package, core is server-only
-- Don't add direct DOM manipulation — use React patterns and `rangka:*` events for cross-panel communication
+- Don't add direct DOM manipulation or CustomEvents — use the action dispatcher and formRef for cross-component communication
 - Don't create new data-fetching logic — use `useModelRecord` or `useModelQuery` from `widgets/data/`
 - Don't bypass `useBind` — every widget reads data through `bind.value` and writes through `bind.setValue`
 - Don't call `dispatch` directly from widgets — use the `on` handlers from WidgetProps

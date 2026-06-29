@@ -14,6 +14,7 @@ const mockModel: ResolvedModel = {
   app: 'sales',
   name: 'customer',
   auditLog: false,
+  crud: true,
   traits: [],
   fields: [],
   indexes: [],
@@ -24,6 +25,7 @@ const mockModelWithTimestamped: ResolvedModel = {
   app: 'sales',
   name: 'order',
   auditLog: false,
+  crud: true,
   traits: ['timestamped'],
   fields: [
     { name: 'id', config: { type: 'string' }, provenance: { source: 'base' } },

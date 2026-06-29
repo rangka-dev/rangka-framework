@@ -1,7 +1,7 @@
 ---
 status: stable
 since: 0.1.0
-last-updated: 2026-06-10
+last-updated: 2026-06-29
 description: defineJob() API. Job scheduling, retries, and handlers.
 ---
 

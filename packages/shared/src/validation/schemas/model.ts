@@ -18,6 +18,7 @@ export const modelSchema = z
     naming: z.string().optional(),
     scope: scopeConfigSchema.optional(),
     auditLog: z.boolean().optional(),
+    crud: z.boolean().optional(),
     fields: z.record(z.string(), fieldSchema),
     indexes: z.array(indexConfigSchema).optional(),
     traits: z.array(z.enum(['ledger', 'timestamped', 'soft_delete'])).optional(),

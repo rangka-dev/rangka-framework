@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../api/client.js';
 import { modelToPath } from '../../api/paths.js';
 import { useNavigate } from '../../router/hooks.js';
+import { useShell } from '../../shell/ShellContext.js';
 import type { ActionHandlers } from '../action/dispatcher.js';
 
 export interface UseActionHandlersOptions {
@@ -13,6 +14,7 @@ export interface UseActionHandlersOptions {
 export function useActionHandlers(options: UseActionHandlersOptions = {}): ActionHandlers {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const shell = useShell();
 
   const handleNavigate = useCallback(
     (path: string) => {
@@ -141,6 +143,13 @@ export function useActionHandlers(options: UseActionHandlersOptions = {}): Actio
     [],
   );
 
+  const handleToast = useCallback(
+    (message: string, variant?: string) => {
+      shell.toast(message, (variant as 'info' | 'success' | 'warning' | 'error') ?? 'info');
+    },
+    [shell],
+  );
+
   return useMemo(
     () => ({
       navigate: handleNavigate,
@@ -153,6 +162,7 @@ export function useActionHandlers(options: UseActionHandlersOptions = {}): Actio
       modelDelete: handleModelDelete,
       modelFetch: handleModelFetch,
       modelList: handleModelList,
+      toast: handleToast,
     }),
     [
       handleNavigate,
@@ -165,6 +175,7 @@ export function useActionHandlers(options: UseActionHandlersOptions = {}): Actio
       handleModelDelete,
       handleModelFetch,
       handleModelList,
+      handleToast,
     ],
   );
 }

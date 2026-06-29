@@ -118,6 +118,12 @@ const formResetActionSchema = z.object({
   type: z.literal('form.reset'),
 });
 
+const toastActionSchema = z.object({
+  type: z.literal('toast'),
+  message: z.string(),
+  variant: z.enum(['info', 'success', 'warning', 'error']).optional(),
+});
+
 const baseActionSchemas = [
   setValueActionSchema,
   clearValueActionSchema,
@@ -137,6 +143,7 @@ const baseActionSchemas = [
   modelListActionSchema,
   formSubmitActionSchema,
   formResetActionSchema,
+  toastActionSchema,
 ] as const;
 
 // Service action references widgetActionSchema recursively
@@ -200,7 +207,7 @@ export const widgetPropSchemaSchema = z.object({
 export const widgetDefinitionMetaSchema = z.object({
   name: z.string().min(1),
   label: z.string().min(1),
-  category: z.enum(['input', 'display', 'layout', 'action', 'data']),
+  category: z.enum(['input', 'display', 'layout', 'action', 'data', 'data-container']),
   schema: z.record(z.string(), widgetPropSchemaSchema),
   binding: z.enum(['none', 'field', 'expression', 'record', 'model']),
   triggers: z.array(z.string()),

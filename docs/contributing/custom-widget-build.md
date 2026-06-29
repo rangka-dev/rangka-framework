@@ -7,17 +7,17 @@ description: How the custom widget build pipeline and runtime loader work
 
 # Custom Widget Build System
 
-This document explains how custom widgets are compiled, served, and loaded at runtime. Read this if you are working on `@rangka/cli`, `@rangka/client`, or `@rangka/studio-core`.
+How custom widgets are compiled, served, and loaded at runtime. Read this if you work on `@rangka/cli`, `@rangka/client`, or `@rangka/studio-core`.
 
 ## Overview
 
-Custom widgets are React components that app developers write in `apps/<module>/widgets/`. The framework compiles them into standalone ES module bundles with scoped CSS, serves them as static files, and loads them on demand in the browser via dynamic `import()`.
+App developers write custom widgets as React components in `apps/<module>/widgets/`. The framework compiles each widget into a standalone ES module bundle with scoped CSS. It serves them as static files and loads them on demand via dynamic `import()`.
 
-The pipeline has three stages: build, serve, load.
+Three stages: build, serve, load.
 
 ## Build pipeline
 
-The build logic lives in `packages/cli/src/build-widgets.ts` and is exported as `buildWidgets(root)`. Both the CLI `rangka build` command and the studio `build_widgets` tool call this function.
+The build logic lives in `packages/cli/src/build-widgets.ts`. It exports `buildWidgets(root)`. Both the CLI `rangka build` command and the studio `build_widgets` tool call this function.
 
 ### Widget discovery
 
@@ -28,11 +28,11 @@ apps/*/widgets/*.tsx
 apps/*/widgets/*.ts
 ```
 
-Each file produces a registry key in the format `<app>.<kebab-name>`. For example, `widgets/PipelineBoard.tsx` becomes `sales.pipeline-board`.
+Each file produces a registry key in the format `<app>.<kebab-name>`. Example: `widgets/PipelineBoard.tsx` becomes `sales.pipeline-board`.
 
 ### JS bundling
 
-Each widget is bundled independently with esbuild:
+Each widget is bundled independently with esbuild.
 
 | Option      | Value        | Reason                                  |
 | ----------- | ------------ | --------------------------------------- |
@@ -43,7 +43,7 @@ Each widget is bundled independently with esbuild:
 | `jsx`       | `transform`  | Outputs `React.createElement` calls     |
 | `nodePaths` | project root | Helps esbuild find deps in pnpm setups  |
 
-A banner injects `var React = window.__rangka_React;` at the top of every bundle so the JSX calls resolve to the shell's React instance.
+A banner injects `var React = window.__rangka_React;` at the top of every bundle. This makes JSX calls resolve to the shell's React instance.
 
 ### Global externals plugin
 
@@ -62,11 +62,11 @@ All other npm packages (charts, editors, etc.) are bundled into the widget chunk
 After JS bundling, PostCSS + Tailwind v4 generates scoped CSS per widget:
 
 1. Read `dist/theme.css` from `@rangka/client` (the shell's `@theme inline` block)
-2. Process a virtual input that imports only `tailwindcss/utilities` and `tailwindcss/theme`, with `source(none)` and `@source` pointing at the widget file
-3. Strip the `@layer base` and shell semantic token definitions from the output
-4. Keep Tailwind's default palette variables (only those the widget actually uses)
+2. Process a virtual input that imports `tailwindcss/utilities` and `tailwindcss/theme` with `source(none)` and `@source` pointing at the widget file
+3. Strip `@layer base` and shell semantic token definitions from the output
+4. Keep Tailwind default palette variables (only those the widget actually uses)
 
-The result is a CSS file that contains only the utility classes the widget references, with color variables defined locally. It does not override the shell's theme.
+The result is a CSS file containing only the utility classes the widget references. Color variables are defined locally. It does not override the shell's theme.
 
 If esbuild also produces CSS (from `.css` file imports like `@xyflow/react/dist/style.css`), the two are merged into a single output file.
 
@@ -74,11 +74,11 @@ If esbuild also produces CSS (from `.css` file imports like `@xyflow/react/dist/
 
 The shell's `@theme inline` block defines semantic tokens (`--color-primary`, `--color-card`, etc.) that Tailwind needs to resolve classes like `bg-primary`. This block is extracted during the `@rangka/client` build:
 
-- `packages/client/scripts/extract-theme.js` runs after Vite build
-- Reads `src/index.css`, extracts the `@theme inline { ... }` block
-- Writes it to `dist/theme.css`
+- `packages/client/scripts/extract-theme.js` runs after the Vite build
+- It reads `src/index.css` and extracts the `@theme inline { ... }` block
+- It writes the result to `dist/theme.css`
 
-The CLI reads `dist/theme.css` at build time via `resolveShellDir()` (same resolution used to find the shell HTML).
+The CLI reads `dist/theme.css` at build time via `resolveShellDir()`.
 
 ### Manifest generation
 
@@ -108,9 +108,9 @@ Entries are either a string (JS only) or an object with `js` and `css` paths. Th
 
 ## Serving
 
-`rangka start` registers `.rangka/` as a static directory at `/_rangka/` using `@fastify/static`. JS and CSS files use content hashes in filenames so they can be cached indefinitely. The manifest is fetched fresh on each page load.
+`rangka start` registers `.rangka/` as a static directory at `/_rangka/` using `@fastify/static`. JS and CSS files use content hashes in filenames for indefinite caching. The manifest is fetched fresh on each page load.
 
-In studio mode, `RuntimeManager.registerRangkaStatic()` handles late registration when `.rangka/` is created after the server boots (e.g., when the agent builds widgets for the first time).
+In studio mode, `RuntimeManager.registerRangkaStatic()` handles late registration when `.rangka/` is created after the server boots.
 
 ## Runtime loading
 
@@ -118,19 +118,19 @@ The loader lives in `packages/client/src/widgets/loader.ts`.
 
 ### Boot phase
 
-When the app reaches the `ready` state, `App.tsx` calls `loadCustomWidgets()`. This fetches `/_rangka/manifest.json` and caches it in memory. If the manifest is not available (no custom widgets), the fetch fails silently.
+When the app reaches the `ready` state, `App.tsx` calls `loadCustomWidgets()`. This fetches `/_rangka/manifest.json` and caches it in memory. If no custom widgets exist, the fetch fails silently.
 
 ### Lazy loading
 
-When the `WidgetRenderer` encounters an unknown widget type, it renders a `LazyWidget` component instead of an error:
+When `WidgetRenderer` encounters an unknown widget type, it renders a `LazyWidget` component:
 
 1. `LazyWidget` calls `ensureWidget(name)`
 2. `ensureWidget` checks the manifest cache for the widget key
 3. If found, it injects the CSS (via a `<link>` element) and dynamically imports the JS bundle
-4. The imported app's default export (`{ meta, component }`) is registered in the widget registry
+4. The imported module's default export (`{ meta, component }`) is registered in the widget registry
 5. `LazyWidget` re-renders with the loaded component
 
-While loading, a pulsing placeholder is shown. If loading fails, an error placeholder renders. The rest of the page continues working regardless.
+A pulsing placeholder shows while loading. An error placeholder renders on failure. The rest of the page continues working regardless.
 
 ### Widget app contract
 
@@ -140,7 +140,7 @@ Custom widgets export a default object:
 export default { meta, component };
 ```
 
-Where `meta` is a `WidgetDefinitionMeta` (from `defineWidget()`) and `component` is a React component that receives `WidgetProps`.
+`meta` is a `WidgetDefinitionMeta` (from `defineWidget()`). `component` is a React component that receives `WidgetComponentProps`.
 
 ## React global injection
 
@@ -151,25 +151,25 @@ The shell exposes React and ReactDOM on `window` in `packages/client/src/main.ts
 (window as any).__rangka_ReactDOM = ReactDOM;
 ```
 
-The esbuild banner and global externals plugin ensure widget bundles reference these globals instead of bundling their own React. This guarantees:
+The esbuild banner and global externals plugin ensure widget bundles reference these globals. This guarantees:
 
 - A single React instance (hooks work across shell and widget boundaries)
 - `react-dom` features like `createPortal` use the shell's DOM reconciler
 
 ## Key files
 
-| Path                                                      | Responsibility                                                              |
-| --------------------------------------------------------- | --------------------------------------------------------------------------- |
-| `packages/cli/src/build-widgets.ts`                       | Core build function (`buildWidgets`), esbuild config, Tailwind generation   |
-| `packages/cli/src/ui-scanner.ts`                          | Widget file discovery                                                       |
-| `packages/cli/src/resolve-client.ts`                      | Resolves `@rangka/client/dist/shell` path                                   |
-| `packages/cli/src/commands/build.ts`                      | CLI command wrapper                                                         |
-| `packages/client/src/widgets/loader.ts`                   | Manifest fetch, dynamic import, CSS injection                               |
-| `packages/client/src/widgets/renderer/LazyWidget.tsx`     | Loading/error state for unknown widgets                                     |
-| `packages/client/src/widgets/renderer/WidgetRenderer.tsx` | Routes unknown types to LazyWidget                                          |
-| `packages/client/src/widgets/registry.ts`                 | In-memory widget registry                                                   |
-| `packages/client/src/main.tsx`                            | Exposes React/ReactDOM globals                                              |
-| `packages/client/src/App.tsx`                             | Calls `loadCustomWidgets()` on boot                                         |
-| `packages/client/scripts/extract-theme.js`                | Extracts `@theme inline` to `dist/theme.css`                                |
-| `packages/studio-core/src/tools.ts`                       | Studio `build_widgets` tool (calls `buildWidgets` from `@rangka/cli/build`) |
-| `packages/studio-core/src/runtime-manager.ts`             | `registerRangkaStatic()` for late static route                              |
+| Path                                                      | Responsibility                                           |
+| --------------------------------------------------------- | -------------------------------------------------------- |
+| `packages/cli/src/build-widgets.ts`                       | Core build function, esbuild config, Tailwind generation |
+| `packages/cli/src/ui-scanner.ts`                          | Widget file discovery                                    |
+| `packages/cli/src/resolve-client.ts`                      | Resolves `@rangka/client/dist/shell` path                |
+| `packages/cli/src/commands/build.ts`                      | CLI command wrapper                                      |
+| `packages/client/src/widgets/loader.ts`                   | Manifest fetch, dynamic import, CSS injection            |
+| `packages/client/src/widgets/renderer/LazyWidget.tsx`     | Loading/error state for unknown widgets                  |
+| `packages/client/src/widgets/renderer/WidgetRenderer.tsx` | Routes unknown types to LazyWidget                       |
+| `packages/client/src/widgets/registry.ts`                 | In-memory widget registry                                |
+| `packages/client/src/main.tsx`                            | Exposes React/ReactDOM globals                           |
+| `packages/client/src/App.tsx`                             | Calls `loadCustomWidgets()` on boot                      |
+| `packages/client/scripts/extract-theme.js`                | Extracts `@theme inline` to `dist/theme.css`             |
+| `packages/studio-core/src/tools.ts`                       | Studio `build_widgets` tool                              |
+| `packages/studio-core/src/runtime-manager.ts`             | `registerRangkaStatic()` for late static route           |

@@ -18,13 +18,14 @@ src/
 │   ├── schema.ts    — ModelConfig, ResolvedModel, RelationshipConfig
 │   ├── hooks.ts     — HookDefinition, HookType
 │   ├── app.ts       — AppDefinition, ModuleConfig
-│   ├── widget.ts    — WidgetNode, WidgetBinding, WidgetAction union, WidgetDefinitionMeta
+│   ├── widget.ts    — WidgetNode, WidgetBinding, WidgetAction union, WidgetDefinitionMeta, WidgetCategory
 │   ├── page.ts      — PageDefinition, NavigationItem
 │   ├── layout.ts    — LayoutConfig
 │   ├── context.ts   — FrameworkContext (passed to hooks/services at runtime)
 │   ├── permissions.ts — RolesConfig, PermissionRule
 │   ├── auth.ts      — Session, TokenPayload
 │   ├── boot.ts      — BootPayload (metadata sent to client at startup)
+│   ├── ui-kit.ts    — UIKit, WidgetProps, ShellLayoutProps, FilterFieldDeclaration, ActiveFilter
 │   ├── service.ts   — ServiceConfig
 │   ├── job.ts       — JobConfig
 │   ├── fixture.ts   — FixtureConfig
@@ -41,18 +42,23 @@ src/
 
 ## Key interfaces
 
-| Interface          | File                   | Used by                                     |
-| ------------------ | ---------------------- | ------------------------------------------- |
-| `WidgetNode`       | `types/widget.ts`      | client (renderer), studio, page definitions |
-| `WidgetBinding`    | `types/widget.ts`      | client (useBind, WidgetRenderer)            |
-| `WidgetAction`     | `types/widget.ts`      | client (dispatcher), page definitions       |
-| `WidgetProps`      | client only (not here) | —                                           |
-| `FieldConfig`      | `types/field.ts`       | core (schema), client (field meta)          |
-| `ModelConfig`      | `types/schema.ts`      | core (boot, registry)                       |
-| `FrameworkContext` | `types/context.ts`     | core (hooks, services, jobs)                |
-| `PageDefinition`   | `types/page.ts`        | client (router), core (boot payload)        |
-| `BootPayload`      | `types/boot.ts`        | core (API), client (boot provider)          |
-| `RolesConfig`      | `types/permissions.ts` | core (permission registry)                  |
+| Interface                | File                   | Used by                                            |
+| ------------------------ | ---------------------- | -------------------------------------------------- |
+| `WidgetNode`             | `types/widget.ts`      | client (renderer), studio, page definitions        |
+| `WidgetBinding`          | `types/widget.ts`      | client (useBind, WidgetRenderer)                   |
+| `WidgetAction`           | `types/widget.ts`      | client (dispatcher), page definitions              |
+| `WidgetCategory`         | `types/widget.ts`      | widget definitions (leaf/container/data-container) |
+| `WidgetProps`            | `types/ui-kit.ts`      | client (renderer), ui (all widget components)      |
+| `ShellLayoutProps`       | `types/ui-kit.ts`      | client (shell), ui (shell layout)                  |
+| `FilterFieldDeclaration` | `types/ui-kit.ts`      | client (extractFilterFields), ui (filter bar)      |
+| `ActiveFilter`           | `types/ui-kit.ts`      | client (shell), ui (filter bar)                    |
+| `UIKit`                  | `types/ui-kit.ts`      | client (UIProvider), ui (kit.ts export)            |
+| `FieldConfig`            | `types/field.ts`       | core (schema), client (field meta)                 |
+| `ModelConfig`            | `types/schema.ts`      | core (boot, registry)                              |
+| `FrameworkContext`       | `types/context.ts`     | core (hooks, services, jobs)                       |
+| `PageDefinition`         | `types/page.ts`        | client (router), core (boot payload)               |
+| `BootPayload`            | `types/boot.ts`        | core (API), client (boot provider)                 |
+| `RolesConfig`            | `types/permissions.ts` | core (permission registry)                         |
 
 ## Builder factories (public API)
 

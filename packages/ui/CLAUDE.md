@@ -20,6 +20,8 @@ Design system package. All visual rendering lives here. The client package is he
 - `@rangka/ui` imports from `@rangka/shared` (types only, if needed)
 - `@rangka/ui` never imports from `core`, `client`, `cli`, or `studio-*`
 - `@rangka/client` imports from `@rangka/ui` for all visual components
+- All widget prop types derive from `WidgetProps` in `@rangka/shared` — `WidgetComponentProps` in ui is a re-export alias
+- This boundary is enforced by ESLint `no-restricted-imports`
 
 ## Adding a New Component
 

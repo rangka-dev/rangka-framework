@@ -1,12 +1,5 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import { Dialog } from '@rangka/ui';
+import { Button } from '@rangka/ui';
 
 export interface ConfirmDialogProps {
   message: string;
@@ -16,19 +9,19 @@ export interface ConfirmDialogProps {
 
 export function ConfirmDialog({ message, onConfirm, onCancel }: ConfirmDialogProps) {
   return (
-    <Dialog open onOpenChange={(open) => !open && onCancel()}>
-      <DialogContent className="sm:max-w-sm">
-        <DialogHeader>
-          <DialogTitle>Confirm</DialogTitle>
-          <DialogDescription>{message}</DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
+    <Dialog open onOpenChange={(open: boolean) => !open && onCancel()} modal>
+      <Dialog.Content>
+        <Dialog.Header>
+          <Dialog.Title>Confirm</Dialog.Title>
+          <Dialog.Description>{message}</Dialog.Description>
+        </Dialog.Header>
+        <Dialog.Footer>
           <Button variant="outline" onClick={onCancel}>
             Cancel
           </Button>
           <Button onClick={onConfirm}>Confirm</Button>
-        </DialogFooter>
-      </DialogContent>
+        </Dialog.Footer>
+      </Dialog.Content>
     </Dialog>
   );
 }

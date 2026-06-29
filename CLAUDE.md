@@ -38,6 +38,16 @@ Import rules:
 - `studio-core` imports from `shared` and `core`
 - Never create circular imports between packages
 
+## Widget system layers
+
+The widget system has three layers. See `docs/architecture/widget-system.md` for full documentation.
+
+- **Layer 1 (shared):** WidgetNode trees, WidgetAction, WidgetProps contract, builder DSL
+- **Layer 2 (client):** Controllers, renderer, state store, action dispatcher. Produces no DOM.
+- **Layer 3 (ui):** UIKit implementation. Receives resolved data via WidgetProps, renders DOM.
+
+Widget categories: leaf (render-only), container (pass-through children), data-container (controller-backed).
+
 ## Public API boundary
 
 The framework has two audiences. Know which one you're affecting:
@@ -52,7 +62,9 @@ Rules:
 - Interfaces in `@rangka/shared/src/types/` are the public contract. Breaking them breaks every app.
 - `FrameworkContext` (`shared/src/types/context.ts`) is the most sensitive interface. Every hook, service, and job receives it.
 - `PageDefinition` (`shared/src/types/page.ts`) defines page structure. Uses `widgets: WidgetNode[]` (not `body`). No `type` field.
-- `WidgetProps` (`client/src/widgets/types.ts`) is the widget contract. Every widget component depends on it.
+- `WidgetProps` (`shared/src/types/ui-kit.ts`) is the widget rendering contract. Both `client` and `ui` derive their widget prop types from it.
+- `ShellLayoutProps` (`shared/src/types/ui-kit.ts`) defines the shell boundary. `filterBar` is structured data (fields + callbacks), not ReactNode.
+- `FilterFieldDeclaration` and `ActiveFilter` (`shared/src/types/ui-kit.ts`) are the filter contract shared between shell and table widgets.
 - `BootPayload` (`shared/src/types/boot.ts`) bridges server and client. Changing it requires updating both.
 - The `field`, `widget`, and `action` factories (`shared/src/field.ts`, `shared/src/widget.ts`, `shared/src/action.ts`) are the app developer DSL. Their signatures are public API.
 
@@ -62,12 +74,13 @@ When changing code that crosses package boundaries:
 
 1. **Changing a type in `shared`** → rebuild shared first, then check all consumers compile: `pnpm build`
 2. **Adding a field to `FrameworkContext`** → update `shared/src/types/context.ts` + `core/src/hooks/context.ts` + `core/src/context.ts`
-3. **Adding a field to `WidgetProps`** → update `client/src/widgets/types.ts` + verify all widget components handle it
+3. **Adding a field to `WidgetProps`** → update `shared/src/types/ui-kit.ts` + verify all widget components in `ui/src/widgets/` handle it
 4. **Adding a new `WidgetAction`** → update `shared/src/types/widget.ts` union + `client/src/widgets/action/dispatcher.ts` + add helper to `shared/src/action.ts`
-5. **Adding a new built-in widget type** → add props schema in `shared/src/validation/schemas/widget-props/` + add helper to `shared/src/widget.ts`
+5. **Adding a new built-in widget type** → add props schema in `shared/src/validation/schemas/widget-props/` + add helper to `shared/src/widget.ts` + add component to `ui/src/widgets/` + register in `ui/src/widgets/index.ts`
 6. **Adding a field to `PageDefinition`** → update `shared/src/types/page.ts` + `shared/src/validation/schemas/page.ts` + `core/src/boot/page-utils.ts`
 7. **Adding a field to `BootPayload`** → update `shared/src/types/boot.ts` + `core/src/api/meta-handler.ts` + `client/src/boot/`
-8. **Renaming or removing anything in `shared`** → grep the entire monorepo, update all consumers in the same commit
+8. **Adding a field to `ShellLayoutProps`** → update `shared/src/types/ui-kit.ts` + `ui/src/shell/kit/ShellLayout.tsx` + `client/src/shell/ShellLayout.tsx`
+9. **Renaming or removing anything in `shared`** → grep the entire monorepo, update all consumers in the same commit
 
 Always run `pnpm build` after cross-package changes. Type errors in downstream packages mean you missed a consumer.
 

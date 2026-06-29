@@ -206,7 +206,7 @@ const TableSelectCell = forwardRef<HTMLTableCellElement, TableSelectCellProps>(
       ref={ref}
       data-slot="table-select-cell"
       className={cn(
-        'group/select w-12 px-3 py-2.5 text-center text-xs text-foreground/50',
+        'group/select w-6 px-1 py-2.5 text-center text-xs text-foreground/50',
         className,
       )}
       {...props}
@@ -253,7 +253,7 @@ const TableSelectHead = forwardRef<HTMLTableCellElement, TableSelectHeadProps>(
     <th
       ref={ref}
       data-slot="table-select-head"
-      className={cn('w-12 px-3 py-2.5 text-center', className)}
+      className={cn('w-6 px-1 py-2.5 text-center', className)}
       {...props}
     >
       <input

@@ -103,7 +103,7 @@ const DrawerBody = forwardRef<HTMLDivElement, DrawerBodyProps>(({ className, ...
   <div
     ref={ref}
     data-slot="drawer-body"
-    className={cn('flex-1 overflow-auto px-5 py-4', className)}
+    className={cn('flex flex-col gap-6 flex-1 overflow-auto px-5 py-4', className)}
     {...props}
   />
 ));

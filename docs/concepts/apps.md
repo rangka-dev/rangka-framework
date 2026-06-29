@@ -1,15 +1,15 @@
 ---
 status: stable
 since: 0.1.0
-last-updated: 2026-06-28
+last-updated: 2026-06-29
 description: App definition, namespacing, dependency declaration, and multi-app composition
 ---
 
 # Apps
 
-Software mirrors the organizations that build it. A business has departments and each department has its own language and concerns. Apps let you honor those boundaries in code.
+Software mirrors the organizations that build it. A business has departments. Each department has its own language and concerns. Apps let you honor those boundaries in code.
 
-Sales logic lives in the sales app. Inventory logic lives in the inventory app. Each app is a self-contained project that groups related models, pages, services, and logic together. A single Rangka instance can run one app or compose multiple apps together.
+Sales logic lives in the sales app. Inventory logic lives in the inventory app. Each app groups related models, pages, services, and logic together. A single Rangka instance can run one app or compose multiple apps.
 
 ## Defining an app
 
@@ -98,11 +98,11 @@ fields: {
 }
 ```
 
-This naming convention keeps references unambiguous, even as the number of apps grows.
+This keeps references unambiguous as the number of apps grows.
 
 ## Dependencies
 
-When your app references models from another app, declare the dependency:
+When your app references models from another app, declare it:
 
 ```typescript
 defineApp({
@@ -112,7 +112,7 @@ defineApp({
 });
 ```
 
-This ensures dependent apps load first. Their models, hooks, and services are registered before yours, so references always resolve.
+This ensures dependent apps load first. Their models, hooks, and services are registered before yours so references always resolve.
 
 ## Multi-app composition
 
@@ -143,9 +143,9 @@ my-project/
 │   └── hr/
 ```
 
-All apps are peers. The root app just happens to live at the project root instead of `apps/`. The `depends` field controls boot order. The config controls what is installed.
+All apps are peers. The root app lives at the project root instead of `apps/`. The `depends` field controls boot order. The config controls what is installed.
 
-Apps without `navigation` defined do not appear in the app selector. This makes the root app invisible in the UI when it exists purely for composition.
+Apps without `navigation` defined do not appear in the app selector. This makes the root app invisible in the UI when it exists for composition only.
 
 ## Navigation
 
@@ -163,7 +163,7 @@ navigation: [
 ],
 ```
 
-Navigation items are filtered by the user's page permissions at boot time. Sections with no permitted items are hidden entirely.
+Navigation items are filtered by the user's page permissions at boot time. Sections with no permitted items are hidden.
 
 ## Scopes
 
@@ -208,7 +208,7 @@ export default defineConfig({
 });
 ```
 
-Each prebuilt app declares its own dependencies. If `crm` depends on `foundation`, and `foundation` is not listed in your config, boot fails with a clear error.
+Each prebuilt app declares its own dependencies. If `crm` depends on `foundation` and `foundation` is not listed in your config, boot fails with a clear error.
 
 ## Splitting large domains
 

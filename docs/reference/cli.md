@@ -1,7 +1,7 @@
 ---
 status: stable
 since: 0.1.0
-last-updated: 2026-06-21
+last-updated: 2026-06-29
 description: 'CLI commands reference: start, build, studio'
 ---
 

@@ -71,6 +71,13 @@ export class StateStore {
     this.version = 0;
   }
 
+  reset(): void {
+    if (this.state.size === 0) return;
+    this.state.clear();
+    this.version++;
+    this.notifyListeners();
+  }
+
   keys(): string[] {
     return [...this.state.keys()];
   }

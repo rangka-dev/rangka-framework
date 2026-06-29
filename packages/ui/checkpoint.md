@@ -1,44 +1,47 @@
-# Shell Revamp Checkpoint
+# Filter System Checkpoint (RAN-29)
 
-## Goal
+## What's done
 
-Revamp the shell layer to match Plane.so's structure. The client writes zero divs, zero Tailwind — all rendering comes from `@rangka/ui` components exclusively.
+### Inline filter (card layout)
 
-## Plane.so Structure (from inspection)
+- `filterable: true` on columns works — `TableController` resolves field metadata
+- Inline `TableFilterBar` renders above table when `surface === 'card'` (default layout)
+- Filter operators utility (`packages/ui/src/data/filter-operators.ts`)
+- `TableFilterBar` UI component with two-step field→operator→value flow
+- Auto CRUD generator sets `filterable` on appropriate column types (enum, boolean, link, date, datetime, int, decimal, money)
+- Filter state writes to page state store (`$filter.{model}.{field}__${op}`) via `useDataQuery`
+- `useModelQuery` picks up filter changes and re-fetches automatically
+- `SurfaceProvider` wraps pages based on layout in `buildRouteTree.tsx`
+- Same field+operator: second filter replaces first (API limitation — server only supports one value per field+operator)
 
-- **Top bar** (horizontal, full width): workspace avatar + name + switcher, search input, action buttons (notifications, AI assistant), user avatar
-- **Secondary nav** (horizontal, below top bar): workspace-level links (Projects, Wiki, AI, Settings)
-- **Left sidebar** (vertical, below secondary nav): collapsible sections — "New work item" button, quick links (Home, Drafts, Your work, Stickies), Workspace section (Projects, More), Projects section (expandable per-project with sub-nav: Overview, Work items, Cycles, Modules, Views, Pages), "Try" section with tips
-- **Main content area**: breadcrumb header row (project name + page title + actions) then page body
-- Sidebar is resizable with a drag handle
+### Page-level filter (full layout)
 
-## Current State
+- `ShellLayout` scans current page's widget tree to extract filterable columns from table nodes
+- `extractFilterFields.ts` utility walks widget tree, resolves field metadata from `useMeta().models`
+- Filter trigger is a regular page action using `action.setValue('$state.filterOpen', '{{!$state.filterOpen}}')`
+- CRUD generator adds filter toggle action to list pages when filterable columns exist
+- `ShellLayout` watches `pageState.get('filterOpen')` — renders `ShellFilterBar` when truthy
+- `ShellFilterBar` uses `FilterBar.*` composition components from `@rangka/ui`
+- Filter bar rendered via `filterBar` prop on `ShellLayoutProps`, slotted between header and body
+- Filter handlers write to `$filter.*` keys in page state — same mechanism as inline filters
+- Active filters read from page state using `getFiltersForModel()`
 
-- Shell components exist: Sidebar (full composition), ShellContent (Header + Main), PageContainer, Breadcrumb
-- Full shell story demonstrates the pattern at `stories/shell/full-shell.stories.tsx`
-- Sidebar already has: Header, Content, Footer, Group, GroupLabel, Menu, MenuItem, MenuButton, MenuSub, etc.
+## Key files
 
-## What Needs to Change
-
-1. **Add a top-level workspace bar** — the horizontal bar at the very top with workspace switcher + search + user
-2. **Add workspace-level navigation** — horizontal tabs below the top bar (Projects, Wiki, AI, Settings)
-3. **Restructure the sidebar** — it sits below the workspace nav, not full-height. Contains project-level navigation.
-4. **Update ShellContent.Header** — becomes the breadcrumb bar with project context + page actions
-5. **Ensure the shell can render a full app** with only `@rangka/ui` imports — no intermediate divs
-
-## Approach
-
-1. Use Playwright to inspect Plane's DOM structure in detail (accessibility snapshots, not screenshots)
-2. Design the component API to match that structure
-3. Build new shell components or restructure existing ones
-4. Update the full-shell story to demonstrate the new layout
-5. Verify zero-div rendering from client perspective
-
-## Token System
-
-Tokens are now fully wired via `@theme inline`. Components use clean Tailwind utilities (bg-popover, text-muted-foreground, shadow-md, etc.) — no var() wrappers in component code.
-
-## Remaining Non-Shell Work
-
-- FileUpload component (for AttachmentWidget/AttachmentsWidget)
-- DataTable (for TableWidget — biggest remaining item)
+| File                                                                  | Status                                                            |
+| --------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `packages/ui/src/data/filter-operators.ts`                            | Done                                                              |
+| `packages/ui/src/data/__tests__/filter-operators.test.ts`             | Done                                                              |
+| `packages/ui/src/data/filter-bar.tsx`                                 | Done                                                              |
+| `packages/ui/src/widgets/data/table-filter-bar.tsx`                   | Done                                                              |
+| `packages/ui/src/widgets/data/__tests__/table-filter-bar.api.test.ts` | Done                                                              |
+| `packages/ui/src/widgets/data/table-widget.tsx`                       | Done (inline filters gated on `surface === 'card'`)               |
+| `packages/ui/src/shell/kit/ShellLayout.tsx`                           | Done (filterBar slot between header and body)                     |
+| `packages/client/src/widgets/controllers/TableController.tsx`         | Done (resolves filterFields, reads activeFilters, passes to UI)   |
+| `packages/client/src/router/buildRouteTree.tsx`                       | Done (SurfaceProvider wraps pages)                                |
+| `packages/client/src/shell/ShellLayout.tsx`                           | Done (filter field extraction, state watch, filter bar rendering) |
+| `packages/client/src/shell/extractFilterFields.ts`                    | Done (widget tree scan utility)                                   |
+| `packages/client/src/shell/ShellFilterBar.tsx`                        | Done (filter bar orchestration component)                         |
+| `packages/core/src/boot/crud-page-generator.ts`                       | Done (filter toggle action + filterable columns)                  |
+| `packages/core/src/boot/__tests__/crud-page-generator.test.ts`        | Done (5 filter tests)                                             |
+| `packages/shared/src/types/ui-kit.ts`                                 | Done (filterBar prop on ShellLayoutProps)                         |

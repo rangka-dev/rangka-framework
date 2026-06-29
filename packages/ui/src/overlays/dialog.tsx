@@ -128,7 +128,7 @@ DialogDescription.displayName = 'Dialog.Description';
 export type DialogBodyProps = ComponentProps<'div'>;
 
 const DialogBody = forwardRef<HTMLDivElement, DialogBodyProps>(({ className, ...props }, ref) => {
-  return <div ref={ref} className={cn('px-6 py-4', className)} {...props} />;
+  return <div ref={ref} className={cn('flex flex-col gap-6 px-6 py-4', className)} {...props} />;
 });
 DialogBody.displayName = 'Dialog.Body';
 

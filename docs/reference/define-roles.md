@@ -1,7 +1,7 @@
 ---
 status: stable
 since: 0.1.0
-last-updated: 2026-06-12
+last-updated: 2026-06-29
 description: defineRoles() API — role definitions and permission grants
 ---
 
@@ -54,15 +54,17 @@ interface RoleDefinition {
   extends?: string;
   models?: Record<string, ModelPermissions>;
   pages?: string[];
+  filters?: Record<string, Record<string, unknown>>;
 }
 ```
 
-| Field     | Type                               | Required | Description                                                           |
-| --------- | ---------------------------------- | -------- | --------------------------------------------------------------------- |
-| `label`   | `string`                           | Yes      | Human-readable display name.                                          |
-| `extends` | `string`                           | No       | Name of another role to inherit from. Permissions merge permissively. |
-| `models`  | `Record<string, ModelPermissions>` | No       | Model-level CRUD permissions.                                         |
-| `pages`   | `string[]`                         | No       | Page keys this role can access.                                       |
+| Field     | Type                                      | Required | Description                                                           |
+| --------- | ----------------------------------------- | -------- | --------------------------------------------------------------------- |
+| `label`   | `string`                                  | Yes      | Human-readable display name.                                          |
+| `extends` | `string`                                  | No       | Name of another role to inherit from. Permissions merge permissively. |
+| `models`  | `Record<string, ModelPermissions>`        | No       | Model-level CRUD permissions.                                         |
+| `pages`   | `string[]`                                | No       | Page keys this role can access.                                       |
+| `filters` | `Record<string, Record<string, unknown>>` | No       | Row-level filters applied automatically to queries for each model.    |
 
 ## ModelPermissions
 

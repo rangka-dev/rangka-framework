@@ -21,6 +21,7 @@ import type {
   ConditionalAction,
   FormSubmitAction,
   FormResetAction,
+  ToastAction,
 } from './types/widget.js';
 import type { Condition } from './validation/schemas/widget.js';
 
@@ -145,6 +146,12 @@ export const action = Object.assign(
 
     reset(): FormResetAction {
       return { type: 'form.reset' };
+    },
+
+    toast(message: string, variant?: ToastAction['variant']): ToastAction {
+      const act: ToastAction = { type: 'toast', message };
+      if (variant) act.variant = variant;
+      return act;
     },
   },
 );

@@ -1,13 +1,13 @@
 ---
 status: stable
 since: 0.2.0
-last-updated: 2026-06-15
+last-updated: 2026-06-29
 description: 'Shell layout: sidebar, topbar, breadcrumbs, and rendering flow'
 ---
 
 # Shell
 
-The shell is the outermost container of the application. It provides the frame around every screen: the sidebar, topbar, breadcrumbs, and command palette. Your pages fill the frame with widget trees. The frame itself is consistent and managed for you.
+The shell is the outermost frame of the application. It wraps every screen with a sidebar, topbar, breadcrumbs, and command palette. Your pages fill the content area with widget trees. The shell itself stays consistent across all screens.
 
 ## What the shell manages
 
@@ -32,13 +32,13 @@ The shell does not manage layout, data fetching, overlays, or widget state. Thos
 │ │          ├──────────────────────────────────────────────┤ │
 │ │ Sidebar  │                                             │ │
 │ │          │              Widget tree                     │ │
-│ │          │              (page body)                     │ │
+│ │          │              (page content)                  │ │
 │ │          │                                             │ │
 │ └──────────┴──────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-The content area renders the matched page's `body` widget tree directly via the `WidgetRenderer`.
+The content area renders the matched page's `widgets` tree via the `WidgetRenderer`.
 
 ## Topbar actions
 
@@ -71,27 +71,20 @@ actions: [
 
 Action types: `button`, `menu`, `toggle-group`, `separator`.
 
-Action string prefixes:
-
-| Prefix           | Behavior                                                  |
-| ---------------- | --------------------------------------------------------- |
-| `navigate:/path` | Navigate to a route                                       |
-| (no prefix)      | Dispatches as a `rangka:action` event for custom handling |
-
 ## Rendering flow
 
 ```
 Route match
   → Shell renders sidebar + topbar
     → PageRenderer looks up PageDefinition by route
-      → WidgetRenderer walks the page body tree recursively
+      → WidgetRenderer walks the widgets tree recursively
 ```
 
-The shell is the boundary between framework-managed chrome (sidebar, topbar, breadcrumbs) and application-defined content (the widget tree). Everything inside the content area is your page definition.
+The shell is the boundary between framework-managed chrome and application-defined content. Sidebar, topbar, and breadcrumbs are framework territory. Everything inside the content area is your page definition.
 
 ## Sidebar
 
-Built from app navigation definitions. See [Navigation](/concepts/navigation) for how it is configured.
+Built from app navigation definitions. See [Navigation](/concepts/navigation) for configuration details.
 
 The sidebar shows:
 
@@ -109,7 +102,7 @@ Home > Sales > Sales Orders
 Home > Sales > Sales Orders > ORD-001
 ```
 
-For `record` type pages the breadcrumb includes the parent collection and the record title.
+Record pages include the parent collection and the record title in the breadcrumb.
 
 ## Command palette
 

@@ -16,6 +16,7 @@ const invoiceModel: ResolvedModel = {
   app: 'sales',
   name: 'invoice',
   auditLog: false,
+  crud: true,
   traits: [],
   fields: [
     {

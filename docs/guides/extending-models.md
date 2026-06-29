@@ -1,7 +1,7 @@
 ---
 status: stable
 since: 0.1.0
-last-updated: 2026-06-14
+last-updated: 2026-06-29
 description: How to extend another app's models with new fields or traits
 ---
 
@@ -11,7 +11,7 @@ You can add fields, hooks, and UI to another app's model without modifying the s
 
 ## The scenario
 
-You have a `sales` app with a `customer` model. You're building a `loyalty` app that needs to add points and tiers to every customer, recalculate tiers on save, and show a leaderboard page.
+You have a `sales` app with a `customer` model. You are building a `loyalty` app that needs to add points and tiers to every customer, recalculate tiers on save, and show a leaderboard.
 
 Instead of editing the sales app, you extend it.
 
@@ -36,7 +36,7 @@ export default defineApp({
 });
 ```
 
-`depends: ['sales']` ensures the sales app loads first and your extensions apply after the base model is registered.
+`depends: ['sales']` ensures the sales app loads first. Your extensions apply after the base model is registered.
 
 ## 2. Add fields
 
@@ -61,7 +61,7 @@ The first argument is the target model. These fields merge into `sales.customer`
 ## 3. Add hooks
 
 ```typescript
-// hooks/customer.ts
+// apps/loyalty/hooks/customer.ts
 import { defineHooks } from 'rangka';
 
 export default defineHooks('sales.customer', {
@@ -84,14 +84,14 @@ export default defineHooks('sales.customer', {
 });
 ```
 
-Extension hooks append to the hook chain. The original app's hooks run first, then extensions in dependency order.
+Extension hooks append to the hook chain. The original app's hooks run first. Then extensions run in dependency order.
 
 ## 4. React to other models
 
 Award points when a sales order is created:
 
 ```typescript
-// hooks/order-points.ts
+// apps/loyalty/hooks/order-points.ts
 import { defineHooks } from 'rangka';
 
 export default defineHooks('sales.order', {
@@ -134,12 +134,12 @@ export default defineExtension('sales.customer', {
 });
 ```
 
-The `after` option places your section after an existing one. If it doesn't exist, your section goes at the end.
+The `after` option places your section after an existing one. If the target section does not exist, yours goes at the end.
 
 ## 6. Add your own pages
 
 ```typescript
-// pages/dashboard.ts
+// apps/loyalty/pages/dashboard.ts
 import { definePage } from 'rangka';
 
 export default definePage({
@@ -167,7 +167,7 @@ export default definePage({
 });
 ```
 
-This page lives in the loyalty app but queries `sales.customer`. The extension fields are available because they're part of the schema.
+This page lives in the loyalty app but queries `sales.customer`. The extension fields are available because they are part of the schema.
 
 ## Rules
 

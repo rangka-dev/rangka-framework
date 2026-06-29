@@ -22,7 +22,6 @@ export function CodeWidget({ props, bind, on }: WidgetComponentProps) {
         onChange={handleChange}
         placeholder={placeholder}
         disabled={disabled}
-        readOnly={bind.meta?.readOnly}
         rows={rows}
         spellCheck={false}
         className="font-mono text-2xs"
