@@ -1,7 +1,7 @@
 ---
 status: stable
 since: 0.1.0
-last-updated: 2026-06-11
+last-updated: 2026-06-29
 description: defineModel() API — fields, traits, relationships, and options
 ---
 
@@ -41,6 +41,7 @@ interface ModelConfig {
   label?: string;
   naming?: NamingConfig;
   scope?: string;
+  crud?: boolean;
   auditLog?: boolean;
   fields: Record<string, FieldConfig>;
   indexes?: IndexConfig[];
@@ -56,6 +57,7 @@ interface ModelConfig {
 | `label`    | `string`                      | `undefined` | Human-readable name. If omitted, derived from `name`.                                                                    |
 | `naming`   | `string`                      | `undefined` | Field name to use as the record's display title.                                                                         |
 | `scope`    | `ScopeConfig`                 | `undefined` | Scope to auto-filter queries by the user's active scope value. Models without `scope` are global. See ScopeConfig below. |
+| `crud`     | `boolean`                     | `true`      | Generate CRUD API routes and auto-generated pages (list, create, edit) for this model. Set `false` to suppress both.     |
 | `auditLog` | `boolean`                     | `false`     | Track all field changes in an audit trail table.                                                                         |
 | `fields`   | `Record<string, FieldConfig>` | —           | **Required.** Field definitions keyed by field name.                                                                     |
 | `indexes`  | `IndexConfig[]`               | `undefined` | Database indexes for query performance.                                                                                  |
@@ -305,7 +307,7 @@ interface MoneyFieldConfig extends BaseFieldOptions {
 }
 ```
 
-Semantic field type. Stored as decimal. Marks the field as monetary so the frontend formats it as currency. The app layer handles currency awareness — no framework-level configuration needed.
+Semantic field type. Stored as decimal. Marks the field as monetary so the frontend formats it as currency. The app layer handles currency awareness. No framework-level configuration needed.
 
 ---
 
@@ -446,7 +448,7 @@ interface HasManyFieldConfig {
 | `model`      | `string` | **Required.** Qualified model name of the related records.            |
 | `foreignKey` | `string` | **Required.** Field on the related model pointing back to this model. |
 
-Virtual field. Does not create a column. Used for eager-loading via `?include=`. Does **not** cascade delete — related records are independent and must be deleted separately.
+Virtual field. Does not create a column. Used for eager-loading via `?include=`. Does **not** cascade delete. Related records are independent and must be deleted separately.
 
 ---
 
@@ -467,7 +469,7 @@ interface ChildrenFieldConfig {
 | `foreignKey` | `string`                      | —           | **Required.** Field on the child model referencing this parent.                       |
 | `fields`     | `Record<string, FieldConfig>` | `undefined` | Inline field definitions for the child model (alternative to a separate schema file). |
 
-Parent-child relationship. Children are saved/deleted with the parent in a single transaction. Children always cascade delete with the parent — when a parent is deleted, all its children are deleted.
+Parent-child relationship. Children are saved/deleted with the parent in a single transaction. Children always cascade delete with the parent. When a parent is deleted, all its children are deleted.
 
 ---
 

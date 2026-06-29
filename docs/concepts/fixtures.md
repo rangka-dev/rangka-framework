@@ -1,15 +1,15 @@
 ---
 status: stable
 since: 0.1.0
-last-updated: 2026-06-12
+last-updated: 2026-06-29
 description: Seed data and test fixture loading
 ---
 
 # Fixtures
 
-Every application needs some data to exist before users start working. Default roles, base currencies, demo records for onboarding, test data for automated tests. Fixtures are how you declare that seed data.
+Every application needs data to exist before users start working. Default roles, base currencies, demo records for onboarding, test data for automated tests. Fixtures are how you declare that seed data.
 
-You write the records you need. The framework ensures they exist in the database, safely and idempotently.
+You write the records you need. The framework ensures they exist in the database safely and idempotently.
 
 ## Defining a fixture
 
@@ -45,7 +45,7 @@ export default defineFixture({
 
 ## Idempotent
 
-Fixtures use the `key` field to check for existing records. If a record with that key value already exists, the framework compares a hash of the fixture data against the stored hash. If the data has changed, the record is updated. If unchanged, it is skipped. Running fixtures multiple times is safe and records stay in sync with your fixture definitions.
+Fixtures use the `key` field to check for existing records. If a record with that key value exists, the framework compares a hash of the fixture data against the stored hash. Changed data triggers an update. Unchanged data is skipped. Running fixtures multiple times is safe and records stay in sync with your definitions.
 
 ```typescript
 defineFixture({

@@ -1,4 +1,4 @@
-import { type ReactNode } from 'react';
+import { type ReactNode, useMemo } from 'react';
 import { Table } from '../../data/table';
 import { TablePagination } from '../../data/table-pagination';
 import { renderDisplay, type CellColumn } from './cell-renderers';
@@ -42,6 +42,8 @@ export function TableWidget({ props, bind, on, childNodes }: WidgetComponentProp
   const records = (bind.value as Record<string, unknown>[]) ?? [];
   const colCount = columns.length + (selectable ? 1 : 0);
 
+  const cellColumns = useMemo(() => columns.map(toCellColumn), [columns]);
+
   const showPagination = pageSize > 0 && total > 0;
   const showInlineFilters = filterFields.length > 0 && surface === 'card';
 
@@ -51,8 +53,8 @@ export function TableWidget({ props, bind, on, childNodes }: WidgetComponentProp
         <TableFilterBar
           fields={filterFields}
           activeFilters={activeFilters}
-          onSetFilter={(field, operator, value) => on.setFilter?.(field, operator, value)}
-          onRemoveFilter={(field, operator) => on.removeFilter?.(field, operator)}
+          onSetFilter={on.setFilter}
+          onRemoveFilter={on.removeFilter}
         />
       )}
       <Table.Content>
@@ -102,11 +104,11 @@ export function TableWidget({ props, bind, on, childNodes }: WidgetComponentProp
                     onSelectChange={(checked) => on.select?.(row, checked)}
                   />
                 )}
-                {columns.map((col) => (
+                {columns.map((col, colIdx) => (
                   <Table.Cell key={col.field} align={col.align}>
                     {col.renderCell
                       ? col.renderCell(row, idx)
-                      : renderDisplay(col.fieldType, row[col.field], toCellColumn(col))}
+                      : renderDisplay(col.fieldType, row[col.field], cellColumns[colIdx])}
                   </Table.Cell>
                 ))}
               </Table.Row>

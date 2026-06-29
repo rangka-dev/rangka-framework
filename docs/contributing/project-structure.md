@@ -16,7 +16,8 @@ rangka/
 ├── packages/
 │   ├── shared/          # Contract layer: types, builders, traits (zero deps)
 │   ├── core/            # Server runtime: boot, registries, DB, API, auth, hooks
-│   ├── client/          # Browser shell: widget renderer, routing, data hooks
+│   ├── client/          # Browser orchestration: controllers, renderer, data hooks (no DOM)
+│   ├── ui/              # Design system: UIKit, widget components, shell rendering
 │   ├── cli/             # CLI binary: start, build, studio commands
 │   ├── studio-core/     # Studio backend: WebSocket server, AI agent, runtime manager
 │   ├── studio-local/    # Studio frontend: React chat UI, explorer, settings
@@ -39,7 +40,8 @@ rangka/
 
 ```
 shared ← core ← cli
-shared ← client
+shared ← client ← ui
+shared ← ui
 shared ← studio-core ← studio-local
 shared ← rangka (re-exports core + shared)
 ```
@@ -49,6 +51,7 @@ Import rules:
 - `shared` imports from nothing (it is the base)
 - `core` imports from `shared` only
 - `client` imports from `shared` only (never from `core`)
+- `ui` imports from `shared` only (never from `client` or `core`)
 - `cli` imports from `core`, `client`, `shared`, `studio-core`
 - `studio-core` imports from `core`, `client`, `shared`
 - `studio-local` imports protocol types from `studio-core` only
@@ -65,7 +68,8 @@ shared/src/
 ├── types/             — All shared interfaces and type unions
 │   ├── field.ts       — FieldConfig, FieldType (18+ types)
 │   ├── schema.ts      — ModelConfig, ResolvedModel, RelationshipConfig
-│   ├── widget.ts      — WidgetNode, WidgetBinding, WidgetAction, WidgetDefinitionMeta
+│   ├── widget.ts      — WidgetNode, WidgetBinding, WidgetAction, WidgetDefinitionMeta, WidgetCategory
+│   ├── ui-kit.ts      — UIKit, WidgetProps, ShellLayoutProps, FilterFieldDeclaration, ActiveFilter
 │   ├── context.ts     — FrameworkContext (hooks/services/jobs receive this)
 │   ├── page.ts        — PageDefinition, NavigationItem
 │   ├── boot.ts        — BootPayload (server → client metadata)
@@ -113,33 +117,60 @@ core/src/
 
 ### packages/client
 
-React frontend shell. Depends on `@rangka/shared`.
+React frontend orchestration. Depends on `@rangka/shared`. Produces no DOM directly. Delegates all rendering to `@rangka/ui` via the UIKit contract.
 
 ```
 client/src/
 ├── api/          — HTTP client, auth headers, token management
 ├── auth/         — Login form, session expired screen
 ├── boot/         — Boot state machine (fetches metadata, gates rendering)
-├── components/
-│   └── ui/       — shadcn primitives (Input, ScrollArea, Collapsible, etc.)
 ├── context/      — React contexts (Meta, Permissions, User, ShellProviders)
 ├── data/         — Data hooks (useSource, useRecord, useMutation, QueryProvider)
 ├── router/       — Dynamic TanStack Router (builds route tree from pages)
-├── shell/        — Shell layout (sidebar, panels, page outlet)
+├── shell/        — Shell layout orchestration (delegates to UIKit shell)
+├── ui/           — UIProvider (injects UIKit into React context)
 ├── widgets/
 │   ├── action/     — Action dispatcher and handler types
 │   ├── binding/    — Binding resolver (field, expression, model)
-│   ├── components/ — Widget implementations (~35 widgets, one file each)
+│   ├── controllers/ — Data-container controllers (data, form, table, repeat, datagrid, modal, drawer)
 │   ├── context/    — WidgetContext type and builder
-│   ├── data/       — Shared data hooks (useModelRecord, useModelQuery)
-│   ├── form/       — FormWidget, FormContext, form state/validation/submit
+│   ├── data/       — Data hooks (useModelRecord, useModelQuery)
+│   ├── form/       — FormProvider, FormContext, form-ref, form state/validation/submit
 │   ├── hooks/      — Shared widget hooks (useBind, useAction, useCondition)
 │   ├── lib/        — Layout prop resolver, spacing maps
 │   ├── renderer/   — WidgetRenderer (props, binding, layout wrapper)
+│   ├── shell/      — Shell-level action handlers
 │   └── state/      — Page-level state store (magic variables)
 ├── App.tsx       — Root component
 ├── main.tsx      — Entry point
 └── index.ts      — Public exports
+```
+
+### packages/ui
+
+Design system and rendering layer. Depends on `@rangka/shared`. Never imports from `client`.
+
+```
+ui/src/
+├── primitives/     — Base components (Button, Input, Avatar, DynamicIcon, etc.)
+├── form/           — Form field components (Field, Listbox, etc.)
+├── layout/         — Layout components (Card, Split, ScrollArea, etc.)
+├── overlays/       — Dialog, Sheet, DropdownMenu, etc.
+├── feedback/       — Empty state, spinners, etc.
+├── data/           — Table, FilterBar, TablePagination, etc.
+├── shell/          — Shell composition (Shell, Rail, Sidebar, TopBar, etc.)
+│   └── kit/        — Shell-level UIKit components (ShellLayout, PageOutlet, Toast, etc.)
+├── widgets/        — Widget components (one per type, accept WidgetComponentProps)
+│   ├── input/      — Input widgets (input, select, checkbox, datepicker, etc.)
+│   ├── display/    — Display widgets (text, badge, icon, image, etc.)
+│   ├── action/     — Action widgets (button)
+│   ├── layout/     — Layout widgets (group, grid, section, card, etc.)
+│   ├── data/       — Data widgets (table-widget, form-widget, cell-renderers, etc.)
+│   └── overlay/    — Overlay widgets (modal, drawer)
+├── tokens/         — CSS design tokens (colors, animations, typography)
+├── lib/            — Utilities (cn, useClickOutside)
+├── kit.ts          — defaultKit export (widgets + shell components)
+└── index.ts        — Public exports
 ```
 
 ### packages/cli
@@ -213,6 +244,7 @@ studio-local/src/
 | Type definitions                     | `packages/shared/src/types/`                |
 | Declarative API (`define*`, `field`) | `packages/shared/src/define.ts`, `field.ts` |
 | Widget node builders                 | `packages/shared/src/widget.ts`             |
+| UIKit contract (WidgetProps, Shell)  | `packages/shared/src/types/ui-kit.ts`       |
 | Boot orchestration                   | `packages/core/src/boot/`                   |
 | Schema resolution                    | `packages/core/src/schema/`                 |
 | Database operations                  | `packages/core/src/db/`                     |
@@ -222,15 +254,19 @@ studio-local/src/
 | Model access (CRUD)                  | `packages/core/src/model-api/`              |
 | Service registry                     | `packages/core/src/services/`               |
 | Background jobs                      | `packages/core/src/jobs/`                   |
-| Widget system                        | `packages/client/src/widgets/`              |
+| Widget controllers                   | `packages/client/src/widgets/controllers/`  |
 | Widget hooks (useBind, useAction)    | `packages/client/src/widgets/hooks/`        |
 | Widget data hooks                    | `packages/client/src/widgets/data/`         |
 | Widget renderer                      | `packages/client/src/widgets/renderer/`     |
 | Form system                          | `packages/client/src/widgets/form/`         |
-| Frontend shell                       | `packages/client/src/shell/`                |
+| Frontend shell orchestration         | `packages/client/src/shell/`                |
 | Boot state machine                   | `packages/client/src/boot/`                 |
 | Dynamic router                       | `packages/client/src/router/`               |
 | Data fetching                        | `packages/client/src/data/`                 |
+| UIKit widget components              | `packages/ui/src/widgets/`                  |
+| UIKit shell layout                   | `packages/ui/src/shell/kit/`                |
+| Design tokens                        | `packages/ui/src/tokens/`                   |
+| Base primitives (Button, Input)      | `packages/ui/src/primitives/`               |
 | CLI commands                         | `packages/cli/src/commands/`                |
 | Studio WebSocket protocol            | `packages/studio-core/src/protocol.ts`      |
 | Studio AI tools                      | `packages/studio-core/src/tools.ts`         |

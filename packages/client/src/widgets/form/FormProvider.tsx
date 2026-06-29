@@ -5,6 +5,7 @@ import { FormContextProvider } from './FormContext.js';
 import { useFormState } from './useFormState.js';
 import { useFormValidation } from './useFormValidation.js';
 import { useFormSubmit } from './useFormSubmit.js';
+import { formRef } from './form-ref.js';
 import type { FormContextValue } from './FormContext.js';
 import type { FieldMeta } from '../binding/resolver.js';
 
@@ -73,13 +74,9 @@ export function FormProvider({
   );
 
   useEffect(() => {
-    const handleSubmitEvent = () => submit();
-    const handleResetEvent = () => reset();
-    document.addEventListener('rangka:form.submit', handleSubmitEvent);
-    document.addEventListener('rangka:form.reset', handleResetEvent);
+    formRef.current = { submit, reset };
     return () => {
-      document.removeEventListener('rangka:form.submit', handleSubmitEvent);
-      document.removeEventListener('rangka:form.reset', handleResetEvent);
+      formRef.current = null;
     };
   }, [submit, reset]);
 

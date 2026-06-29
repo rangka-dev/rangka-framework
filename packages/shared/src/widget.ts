@@ -73,6 +73,8 @@ interface ColumnOptions {
   align?: 'left' | 'center' | 'right';
   sortable?: boolean;
   filterable?: boolean;
+  visible?: Condition | Condition[];
+  on?: Record<string, WidgetAction | WidgetAction[]>;
 }
 
 interface ButtonOptions {
@@ -221,6 +223,14 @@ export const widget = Object.assign(
       return inputNode(field, 'tree', opts);
     },
 
+    manyToMany(field: string, opts?: InputOptions): WidgetNode {
+      return inputNode(field, 'many-to-many', opts);
+    },
+
+    dynamicLink(field: string, opts?: InputOptions): WidgetNode {
+      return inputNode(field, 'dynamic-link', opts);
+    },
+
     sequence(field: string, opts?: InputOptions): WidgetNode {
       return inputNode(field, 'sequence', opts);
     },
@@ -354,6 +364,8 @@ export const widget = Object.assign(
       if (opts?.filterable) props.filterable = opts.filterable;
       const node: WidgetNode = { type: 'column', bind: { field } };
       if (Object.keys(props).length > 0) node.props = props;
+      if (opts?.visible) node.visible = opts.visible;
+      if (opts?.on) node.on = opts.on;
       return node;
     },
 
@@ -466,10 +478,11 @@ export const widget = Object.assign(
         direction?: 'horizontal' | 'vertical';
         minSize?: number;
         visible?: Condition | Condition[];
+        on?: Record<string, WidgetAction | WidgetAction[]>;
       },
       children: WidgetNode[],
     ): WidgetNode {
-      const { visible, ...rest } = opts;
+      const { visible, on, ...rest } = opts;
       const props: Record<string, unknown> = {};
       for (const [k, v] of Object.entries(rest)) {
         if (v !== undefined) props[k] = v;
@@ -477,6 +490,7 @@ export const widget = Object.assign(
       const node: WidgetNode = { type: 'split', children };
       if (Object.keys(props).length > 0) node.props = props;
       if (visible) node.visible = visible;
+      if (on) node.on = on;
       return node;
     },
 
@@ -485,10 +499,11 @@ export const widget = Object.assign(
         height?: string;
         padding?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
         visible?: Condition | Condition[];
+        on?: Record<string, WidgetAction | WidgetAction[]>;
       },
       children: WidgetNode[],
     ): WidgetNode {
-      const { visible, ...rest } = opts;
+      const { visible, on, ...rest } = opts;
       const props: Record<string, unknown> = {};
       for (const [k, v] of Object.entries(rest)) {
         if (v !== undefined) props[k] = v;
@@ -496,6 +511,7 @@ export const widget = Object.assign(
       const node: WidgetNode = { type: 'stack', children };
       if (Object.keys(props).length > 0) node.props = props;
       if (visible) node.visible = visible;
+      if (on) node.on = on;
       return node;
     },
 
@@ -505,10 +521,11 @@ export const widget = Object.assign(
         height?: string;
         maxHeight?: string;
         visible?: Condition | Condition[];
+        on?: Record<string, WidgetAction | WidgetAction[]>;
       },
       children: WidgetNode[],
     ): WidgetNode {
-      const { visible, ...rest } = opts;
+      const { visible, on, ...rest } = opts;
       const props: Record<string, unknown> = {};
       for (const [k, v] of Object.entries(rest)) {
         if (v !== undefined) props[k] = v;
@@ -516,6 +533,7 @@ export const widget = Object.assign(
       const node: WidgetNode = { type: 'scroll-area', children };
       if (Object.keys(props).length > 0) node.props = props;
       if (visible) node.visible = visible;
+      if (on) node.on = on;
       return node;
     },
   },

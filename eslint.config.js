@@ -15,4 +15,14 @@ export default tseslint.config(eslint.configs.recommended, ...tseslint.configs.r
   rules: {
     '@typescript-eslint/no-explicit-any': 'off',
   },
+}, {
+  files: ['packages/ui/src/**/*.ts', 'packages/ui/src/**/*.tsx'],
+  rules: {
+    'no-restricted-imports': ['error', {
+      patterns: [{
+        group: ['@rangka/client', '@rangka/client/*'],
+        message: 'ui must not import from client — see docs/architecture/widget-system.md',
+      }],
+    }],
+  },
 });

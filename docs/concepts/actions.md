@@ -1,13 +1,13 @@
 ---
 status: stable
 since: 0.2.0
-last-updated: 2026-06-15
-description: Page-level and widget-level actions, triggers, and handlers
+last-updated: 2026-06-29
+description: Widget actions, triggers, page actions, and the action dispatcher
 ---
 
 # Actions
 
-Users need to do things. Submit an order, export a report, navigate to a form. Actions are the bridge between interaction and behavior.
+Actions bridge interaction and behavior. A user clicks a button, selects a row, or submits a form. An action declares what happens next.
 
 Actions exist at two levels: page-level (topbar) and widget-level (triggers).
 
@@ -16,12 +16,16 @@ Actions exist at two levels: page-level (topbar) and widget-level (triggers).
 Page-level actions render in the topbar. The shell manages them.
 
 ```typescript
+import { definePage, action } from 'rangka';
+
 definePage({
   key: 'sales.orders',
   label: 'Sales Orders',
   actions: [
-    { type: 'button', label: 'New Order', icon: 'plus', action: { type: 'navigate', path: '/sales/orders/new' } },
-    { type: 'button', label: 'Export', variant: 'secondary', action: { type: 'service', name: 'sales.export' } },
+    { type: 'button', label: 'New Order', icon: 'plus',
+      action: action.navigate('/sales/orders/new') },
+    { type: 'button', label: 'Export', variant: 'secondary',
+      action: action.service('sales.export') },
   ],
   widgets: [...],
 });
@@ -29,128 +33,139 @@ definePage({
 
 Action types: `button`, `menu`, `toggle-group`, `separator`.
 
-Page actions use the same `WidgetAction` format as widget triggers. Not all action types are available at page level since some require widget context (form, record, data source).
-
 ### Context availability
 
-| Action          | Widget | Page | Requires                                        |
-| --------------- | ------ | ---- | ----------------------------------------------- |
-| `navigate`      | Yes    | Yes  | —                                               |
-| `service`       | Yes    | Yes  | Widget passes record; page passes params only   |
-| `model.create`  | Yes    | Yes  | —                                               |
-| `sequence`      | Yes    | Yes  | Only if inner actions are page-compatible       |
-| `setValue`      | Yes    | No   | Record or state context                         |
-| `clearValue`    | Yes    | No   | Record or state context                         |
-| `setValues`     | Yes    | No   | Record or state context                         |
-| `model.update`  | Yes    | No   | Record context (defaults model/id from context) |
-| `model.delete`  | Yes    | No   | Record context (defaults model/id from context) |
-| `model.fetch`   | Yes    | No   | State store (`into` field)                      |
-| `model.list`    | Yes    | No   | State store (`into` field)                      |
-| `refreshSource` | Yes    | No   | Data source context                             |
-| `fetchOptions`  | Yes    | No   | Widget context                                  |
-| `validate`      | Yes    | No   | Form context                                    |
-| `focus`         | Yes    | No   | Form context                                    |
-| `form.submit`   | Yes    | No   | Form context                                    |
-| `form.reset`    | Yes    | No   | Form context                                    |
-| `addRow`        | Yes    | No   | Child table context                             |
-| `removeRow`     | Yes    | No   | Child table context                             |
-| `duplicateRow`  | Yes    | No   | Child table context                             |
-| `conditional`   | Yes    | No   | Context for condition evaluation                |
+Page actions operate without widget context. They cannot access record fields, form state, or data sources. Only context-free actions work at page level.
+
+| Action          | Page | Widget | Requires                         |
+| --------------- | ---- | ------ | -------------------------------- |
+| `navigate`      | yes  | yes    | nothing                          |
+| `service`       | yes  | yes    | params only at page level        |
+| `model.create`  | yes  | yes    | nothing                          |
+| `toast`         | yes  | yes    | nothing                          |
+| `sequence`      | yes  | yes    | inner actions must be compatible |
+| `setValue`      | no   | yes    | record or state context          |
+| `clearValue`    | no   | yes    | record or state context          |
+| `setValues`     | no   | yes    | record or state context          |
+| `model.update`  | no   | yes    | record context                   |
+| `model.delete`  | no   | yes    | record context                   |
+| `model.fetch`   | no   | yes    | state store                      |
+| `model.list`    | no   | yes    | state store                      |
+| `refreshSource` | no   | yes    | data source context              |
+| `validate`      | no   | yes    | form context                     |
+| `focus`         | no   | yes    | form context                     |
+| `form.submit`   | no   | yes    | form context                     |
+| `form.reset`    | no   | yes    | form context                     |
+| `addRow`        | no   | yes    | child table context              |
+| `removeRow`     | no   | yes    | child table context              |
+| `duplicateRow`  | no   | yes    | child table context              |
+| `conditional`   | no   | yes    | context for evaluation           |
 
 ## Widget-level actions
 
-Inside the widget tree, actions are wired via triggers. A widget declares which triggers it emits. The page definition wires those triggers to actions via the `on` field.
+Inside the widget tree, actions fire via triggers. A widget declares which triggers it emits. The `on` field wires triggers to actions.
 
 ```typescript
 // Button click calls a service
-{ type: 'button', props: { label: 'Submit', variant: 'primary' },
-  on: { click: { type: 'service', name: 'sales.submitOrder' } } }
+widget.button('Submit', {
+  variant: 'primary',
+  on: { click: action.service('sales.submitOrder') }
+})
 
 // Table row click sets state
-{ type: 'table', source: { model: 'sales.order' },
-  on: { rowClick: { type: 'setValue', field: '$state.selectedId', value: '{{id}}' } } }
+widget.table('sales.order', {
+  on: { rowClick: action.setValue('$state.selectedId', '{{id}}') },
+}, [...])
 
-// Input change clears a filter
-{ type: 'input', bind: { field: 'search' },
-  on: { change: { type: 'setValue', field: '$filter.sales.order.name__like', value: '{{value}}' } } }
+// Input change sets a filter
+widget.input('search', {
+  on: { change: action.setValue('$filter.sales.order.name__like', '{{value}}') }
+})
 ```
 
 ## Action types
 
-### Data actions
+### Data mutations
 
 ```typescript
-{ type: 'setValue', field: string, value: any }
-{ type: 'clearValue', field: string }
-{ type: 'setValues', values: Record<string, any> }
+action.setValue('$state.activeTab', 'details');
+action.clearValue('$state.selectedId');
+action.setValues({ '$state.selectedId': '{{id}}', '$state.drawerOpen': true });
 ```
 
 Set or clear reactive variables (`$state`, `$filter`, `$sort`, `$page`) or record fields.
 
-### Backend actions
+### Service calls
 
 ```typescript
-{ type: 'service', name: string, params?: Record<string, any>,
-  onSuccess?: WidgetAction, onError?: WidgetAction }
-{ type: 'validate', fields?: string[] }
+action.service('sales.submitOrder');
+action.service('sales.export', { month: 6, year: 2026 });
 ```
 
-Call a registered service. The framework passes the current record context automatically. Chain `onSuccess` and `onError` for follow-up behavior.
-
-### Model actions
+Calls a registered service. Inside a data context, the framework passes the current record automatically. Chain follow-up behavior with `onSuccess` and `onError`:
 
 ```typescript
-{ type: 'model.create', model: string, data: Record<string, any> }
-{ type: 'model.update', model?: string, id?: string, data: Record<string, any> }
-{ type: 'model.delete', model?: string, id?: string }
-{ type: 'model.fetch', model: string, id: string, into: string }
-{ type: 'model.list', model: string, filters?: Record<string, any>, into: string }
+{ type: 'service', name: 'sales.submitOrder',
+  onSuccess: action.navigate('/sales/orders'),
+  onError: action.toast('{{$response.message}}', 'error') }
 ```
 
-Direct CRUD operations without a service wrapper.
+### Model operations
+
+```typescript
+action.modelCreate('sales.order', { status: 'Draft', customer: '{{customer_id}}' });
+action.modelUpdate({ status: 'Submitted' });
+action.modelDelete();
+action.modelFetch('sales.order', '{{id}}', '$record');
+action.modelList('sales.product', 'products', { category: 'active' });
+```
+
+`model.update` and `model.delete` default to the current record's model and id from context.
 
 ### Navigation
 
 ```typescript
-{ type: 'navigate', path: string }
+action.navigate('/sales/orders/{{id}}');
 ```
-
-### UI actions
-
-```typescript
-{ type: 'focus', field: string }
-{ type: 'refreshSource' }
-{ type: 'fetchOptions', field: string, depends: string[] }
-```
-
-`focus` moves keyboard focus to a field. `refreshSource` re-fetches the current data query. `fetchOptions` loads dependent options for a select field (planned, not fully implemented).
 
 ### Form actions
 
 ```typescript
-{
-  type: 'form.submit';
-}
-{
-  type: 'form.reset';
-}
+action.submit();
+action.reset();
 ```
 
-Only work inside a `form` widget. `form.submit` validates and saves. `form.reset` reverts to initial values.
+Only work inside a `form` widget. `form.submit` validates and saves. `form.reset` reverts to initial values. These use a ref pattern internally for cross-component coordination.
+
+### UI actions
+
+```typescript
+action.focus('customer_id');
+action.refreshSource();
+action.toast('Order submitted', 'success');
+action.fetchOptions('city', ['country', 'state']);
+```
+
+`focus` moves keyboard focus to a field. `refreshSource` re-fetches the current data query. `toast` shows a notification.
 
 ### Child table actions
 
 ```typescript
-{ type: 'addRow', field: string }
-{ type: 'removeRow', field: string }
-{ type: 'duplicateRow', field: string }
+action.addRow('items');
+action.removeRow('items');
+action.duplicateRow('items');
 ```
 
 ### Flow control
 
 ```typescript
-{ type: 'sequence', actions: WidgetAction[] }
-{ type: 'conditional', condition: Condition, then: WidgetAction, else?: WidgetAction }
+action.sequence([action.validate(), action.submit(), action.navigate('/sales/orders')]);
+
+action.conditional(
+  { field: 'status', operator: 'eq', value: 'Draft' },
+  action.service('sales.submitOrder'),
+  action.toast('Can only submit drafts', 'warning'),
+);
 ```
 
 `sequence` runs actions in order. `conditional` branches based on a condition.
@@ -160,135 +175,57 @@ Only work inside a `form` widget. `form.submit` validates and saves. `form.reset
 When a `service` action fires inside a data context, the framework passes the current record:
 
 ```typescript
-// Widget inside a data widget bound to sales.order
-{ type: 'button', props: { label: 'Submit' },
-  on: { click: { type: 'service', name: 'sales.submitOrder' } } }
-
-// The service receives:
-service.execute(doc); // doc is the order record from context
-```
-
-Page-level actions pass params (or nothing):
-
-```typescript
-// Action with explicit params
-{ type: 'service', name: 'sales.monthlyReport', params: { month: 6, year: 2026 } }
-
-// Framework calls:
-service.execute({ month: 6, year: 2026 })
-```
-
-## Permission filtering
-
-Page-level actions with `allowed` are filtered by the user's roles. If the current user does not have a matching role, the button does not render.
-
-## Error handling
-
-When a service action throws:
-
-- The framework catches the error
-- Shows a toast with the error message
-- The UI stays where it is (no navigation, no state change)
-
-When a service action succeeds:
-
-- The framework refreshes the affected data source
-- Runs the `onSuccess` action if provided
-
-## Real-world example
-
-A sales order page with status transitions:
-
-```typescript
-definePage({
-  key: 'sales.orders',
-  label: 'Sales Orders',
-  actions: [
-    {
-      type: 'button',
-      label: 'New Order',
-      icon: 'plus',
-      action: { type: 'navigate', path: '/sales/orders/new' },
-    },
-  ],
-  widgets: [
-    {
-      type: 'table',
-      source: { model: 'sales.order' },
-      on: { rowClick: { type: 'setValue', field: '$state.selectedId', value: '{{id}}' } },
-      children: [
-        { type: 'column', props: { label: 'Name' }, bind: { field: 'name' } },
-        {
-          type: 'column',
-          props: { label: 'Status' },
-          children: [{ type: 'badge', bind: { field: 'status' } }],
-        },
-        { type: 'column', props: { label: 'Total' }, bind: { field: 'total' } },
-      ],
-    },
-    {
-      type: 'drawer',
-      props: { width: 'md', title: 'Order Detail' },
-      visible: { field: '$state.selectedId', operator: 'notEmpty' },
-      children: [
-        {
-          type: 'data',
-          source: { model: 'sales.order', id: '$state.selectedId' },
-          children: [
-            { type: 'text', bind: { field: 'name' }, props: { style: 'heading' } },
-            { type: 'input', bind: { field: 'customer_id' } },
-            { type: 'input', bind: { field: 'status' } },
-            { type: 'input', bind: { field: 'total' } },
-            {
-              type: 'group',
-              props: { direction: 'row', gap: 'sm' },
-              children: [
-                {
-                  type: 'button',
-                  props: { label: 'Submit', variant: 'primary' },
-                  on: { click: { type: 'service', name: 'sales.submitOrder' } },
-                },
-                {
-                  type: 'button',
-                  props: { label: 'Cancel', variant: 'danger' },
-                  on: { click: { type: 'service', name: 'sales.cancelOrder' } },
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-  ],
+// Button inside a data widget bound to sales.order
+widget.button('Submit', {
+  on: { click: action.service('sales.submitOrder') },
 });
-```
 
-The services handle all the logic:
-
-```typescript
+// The service receives the order record
 defineService({
   name: 'sales.submitOrder',
   factory(ctx) {
     return {
       async execute(doc) {
         if (doc.status !== 'Draft') throw new Error('Can only submit drafts');
-        if (!doc.items?.length) throw new Error('Order must have at least one item');
-        await ctx.db.update('sales.order', doc.id, { status: 'Submitted' });
+        await ctx.models.update('sales.order', doc.id, { status: 'Submitted' });
       },
     };
   },
 });
+```
 
-defineService({
-  name: 'sales.cancelOrder',
-  factory(ctx) {
-    return {
-      async execute(doc) {
-        if (doc.status === 'Cancelled') throw new Error('Already cancelled');
-        await ctx.db.update('sales.order', doc.id, { status: 'Cancelled' });
-        await ctx.enqueue('sales.release-reserved-stock', { orderId: doc.id });
-      },
-    };
-  },
-});
+Page-level actions pass explicit params only.
+
+## Error handling
+
+When a service action throws:
+
+- The framework shows a toast with the error message
+- The UI stays where it is (no navigation, no state change)
+- The `onError` action runs if provided
+
+When a service action succeeds:
+
+- The framework refreshes affected data sources
+- The `onSuccess` action runs if provided
+
+## The action factory
+
+The `action` helper provides typed constructors:
+
+```typescript
+import { action } from 'rangka';
+
+action.navigate('/path')
+action.service('name', params)
+action.setValue('field', value)
+action.submit()
+action.sequence([...])
+action.conditional(condition, thenAction, elseAction)
+```
+
+Use `action(type, params)` for the base form:
+
+```typescript
+action('navigate', { path: '/home' });
 ```

@@ -1,18 +1,18 @@
 ---
 status: stable
 since: 0.1.0
-last-updated: 2026-06-19
-description: definePlugin() — create plugins that provide adapters, lifecycle hooks, and custom routes
+last-updated: 2026-06-29
+description: definePlugin() - create plugins that provide adapters, lifecycle hooks, and custom routes
 ---
 
 # definePlugin
 
-Declares a plugin that extends the framework with external capabilities. Plugins provide data adapters for external models, lifecycle hooks, and custom routes.
+Declares a plugin that extends the framework with external capabilities. Plugins provide data adapters for external models and hook into framework lifecycle events.
 
 ## Signature
 
 ```typescript
-import { definePlugin } from 'rangka';
+import { definePlugin } from '@rangka/core';
 
 export default definePlugin({
   name: 'mysql',
@@ -25,15 +25,16 @@ export default definePlugin({
     password: { type: 'string', required: true },
   },
   provides: {
-    adapters: ['mysql'],
+    adapters: [
+      { name: 'mysql', capabilities: ['read', 'list', 'filter', 'create', 'update', 'delete'] },
+    ],
   },
   async boot(ctx) {
     const pool = await createPool(ctx.config);
 
     ctx.adapters.mysql.implement({
       async get(model, id) {
-        const { table, primaryKey } = model.source;
-        const row = await pool.query(`SELECT * FROM ${table} WHERE ${primaryKey} = ?`, [id]);
+        const row = await pool.query(`SELECT * FROM ${model} WHERE id = ?`, [id]);
         return row[0] ?? null;
       },
       async list(model, query) {
@@ -57,51 +58,61 @@ export default definePlugin({
 interface PluginDefinition {
   name: string;
   version: string;
-  config?: Record<string, ConfigField>;
+  config?: Record<string, PluginConfigField>;
   provides?: PluginProvides;
   boot: (ctx: PluginBootContext) => Promise<void> | void;
 }
 ```
 
-| Field      | Type                          | Description                                           |
-| ---------- | ----------------------------- | ----------------------------------------------------- |
-| `name`     | `string`                      | **Required.** Unique plugin identifier.               |
-| `version`  | `string`                      | **Required.** Semver version string.                  |
-| `config`   | `Record<string, ConfigField>` | Configuration schema. Validated at boot.              |
-| `provides` | `PluginProvides`              | Declares what this plugin provides (adapters, etc.).  |
-| `boot`     | `(ctx) => Promise<void>`      | **Required.** Initialization function called at boot. |
+| Field      | Type                                | Description                                           |
+| ---------- | ----------------------------------- | ----------------------------------------------------- |
+| `name`     | `string`                            | **Required.** Unique plugin identifier.               |
+| `version`  | `string`                            | **Required.** Semver version string.                  |
+| `config`   | `Record<string, PluginConfigField>` | Configuration schema. Validated at boot.              |
+| `provides` | `PluginProvides`                    | Declares what this plugin provides (adapters, etc.).  |
+| `boot`     | `(ctx) => Promise\<void\> \| void`  | **Required.** Initialization function called at boot. |
 
 ## Config schema
 
 Declare expected configuration fields. The framework validates user-provided config against this schema at boot time.
 
 ```typescript
-interface ConfigField {
-  type: 'string' | 'number' | 'boolean';
+interface PluginConfigField {
+  type: string;
   required?: boolean;
   default?: unknown;
 }
 ```
 
-| Field      | Type      | Description                                      |
-| ---------- | --------- | ------------------------------------------------ |
-| `type`     | `string`  | Expected value type.                             |
-| `required` | `boolean` | If `true`, boot fails when the field is missing. |
-| `default`  | `unknown` | Default value when not provided by the user.     |
+| Field      | Type      | Description                                                     |
+| ---------- | --------- | --------------------------------------------------------------- |
+| `type`     | `string`  | Expected value type (e.g. `'string'`, `'number'`, `'boolean'`). |
+| `required` | `boolean` | If `true`, boot fails when the field is missing.                |
+| `default`  | `unknown` | Default value when not provided by the user.                    |
 
 Missing required fields throw `PluginConfigError` at boot.
 
 ## Provides
 
-Declares what capabilities this plugin offers. The framework uses this for boot-time validation.
+Declares what capabilities this plugin offers.
 
 ```typescript
 interface PluginProvides {
-  adapters?: string[];
+  adapters?: Array<{ name: string; capabilities: AdapterCapability[] }>;
 }
+
+type AdapterCapability = 'read' | 'list' | 'filter' | 'sort' | 'create' | 'update' | 'delete';
 ```
 
-Every adapter name listed in `provides.adapters` must be implemented during `boot()`. If the boot function finishes without implementing a declared adapter, the framework throws `MissingAdapterImplementationError`.
+Each adapter entry declares its name and the operations it supports. Every adapter listed in `provides.adapters` must be implemented during `boot()`. If the boot function finishes without implementing a declared adapter, the framework throws `MissingAdapterImplementationError`.
+
+```typescript
+provides: {
+  adapters: [
+    { name: 'mysql', capabilities: ['read', 'list', 'filter', 'create', 'update', 'delete'] },
+  ],
+}
+```
 
 > **Planned** — future `provides` slots: `auth`, `storage`, `email`, `queue`.
 
@@ -112,8 +123,8 @@ The `boot` function receives a `PluginBootContext` with tools to register capabi
 ```typescript
 interface PluginBootContext {
   config: Record<string, unknown>;
-  adapters: Record<string, { implement: (adapter: DataAdapter) => void }>;
-  on: (event: PluginLifecycleEvent, handler: (...args: unknown[]) => Promise<void>) => void;
+  adapters: Record<string, { implement(impl: DataAdapter): void }>;
+  on(event: PluginLifecycleEvent, handler: (...args: unknown[]) => Promise<void>): void;
 }
 ```
 
@@ -129,20 +140,17 @@ Adapters implement data operations for external models. Only `get` is required. 
 
 ```typescript
 interface DataAdapter {
-  get(model: AdapterModelInfo, id: string): Promise<Record<string, unknown> | null>;
-  list?(model: AdapterModelInfo, query?: ListQuery): Promise<ListResult>;
-  create?(model: AdapterModelInfo, data: Record<string, unknown>): Promise<Record<string, unknown>>;
+  get(model: string, id: string): Promise<Record<string, unknown> | null>;
+  list?(model: string, query: ListQuery): Promise<ListResult>;
+  create?(model: string, data: Record<string, unknown>): Promise<Record<string, unknown>>;
   update?(
-    model: AdapterModelInfo,
+    model: string,
     id: string,
     data: Record<string, unknown>,
   ): Promise<Record<string, unknown>>;
-  delete?(model: AdapterModelInfo, id: string): Promise<void>;
-  filter?(
-    model: AdapterModelInfo,
-    conditions: Record<string, unknown>,
-  ): Promise<Record<string, unknown>[]>;
-  batchGet?(model: AdapterModelInfo, ids: string[]): Promise<Record<string, unknown>[]>;
+  delete?(model: string, id: string): Promise<void>;
+  filter?(model: string, filters: FilterExpression[]): Promise<ListResult>;
+  batchGet?(model: string, ids: string[]): Promise<Record<string, unknown>[]>;
 }
 ```
 
@@ -155,28 +163,8 @@ interface DataAdapter {
 | `create`   | No       | Insert a new record. Return the created record with its ID.                            |
 | `update`   | No       | Update an existing record. Return the updated record.                                  |
 | `delete`   | No       | Delete a record by primary key.                                                        |
-| `filter`   | No       | Fetch records matching filter conditions. If absent, filtering happens in memory.      |
+| `filter`   | No       | Fetch records matching filter expressions. If absent, filtering happens in memory.     |
 | `batchGet` | No       | Fetch multiple records by IDs in a single call. Prevents N+1 queries on relationships. |
-
-### AdapterModelInfo
-
-The adapter receives model metadata on every call. This includes the source config and field mappings.
-
-```typescript
-interface AdapterModelInfo {
-  name: string;
-  source: Record<string, unknown>;
-  fields: Record<string, { column: string; type: string }>;
-  primaryKey: string;
-}
-```
-
-| Field        | Description                                                          |
-| ------------ | -------------------------------------------------------------------- |
-| `name`       | Qualified model name (e.g., `'crm.customer'`).                       |
-| `source`     | The `source` object from `defineExternalModel`.                      |
-| `fields`     | Map of field names to column names and types.                        |
-| `primaryKey` | The primary key column name from source config (defaults to `'id'`). |
 
 ### ListQuery
 
@@ -185,7 +173,17 @@ interface ListQuery {
   page?: number;
   pageSize?: number;
   sort?: { field: string; direction: 'asc' | 'desc' };
-  filters?: Record<string, unknown>;
+  filters?: FilterExpression[];
+}
+```
+
+### FilterExpression
+
+```typescript
+interface FilterExpression {
+  field: string;
+  operator: string;
+  value: unknown;
 }
 ```
 
@@ -194,10 +192,24 @@ interface ListQuery {
 ```typescript
 interface ListResult {
   data: Record<string, unknown>[];
-  total: number;
+  total?: number;
   hasMore?: boolean;
 }
 ```
+
+## Capability-driven behavior
+
+The framework generates API routes based on what the adapter declares it can do. If an adapter only supports read operations, the model is automatically read-only.
+
+| Adapter capability | API route generated    | HTTP method |
+| ------------------ | ---------------------- | ----------- |
+| `read`             | `/api/:app/:model/:id` | GET         |
+| `list`             | `/api/:app/:model`     | GET         |
+| `create`           | `/api/:app/:model`     | POST        |
+| `update`           | `/api/:app/:model/:id` | PUT         |
+| `delete`           | `/api/:app/:model/:id` | DELETE      |
+
+Routes for missing capabilities return `405 Method Not Allowed`.
 
 ## Lifecycle events
 
@@ -227,27 +239,6 @@ Handlers execute sequentially in registration order. If a handler throws, the er
 
 ## Loading plugins
 
-Declare plugins in `rangka.config.ts`:
-
-```typescript
-import { defineConfig } from 'rangka';
-
-export default defineConfig({
-  database: { dialect: 'pg', host: 'localhost', database: 'myapp' },
-  plugins: [
-    {
-      package: '@rangka/plugin-mysql',
-      config: {
-        host: 'legacy-db.internal',
-        database: 'legacy_crm',
-        user: 'readonly',
-        password: process.env.LEGACY_DB_PASSWORD,
-      },
-    },
-  ],
-});
-```
-
 > **Planned** — plugin loading from `rangka.config.ts` is not yet implemented. Currently plugins are passed to the `boot()` function programmatically.
 
 ## Validation
@@ -267,29 +258,30 @@ All validation runs before the server starts. Errors surface immediately with cl
 ## Example: REST API adapter
 
 ```typescript
-import { definePlugin } from 'rangka';
+import { definePlugin } from '@rangka/core';
 
 export default definePlugin({
   name: 'rest',
   version: '0.1.0',
   config: {
     baseUrl: { type: 'string', required: true },
-    headers: { type: 'string' },
   },
-  provides: { adapters: ['rest'] },
+  provides: {
+    adapters: [{ name: 'rest', capabilities: ['read', 'list'] }],
+  },
   async boot(ctx) {
-    const baseUrl = ctx.config.baseUrl;
+    const baseUrl = ctx.config.baseUrl as string;
 
     ctx.adapters.rest.implement({
       async get(model, id) {
-        const res = await fetch(`${baseUrl}/${model.source.endpoint}/${id}`);
+        const res = await fetch(`${baseUrl}/${model}/${id}`);
         return res.ok ? await res.json() : null;
       },
       async list(model, query) {
         const params = new URLSearchParams();
         if (query?.page) params.set('page', String(query.page));
         if (query?.pageSize) params.set('limit', String(query.pageSize));
-        const res = await fetch(`${baseUrl}/${model.source.endpoint}?${params}`);
+        const res = await fetch(`${baseUrl}/${model}?${params}`);
         const body = await res.json();
         return { data: body.data, total: body.total };
       },
@@ -297,15 +289,3 @@ export default definePlugin({
   },
 });
 ```
-
-## File structure convention
-
-```
-packages/rangka-plugin-mysql/
-  src/
-    index.ts        ← definePlugin(...)
-    adapter.ts      ← DataAdapter implementation
-  package.json      ← { "name": "@rangka/plugin-mysql" }
-```
-
-Plugins are published as npm packages and installed via `pnpm add @rangka/plugin-mysql`.

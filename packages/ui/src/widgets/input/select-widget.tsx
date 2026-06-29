@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { Icon } from '../../primitives/icon';
 import { Field } from '../../form/field';
@@ -13,8 +13,9 @@ export function SelectWidget({ props, bind, on }: WidgetComponentProps) {
   const required = bind.meta?.required;
   const rawOptions =
     (props.options as Array<string | { value: string; label: string }>) ?? bind.meta?.options ?? [];
-  const options = rawOptions.map((opt) =>
-    typeof opt === 'string' ? { value: opt, label: opt } : opt,
+  const options = useMemo(
+    () => rawOptions.map((opt) => (typeof opt === 'string' ? { value: opt, label: opt } : opt)),
+    [rawOptions],
   );
 
   const [open, setOpen] = useState(false);

@@ -1,13 +1,13 @@
 ---
 status: stable
 since: 0.1.0
-last-updated: 2026-06-11
+last-updated: 2026-06-29
 description: defineHook() API — hook types, context, and execution order
 ---
 
 # defineHooks
 
-Declares lifecycle hooks — validation and side-effect handlers that run before or after data operations.
+Declares lifecycle hooks for a model. These are validation and side-effect handlers that run before or after data operations.
 
 See [Hooks concept](../concepts/hooks.md) for usage patterns.
 
@@ -63,7 +63,7 @@ interface HooksConfig {
 type ValidateHook = (doc: Record<string, unknown>) => void;
 ```
 
-- **Synchronous** — no `async`, no context access
+- Synchronous. No `async`, no context access.
 - Throw an `Error` to reject the operation
 - Runs before all other hooks
 - Used for data integrity checks that don't require I/O
@@ -74,10 +74,10 @@ type ValidateHook = (doc: Record<string, unknown>) => void;
 type BeforeHook = (doc: Record<string, unknown>, ctx: FrameworkContext) => Promise<void>;
 ```
 
-- **Async** — full context access
-- Mutate `doc` to transform data before persistence
-- Throw to abort the operation
-- Runs inside the transaction
+- Async. Full context access.
+- Mutate `doc` to transform data before persistence.
+- Throw to abort the operation.
+- Runs inside the transaction.
 
 ### AfterHook
 
@@ -85,8 +85,8 @@ type BeforeHook = (doc: Record<string, unknown>, ctx: FrameworkContext) => Promi
 type AfterHook = (doc: Record<string, unknown>, ctx: FrameworkContext) => Promise<void>;
 ```
 
-- **Async** — full context access
-- `doc` reflects the saved state (includes generated `id`, timestamps, etc.)
+- Async. Full context access.
+- `doc` reflects the saved state (includes generated `id`, timestamps, etc.).
 - Operation-specific after hooks (`afterCreate`, `afterUpdate`, `afterDelete`) run inside the transaction. Throwing rolls back the write.
 - `afterSave` runs outside the transaction (after commit). Throwing does not roll back.
 - Used for side effects: sending emails, enqueuing jobs, emitting events
@@ -110,29 +110,29 @@ type AfterHook = (doc: Record<string, unknown>, ctx: FrameworkContext) => Promis
 For a **create** operation:
 
 1. `validate(doc)`
-2. `beforeSave(doc, ctx)` — in transaction
-3. `beforeCreate(doc, ctx)` — in transaction
-4. — Database INSERT — in transaction
-5. `afterCreate(doc, ctx)` — in transaction
-6. — Transaction COMMIT —
-7. `afterSave(doc, ctx)` — after commit
+2. `beforeSave(doc, ctx)` (in transaction)
+3. `beforeCreate(doc, ctx)` (in transaction)
+4. Database INSERT (in transaction)
+5. `afterCreate(doc, ctx)` (in transaction)
+6. Transaction COMMIT
+7. `afterSave(doc, ctx)` (after commit)
 
 For an **update** operation:
 
 1. `validate(doc)`
-2. `beforeSave(doc, ctx)` — in transaction
-3. `beforeUpdate(doc, ctx)` — in transaction
-4. — Database UPDATE — in transaction
-5. `afterUpdate(doc, ctx)` — in transaction
-6. — Transaction COMMIT —
-7. `afterSave(doc, ctx)` — after commit
+2. `beforeSave(doc, ctx)` (in transaction)
+3. `beforeUpdate(doc, ctx)` (in transaction)
+4. Database UPDATE (in transaction)
+5. `afterUpdate(doc, ctx)` (in transaction)
+6. Transaction COMMIT
+7. `afterSave(doc, ctx)` (after commit)
 
 For a **delete** operation:
 
-1. `beforeDelete(doc, ctx)` — in transaction
-2. — Database DELETE — in transaction
-3. `afterDelete(doc, ctx)` — in transaction
-4. — Transaction COMMIT —
+1. `beforeDelete(doc, ctx)` (in transaction)
+2. Database DELETE (in transaction)
+3. `afterDelete(doc, ctx)` (in transaction)
+4. Transaction COMMIT
 
 ## FrameworkContext
 
@@ -149,11 +149,11 @@ interface FrameworkContext {
   service: (name: string) => ServiceInstance;
   enqueue: (job: string, data: unknown, opts?: JobOptions) => Promise<void>;
   events: {
-    emit: (event: string, data?: unknown) => void;
-    on: (event: string, handler: Function) => void;
+    emit: (event: string, payload: unknown) => Promise<void>;
+    on: (event: string, handler: (payload: unknown) => Promise<void>) => void;
   };
-  notify: (message: string, opts?: NotifyOptions) => Promise<void>;
-  email: { send: (opts: EmailOptions) => Promise<void> };
+  notify: (channel: string, message: unknown) => void;
+  email: { send: (template: string, options: Record<string, unknown>) => Promise<void> };
 }
 ```
 
@@ -171,21 +171,21 @@ interface ContextUser {
 
 ### Context members
 
-| Member        | Type                                    | Description                                               |
-| ------------- | --------------------------------------- | --------------------------------------------------------- |
-| `db`          | `DatabaseClient`                        | Kysely-based database client. Use for direct queries.     |
-| `schema`      | `SchemaRegistry`                        | Schema registry. Access model metadata and relationships. |
-| `auth.user`   | `ContextUser \| null`                   | Authenticated user. `null` for system operations.         |
-| `auth.roles`  | `string[]`                              | Roles assigned to the current user.                       |
-| `scope`       | `unknown`                               | Active scope value (e.g., current company ID).            |
-| `config`      | `Record<string, unknown>`               | App-level configuration values.                           |
-| `models`      | `ModelAccessInterface`                  | Query, create, update, or delete records on any model.    |
-| `service`     | `(name: string) => ServiceInstance`     | Get a registered service by name.                         |
-| `enqueue`     | `(job, data, opts?) => Promise<void>`   | Queue a background job.                                   |
-| `events.emit` | `(event, data?) => void`                | Emit a domain event.                                      |
-| `events.on`   | `(event, handler) => void`              | Register an event listener (rarely used in hooks).        |
-| `notify`      | `(message, opts?) => Promise<void>`     | Send a real-time notification.                            |
-| `email.send`  | `(opts: EmailOptions) => Promise<void>` | Send an email.                                            |
+| Member        | Type                                   | Description                                               |
+| ------------- | -------------------------------------- | --------------------------------------------------------- |
+| `db`          | `DatabaseClient`                       | Kysely-based database client. Use for direct queries.     |
+| `schema`      | `SchemaRegistry`                       | Schema registry. Access model metadata and relationships. |
+| `auth.user`   | `ContextUser \| null`                  | Authenticated user. `null` for system operations.         |
+| `auth.roles`  | `string[]`                             | Roles assigned to the current user.                       |
+| `scope`       | `unknown`                              | Active scope value (e.g., current company ID).            |
+| `config`      | `Record<string, unknown>`              | App-level configuration values.                           |
+| `models`      | `ModelAccessInterface`                 | Query, create, update, or delete records on any model.    |
+| `service`     | `(name: string) => ServiceInstance`    | Get a registered service by name.                         |
+| `enqueue`     | `(job, data, opts?) => Promise<void>`  | Queue a background job.                                   |
+| `events.emit` | `(event, payload) => Promise<void>`    | Emit a domain event.                                      |
+| `events.on`   | `(event, handler) => void`             | Register an event listener (rarely used in hooks).        |
+| `notify`      | `(channel, message) => void`           | Send a real-time notification to a channel.               |
+| `email.send`  | `(template, options) => Promise<void>` | Send an email using a named template.                     |
 
 ### JobOptions (for `enqueue`)
 

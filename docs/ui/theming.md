@@ -7,7 +7,20 @@ description: Theme tokens and CSS customization options
 
 # Theming
 
-Rangka's visual layer is built on CSS custom properties. Every color, spacing value, shadow, and transition is a token you can override to match your brand.
+The visual layer is built on CSS custom properties. Every color, spacing value, radius, and transition is a token you can override to match your brand.
+
+Design tokens live in `packages/ui/src/tokens/`. The token system uses OKLCh color space for perceptual uniformity.
+
+## Token files
+
+| File             | Contents                                  |
+| ---------------- | ----------------------------------------- |
+| `colors.css`     | Primitive color scales + semantic aliases |
+| `spacing.css`    | Spacing scale, radius, border widths      |
+| `typography.css` | Font families, type scale, line heights   |
+| `animations.css` | Transitions and keyframes                 |
+| `base.css`       | Reset and base element styles             |
+| `index.css`      | Imports all above + `@theme inline` block |
 
 ## Customizing your theme
 
@@ -16,112 +29,90 @@ Create a CSS file that overrides the tokens you want to change:
 ```css
 /* styles/theme.css */
 :root {
-  --color-primary: 262 72% 56%; /* purple instead of blue */
-  --color-primary-hover: 262 72% 50%;
+  --color-primary: oklch(0.55 0.15 270);
+  --color-primary-hover: oklch(0.5 0.15 270);
   --font-sans: 'Your Brand Font', system-ui, sans-serif;
-  --density: 0.875; /* compact */
 }
 
 [data-theme='dark'] {
-  --color-primary: 262 72% 64%;
-  --color-primary-hover: 262 72% 58%;
+  --color-primary: oklch(0.65 0.15 270);
+  --color-primary-hover: oklch(0.6 0.15 270);
 }
 ```
 
-Import it after your base tokens:
+Import it after the base tokens:
 
 ```typescript
-import './styles/tokens.css';
+import '@rangka/ui/tokens';
 import './styles/theme.css';
 ```
 
-## Token reference
+## Color system
 
-All tokens live in `tokens.css`. Here's the full set:
+Colors use a two-tier approach: primitive scales and semantic tokens.
 
-```css
-:root {
-  /* Colors (HSL values without wrapper, for opacity modifiers) */
-  --color-primary: 220 72% 56%;
-  --color-primary-hover: 220 72% 50%;
-  --color-primary-subtle: 220 72% 56% / 0.1;
+### Primitive scales
 
-  --color-surface-sunken: 220 20% 96%;
-  --color-surface-base: 0 0% 100%;
-  --color-surface-raised: 220 20% 99%;
+Raw color values at numbered stops. Not used directly in components.
 
-  --color-border-subtle: 220 13% 91%;
-  --color-border-default: 220 13% 87%;
-  --color-border-emphasis: 220 13% 72%;
+| Scale   | Purpose            |
+| ------- | ------------------ |
+| Neutral | Grays and surfaces |
+| Brand   | Primary accent     |
+| Green   | Success states     |
+| Amber   | Warning states     |
+| Red     | Destructive/danger |
 
-  --color-text-primary: 220 20% 10%;
-  --color-text-muted: 220 10% 46%;
+### Semantic tokens
 
-  --color-success: 142 72% 36%;
-  --color-warning: 38 92% 50%;
-  --color-error: 0 72% 51%;
-  --color-info: 220 72% 56%;
+Map primitives to UI roles. Components reference these.
 
-  /* Typography */
-  --font-sans: 'Inter', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+| Token                      | Usage                  |
+| -------------------------- | ---------------------- |
+| `--color-background`       | Page canvas            |
+| `--color-surface`          | Card and panel fills   |
+| `--color-muted`            | Subtle backgrounds     |
+| `--color-primary`          | Brand accent, CTAs     |
+| `--color-destructive`      | Delete, error actions  |
+| `--color-success`          | Positive confirmations |
+| `--color-warning`          | Caution indicators     |
+| `--color-foreground`       | Default text           |
+| `--color-muted-foreground` | Secondary text         |
 
-  --text-xs: 0.75rem; /* 12px */
-  --text-sm: 0.8125rem; /* 13px */
-  --text-base: 0.875rem; /* 14px */
-  --text-lg: 1rem; /* 16px */
-  --text-xl: 1.125rem; /* 18px */
-  --text-2xl: 1.25rem; /* 20px */
+## Spacing
 
-  /* Density */
-  --density: 1;
+Based on a 4px grid. Semantic aliases group the scale into named sizes.
 
-  /* Radius */
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
+| Alias           | Value     | Pixels |
+| --------------- | --------- | ------ |
+| `--spacing-xs`  | `0.25rem` | 4      |
+| `--spacing-sm`  | `0.5rem`  | 8      |
+| `--spacing-md`  | `1rem`    | 16     |
+| `--spacing-lg`  | `1.5rem`  | 24     |
+| `--spacing-xl`  | `2rem`    | 32     |
+| `--spacing-2xl` | `3rem`    | 48     |
 
-  /* Shadows */
-  --shadow-inset: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+## Typography
 
-  /* Transitions */
-  --transition-fast: 100ms ease;
-  --transition-base: 150ms ease;
-  --transition-slow: 250ms ease;
-}
-```
+| Token         | Default value                         |
+| ------------- | ------------------------------------- |
+| `--font-sans` | Inter Variable, system-ui, sans-serif |
+| `--font-mono` | Fira Code, Fira Mono, Cascadia Code   |
+| `--text-xs`   | 0.75rem (12px)                        |
+| `--text-sm`   | 0.875rem (14px)                       |
+| `--text-base` | 1rem (16px)                           |
+| `--text-lg`   | 1.125rem (18px)                       |
+| `--text-xl`   | 1.25rem (20px)                        |
 
-## Surfaces
+## Border radius
 
-Surfaces create depth without heavy shadows:
-
-| Level   | Usage                              |
-| ------- | ---------------------------------- |
-| Sunken  | Page canvas, table stripes, inputs |
-| Base    | Default content area               |
-| Raised  | Cards, elevated sections           |
-| Overlay | Modals, drawers, dropdowns         |
-
-## Density
-
-A single variable scales all vertical spacing, heights, and padding:
-
-| Mode        | Value   | Button Height | Feel                 |
-| ----------- | ------- | ------------- | -------------------- |
-| Compact     | `0.875` | 32px          | Maximum data density |
-| Default     | `1`     | 36px          | Balanced             |
-| Comfortable | `1.125` | 40px          | Touch-friendly       |
-
-Set on the root element:
-
-```html
-<html data-density="compact"></html>
-```
-
-All components using `calc(... * var(--density))` respond automatically.
+| Token          | Value    |
+| -------------- | -------- |
+| `--radius-sm`  | 0.25rem  |
+| `--radius-md`  | 0.375rem |
+| `--radius-lg`  | 0.5rem   |
+| `--radius-xl`  | 0.75rem  |
+| `--radius-2xl` | 1rem     |
 
 ## Dark mode
 
@@ -131,7 +122,7 @@ Toggle with `data-theme="dark"` on the root element:
 <html data-theme="dark"></html>
 ```
 
-Every token has a dark variant. If you use tokens consistently, dark mode works automatically. The moment you hardcode a color value, you opt out of dark mode for that element.
+Every semantic token has a dark variant. If you use tokens consistently, dark mode works automatically. Hardcoding a color value opts that element out of dark mode.
 
 ## Per-app theming
 
@@ -139,11 +130,11 @@ If different apps need different accents:
 
 ```css
 [data-app='hr'] {
-  --color-primary: 142 72% 40%;
+  --color-primary: oklch(0.6 0.18 150);
 }
 
 [data-app='finance'] {
-  --color-primary: 220 72% 56%;
+  --color-primary: oklch(0.48 0.12 243);
 }
 ```
 
@@ -151,6 +142,6 @@ The shell sets `data-app` on the content area based on the current route.
 
 ## Tips
 
-- HSL format allows opacity modifiers: `hsl(var(--color-primary) / 0.5)` gives you 50% opacity. That's why tokens store raw HSL values.
-- Test density extremes. Switch between compact and comfortable to ensure custom components don't break.
-- Don't fight the token system. If you're writing raw color values, there's probably a token for it.
+- OKLCh format gives perceptually uniform lightness. Adjusting the L channel produces consistent contrast across hues.
+- Test dark mode whenever you override tokens. Missing dark overrides cause contrast issues.
+- Do not hardcode color values in components. Use the semantic token layer.

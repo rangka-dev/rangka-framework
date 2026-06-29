@@ -1,7 +1,7 @@
 ---
 status: stable
 since: 0.2.0
-last-updated: 2026-06-21
+last-updated: 2026-06-29
 description: Reactive state system — StateStore, variables, expressions, conditions
 ---
 

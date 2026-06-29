@@ -1,7 +1,7 @@
 ---
 status: stable
 since: 0.2.0
-last-updated: 2026-06-21
+last-updated: 2026-06-29
 description: All built-in widgets with props, triggers, and binding modes
 ---
 
@@ -29,11 +29,7 @@ When `id` is set, the widget operates in record mode (single record). Otherwise 
 The `id` field supports bare `$`-prefixed expressions without template syntax:
 
 ```typescript
-// All equivalent for resolving the route parameter
 source: { model: 'sales.order', id: '$route.id' }
-source: { model: 'sales.order', id: '{{$route.id}}' }
-
-// State variable
 source: { model: 'sales.customer', id: '$state.selectedId' }
 ```
 
@@ -130,7 +126,7 @@ Date selection input.
 
 ### datetime
 
-Date and time selection input.
+Date and time selection input. Uses 12-hour clock with AM/PM.
 
 | Property   | Type    | Default | Description        |
 | ---------- | ------- | ------- | ------------------ |
@@ -299,9 +295,9 @@ Hierarchical record picker for tree-structured models.
 
 Displays text content bound to a field value.
 
-| Property | Type | Default  | Description                          |
-| -------- | ---- | -------- | ------------------------------------ |
-| `style`  | enum | `'body'` | `heading`, `body`, `caption`, `bold` |
+| Property | Type | Default  | Description                                      |
+| -------- | ---- | -------- | ------------------------------------------------ |
+| `style`  | enum | `'body'` | `heading`, `label`, `body`, `caption`, or `code` |
 
 - Binding: `field`
 - Triggers: none
@@ -335,7 +331,7 @@ Displays an icon from the icon set.
 | `size`   | number | `14`         | Icon size in pixels |
 | `color`  | string |              | Icon color          |
 
-- Binding: `none`
+- Binding: none
 - Triggers: `click`
 - Container: no
 
@@ -393,18 +389,18 @@ Displays a sequence field value (auto-generated numbers like INV-00001).
 
 Arranges children in a row or column with no visual chrome.
 
-| Property    | Type    | Default    | Description                                   |
-| ----------- | ------- | ---------- | --------------------------------------------- |
-| `direction` | enum    | `'column'` | `row`, `column`                               |
-| `align`     | enum    |            | `start`, `center`, `end`, `stretch`           |
-| `justify`   | enum    |            | `start`, `center`, `end`, `between`, `around` |
-| `gap`       | enum    | `'md'`     | `none`, `xs`, `sm`, `md`, `lg`, `xl`, `2xl`   |
-| `wrap`      | boolean | `false`    | Wrap overflowing children                     |
-| `padding`   | enum    |            | `none`, `xs`, `sm`, `md`, `lg`, `xl`, `2xl`   |
-| `paddingX`  | enum    |            | Horizontal padding                            |
-| `paddingY`  | enum    |            | Vertical padding                              |
+| Property    | Type    | Default    | Description                                             |
+| ----------- | ------- | ---------- | ------------------------------------------------------- |
+| `direction` | enum    | `'column'` | `row` or `column`                                       |
+| `align`     | enum    |            | `start`, `center`, `end`, `stretch`                     |
+| `justify`   | enum    |            | `start`, `center`, `end`, `between`, `around`, `evenly` |
+| `gap`       | enum    | `'md'`     | `none`, `xs`, `sm`, `md`, `lg`, `xl`                    |
+| `wrap`      | boolean | `false`    | Wrap overflowing children                               |
+| `padding`   | enum    |            | `none`, `sm`, `md`, `lg`, `xl`                          |
+| `paddingX`  | enum    |            | Horizontal padding                                      |
+| `paddingY`  | enum    |            | Vertical padding                                        |
 
-- Binding: `none`
+- Binding: none
 - Triggers: none
 - Container: yes
 
@@ -414,15 +410,15 @@ Arranges children in a row or column with no visual chrome.
 
 Visual grouping with a label and optional collapsibility.
 
-| Property           | Type    | Default      | Description                                 |
-| ------------------ | ------- | ------------ | ------------------------------------------- |
-| `label`            | string  | **required** | Section heading                             |
-| `collapsible`      | boolean | `false`      | Allow collapsing                            |
-| `defaultCollapsed` | boolean | `false`      | Start collapsed                             |
-| `padding`          | enum    | `'md'`       | `none`, `xs`, `sm`, `md`, `lg`, `xl`, `2xl` |
-| `icon`             | string  |              | Icon name beside the label                  |
+| Property           | Type    | Default      | Description                    |
+| ------------------ | ------- | ------------ | ------------------------------ |
+| `label`            | string  | **required** | Section heading                |
+| `collapsible`      | boolean | `false`      | Allow collapsing               |
+| `defaultCollapsed` | boolean | `false`      | Start collapsed                |
+| `padding`          | enum    | `'md'`       | `none`, `sm`, `md`, `lg`, `xl` |
+| `icon`             | string  |              | Icon name beside the label     |
 
-- Binding: `none`
+- Binding: none
 - Triggers: none
 - Container: yes
 
@@ -435,11 +431,10 @@ Splits children into resizable columns or rows.
 | Property    | Type   | Default        | Description                                       |
 | ----------- | ------ | -------------- | ------------------------------------------------- |
 | `sizes`     | array  |                | Percentage sizes for each pane (e.g., `[60, 40]`) |
-| `direction` | enum   | `'horizontal'` | `horizontal`, `vertical`                          |
+| `direction` | enum   | `'horizontal'` | `horizontal` or `vertical`                        |
 | `minSize`   | number | `10`           | Minimum pane size percentage                      |
-| `padding`   | enum   |                | `none`, `xs`, `sm`, `md`, `lg`, `xl`, `2xl`       |
 
-- Binding: `none`
+- Binding: none
 - Triggers: none
 - Container: yes
 
@@ -449,19 +444,19 @@ Splits children into resizable columns or rows.
 
 Responsive grid layout.
 
-| Property     | Type   | Default | Description                                 |
-| ------------ | ------ | ------- | ------------------------------------------- |
-| `columns`    | number | `3`     | Number of columns                           |
-| `gap`        | enum   | `'md'`  | `none`, `xs`, `sm`, `md`, `lg`, `xl`, `2xl` |
-| `rowGap`     | enum   |         | Override gap for rows                       |
-| `colGap`     | enum   |         | Override gap for columns                    |
-| `autoFlow`   | enum   | `'row'` | `row`, `column`, `dense`                    |
-| `responsive` | object |         | Breakpoint overrides                        |
-| `padding`    | enum   |         | `none`, `xs`, `sm`, `md`, `lg`, `xl`, `2xl` |
-| `paddingX`   | enum   |         | Horizontal padding                          |
-| `paddingY`   | enum   |         | Vertical padding                            |
+| Property     | Type   | Default | Description                          |
+| ------------ | ------ | ------- | ------------------------------------ |
+| `columns`    | number | `3`     | Number of columns                    |
+| `gap`        | enum   | `'md'`  | `none`, `xs`, `sm`, `md`, `lg`, `xl` |
+| `rowGap`     | enum   |         | Override gap for rows                |
+| `colGap`     | enum   |         | Override gap for columns             |
+| `autoFlow`   | enum   | `'row'` | `row`, `column`, `dense`             |
+| `responsive` | object |         | Breakpoint overrides                 |
+| `padding`    | enum   |         | `none`, `sm`, `md`, `lg`, `xl`       |
+| `paddingX`   | enum   |         | Horizontal padding                   |
+| `paddingY`   | enum   |         | Vertical padding                     |
 
-- Binding: `none`
+- Binding: none
 - Triggers: none
 - Container: yes
 
@@ -471,12 +466,11 @@ Responsive grid layout.
 
 Horizontal separator line.
 
-| Property  | Type | Default | Description                    |
-| --------- | ---- | ------- | ------------------------------ |
-| `margin`  | enum |         | `none`, `sm`, `md`, `lg`, `xl` |
-| `marginY` | enum |         | Vertical margin override       |
+| Property | Type | Default | Description                    |
+| -------- | ---- | ------- | ------------------------------ |
+| `margin` | enum |         | `none`, `sm`, `md`, `lg`, `xl` |
 
-- Binding: `none`
+- Binding: none
 - Triggers: none
 - Container: no
 
@@ -490,7 +484,7 @@ Empty space between elements.
 | -------- | ---- | ------- | ---------------------------- |
 | `size`   | enum | `'md'`  | `xs`, `sm`, `md`, `lg`, `xl` |
 
-- Binding: `none`
+- Binding: none
 - Triggers: none
 - Container: no
 
@@ -498,17 +492,15 @@ Empty space between elements.
 
 ### card
 
-Visual card container with optional title and actions.
+Visual card container with optional title.
 
-| Property      | Type   | Default     | Description           |
-| ------------- | ------ | ----------- | --------------------- |
-| `title`       | string |             | Card title            |
-| `description` | string |             | Card description      |
-| `size`        | enum   | `'default'` | `default`, `sm`       |
-| `actions`     | array  |             | Header action buttons |
-| `footer`      | array  |             | Footer content        |
+| Property      | Type   | Default | Description      |
+| ------------- | ------ | ------- | ---------------- |
+| `title`       | string |         | Card title       |
+| `description` | string |         | Card description |
+| `size`        | enum   | `'md'`  | `sm`, `md`, `lg` |
 
-- Binding: `none`
+- Binding: none
 - Triggers: none
 - Container: yes
 
@@ -524,7 +516,7 @@ Scrollable container with a fixed height.
 | `height`    | string |              | CSS height                       |
 | `maxHeight` | string |              | CSS max-height                   |
 
-- Binding: `none`
+- Binding: none
 - Triggers: none
 - Container: yes
 
@@ -534,12 +526,12 @@ Scrollable container with a fixed height.
 
 Vertical stack with height control.
 
-| Property  | Type   | Default  | Description                                 |
-| --------- | ------ | -------- | ------------------------------------------- |
-| `height`  | string | `'auto'` | CSS height                                  |
-| `padding` | enum   |          | `none`, `xs`, `sm`, `md`, `lg`, `xl`, `2xl` |
+| Property  | Type   | Default  | Description                    |
+| --------- | ------ | -------- | ------------------------------ |
+| `height`  | string | `'auto'` | CSS height                     |
+| `padding` | enum   |          | `none`, `sm`, `md`, `lg`, `xl` |
 
-- Binding: `none`
+- Binding: none
 - Triggers: none
 - Container: yes
 
@@ -547,19 +539,19 @@ Vertical stack with height control.
 
 ### column
 
-Declares a table column. Only valid as a direct child of `table`.
+Declares a table column. Only valid as a direct child of `table` or `datagrid`.
 
-| Property     | Type    | Default      | Description               |
-| ------------ | ------- | ------------ | ------------------------- |
-| `label`      | string  | **required** | Column header text        |
-| `width`      | string  |              | CSS width                 |
-| `align`      | enum    | `'left'`     | `left`, `center`, `right` |
-| `sortable`   | boolean |              | Enable column sorting     |
-| `filterable` | boolean |              | Enable column filtering   |
+| Property     | Type    | Default  | Description               |
+| ------------ | ------- | -------- | ------------------------- |
+| `label`      | string  |          | Column header text        |
+| `width`      | string  |          | CSS width                 |
+| `align`      | enum    | `'left'` | `left`, `center`, `right` |
+| `sortable`   | boolean |          | Enable column sorting     |
+| `filterable` | boolean |          | Enable column filtering   |
 
-- Binding: `none`
+- Binding: `field`
 - Triggers: none
-- Container: yes
+- Container: no
 
 ---
 
@@ -567,13 +559,13 @@ Declares a table column. Only valid as a direct child of `table`.
 
 Slide-in panel from the right side.
 
-| Property   | Type    | Default | Description       |
-| ---------- | ------- | ------- | ----------------- |
-| `width`    | enum    | `'md'`  | `sm`, `md`, `lg`  |
-| `title`    | string  |         | Drawer title      |
-| `closable` | boolean | `true`  | Show close button |
+| Property   | Type    | Default | Description               |
+| ---------- | ------- | ------- | ------------------------- |
+| `width`    | enum    | `'md'`  | `sm`, `md`, `lg`, or `xl` |
+| `title`    | string  |         | Drawer title              |
+| `closable` | boolean | `true`  | Show close button         |
 
-- Binding: `none`
+- Binding: none
 - Triggers: none
 - Container: yes
 
@@ -583,13 +575,13 @@ Slide-in panel from the right side.
 
 Centered overlay dialog.
 
-| Property   | Type    | Default | Description       |
-| ---------- | ------- | ------- | ----------------- |
-| `size`     | enum    | `'md'`  | `sm`, `md`, `lg`  |
-| `title`    | string  |         | Modal title       |
-| `closable` | boolean | `true`  | Show close button |
+| Property   | Type    | Default | Description                       |
+| ---------- | ------- | ------- | --------------------------------- |
+| `size`     | enum    | `'md'`  | `sm`, `md`, `lg`, `xl`, or `full` |
+| `title`    | string  |         | Modal title                       |
+| `closable` | boolean | `true`  | Show close button                 |
 
-- Binding: `none`
+- Binding: none
 - Triggers: none
 - Container: yes
 
@@ -609,7 +601,7 @@ Clickable action trigger.
 | `disabled` | boolean | `false`       | Disable the button                             |
 | `loading`  | boolean | `false`       | Show loading state                             |
 
-- Binding: `none`
+- Binding: none
 - Triggers: `click`
 - Container: no
 
@@ -627,16 +619,13 @@ Data container that fetches a record or collection. Children render within the d
 | `pageSize`    | number |         | Page size for collection |
 
 - Source: `{ model, id?, filters?, limit? }`
-- Binding: `none`
+- Binding: none
 - Triggers: `load`, `error`
 - Container: yes
 
 ```typescript
-// Single record
-{ type: 'data', source: { model: 'sales.order', id: '$route.id' }, children: [...] }
-
-// Collection
-{ type: 'data', source: { model: 'sales.product' }, children: [...] }
+widget.data('sales.order', { id: '$route.id' }, [...]);
+widget.data('sales.product', [...]);
 ```
 
 ---
@@ -645,22 +634,20 @@ Data container that fetches a record or collection. Children render within the d
 
 Data container with form state management. Fetches a record for editing or provides a blank form for creation.
 
-| Property | Type | Default | Description |
-| -------- | ---- | ------- | ----------- |
+| Property | Type   | Default | Description                          |
+| -------- | ------ | ------- | ------------------------------------ |
+| `mode`   | string |         | Explicit form mode (e.g. `'create'`) |
 
 - Source: `{ model, id? }`
-- Binding: `none`
+- Binding: none
 - Triggers: `success`, `error`
 - Container: yes
 
 When `source.id` is set, the form loads the record and enters edit mode. Without `id`, the form starts in create mode.
 
 ```typescript
-// Edit existing record
-{ type: 'form', source: { model: 'sales.order', id: '$route.id' }, children: [...] }
-
-// Create new record
-{ type: 'form', source: { model: 'sales.order' }, children: [...] }
+widget.form('sales.order', { id: '$route.id' }, [...]);
+widget.form('sales.order', [...]);
 ```
 
 ---
@@ -671,11 +658,12 @@ Iterates over a collection, rendering children for each item.
 
 | Property  | Type   | Default  | Description                          |
 | --------- | ------ | -------- | ------------------------------------ |
-| `layout`  | enum   | `'list'` | `list`, `grid`                       |
+| `layout`  | enum   | `'list'` | `list` or `grid`                     |
 | `columns` | number | `3`      | Grid columns (when layout is `grid`) |
 | `gap`     | enum   | `'md'`   | `sm`, `md`, `lg`                     |
 
-- Binding: `field`
+- Source: `{ model }`
+- Binding: none
 - Triggers: none
 - Container: yes
 
@@ -687,7 +675,7 @@ Data table with pagination, sorting, and selection.
 
 | Property     | Type    | Default  | Description          |
 | ------------ | ------- | -------- | -------------------- |
-| `variant`    | enum    | `'card'` | `card`, `flat`       |
+| `variant`    | enum    | `'card'` | `card` or `flat`     |
 | `selectable` | boolean |          | Enable row selection |
 | `bordered`   | boolean |          | Show cell borders    |
 | `striped`    | boolean |          | Alternate row colors |
@@ -695,29 +683,24 @@ Data table with pagination, sorting, and selection.
 | `emptyText`  | string  |          | Text when no records |
 
 - Source: `{ model, filters?, limit? }`
-- Binding: `none`
+- Binding: none
 - Triggers: `rowClick`, `select`, `pageChange`
-- Container: yes (accepts `column` only)
+- Container: yes (accepts `column` children)
 
 When `pageSize` is set, the table fetches its own data (smart mode). Without `pageSize`, it reads records from a parent data container (passive mode).
 
 ```typescript
-{
-  type: 'table',
-  source: { model: 'sales.order' },
-  props: { pageSize: 10, selectable: true },
-  children: [
-    { type: 'column', props: { label: 'Customer', sortable: true }, bind: { field: 'customer' } },
-    { type: 'column', props: { label: 'Status', filterable: true }, bind: { field: 'status' } },
-  ],
-}
+widget.table('sales.order', { pageSize: 10 }, [
+  widget.column('customer', { label: 'Customer', sortable: true }),
+  widget.column('status', { label: 'Status', filterable: true }),
+]);
 ```
 
 ---
 
 ### datagrid
 
-Spreadsheet-like grid with inline editing, virtual scrolling, and infinite loading. Use the datagrid when users need to edit data inline, manage rows, or work with large datasets. Use the table widget for simple read-only lists.
+Spreadsheet-like grid with inline editing, virtual scrolling, and infinite loading. Use datagrid for inline editing and large datasets. Use table for read-only lists.
 
 | Property      | Type    | Default        | Description                                                |
 | ------------- | ------- | -------------- | ---------------------------------------------------------- |
@@ -731,34 +714,24 @@ Spreadsheet-like grid with inline editing, virtual scrolling, and infinite loadi
 | `addRow`      | boolean | `false`        | Show add-row button in footer                              |
 | `emptyText`   | string  | `'No records'` | Message when no data                                       |
 
-- Source: `{ model, filters? }`
-- Binding: `none`
+- Binding: `field` (for inline child table use)
 - Triggers: `cellChange`, `rowSelect`, `rowCreate`, `rowDelete`
-- Container: yes (accepts `column` only)
+- Container: yes (accepts `column` children)
 
 The datagrid uses infinite scroll. It fetches `pageSize` records per batch and loads more as the user scrolls near the bottom. There is no pagination UI.
 
 Sorting is server-side. Click a column header to sort. Shift+click for multi-column sort. Sort stays stable during inline editing. Rows do not reorder after a cell edit.
 
-New rows appear at the top of the grid. Required fields must be filled before the row persists to the server. The row shows placeholder labels for required fields until they are populated.
+New rows appear at the top of the grid. Required fields must be filled before the row persists to the server.
 
 When `children` is empty the datagrid derives columns automatically from model metadata.
 
 ```typescript
-{
-  type: 'datagrid',
-  source: { model: 'sales.order' },
-  props: { pageSize: 50, editable: true, selectable: true, addRow: true },
-  children: [
-    { type: 'column', bind: { field: 'customer' }, props: { label: 'Customer', sortable: true, filterable: true } },
-    { type: 'column', bind: { field: 'status' }, props: { label: 'Status', editable: true, filterable: true } },
-    { type: 'column', bind: { field: 'total' }, props: { label: 'Total', sortable: true, editable: true } },
-  ],
-  on: {
-    rowCreate: { type: 'refreshSource' },
-    rowDelete: { type: 'refreshSource' },
-  },
-}
+widget.datagrid('items', [
+  widget.column('customer', { label: 'Customer', sortable: true, filterable: true }),
+  widget.column('status', { label: 'Status', filterable: true }),
+  widget.column('total', { label: 'Total', sortable: true, align: 'right' }),
+]);
 ```
 
 #### Column props (datagrid)

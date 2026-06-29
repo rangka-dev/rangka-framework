@@ -3,6 +3,22 @@ import type { NavigationTree } from './boot.js';
 import type { Action } from './page.js';
 import type { WidgetAction, WidgetNode } from './widget.js';
 
+// --- Filter contract (used by shell and table filter bar) ---
+
+export interface FilterFieldDeclaration {
+  field: string;
+  type: string;
+  label: string;
+  model?: string;
+  options?: string[];
+}
+
+export interface ActiveFilter {
+  field: string;
+  operator: string;
+  value: unknown;
+}
+
 // --- Widget contract ---
 
 export interface WidgetProps {
@@ -43,7 +59,12 @@ export interface ShellLayoutProps {
   breadcrumbs: { label: string; path?: string }[];
   currentPath: string;
   pageActions?: Action[];
-  filterBar?: ReactNode;
+  filterBar?: {
+    fields: FilterFieldDeclaration[];
+    activeFilters: ActiveFilter[];
+    onSetFilter: (field: string, operator: string, value: unknown) => void;
+    onRemoveFilter: (field: string, operator: string) => void;
+  } | null;
   onAction?: (action: WidgetAction) => void;
   onNavigate: (path: string) => void;
   onAppSwitch: (app: string) => void;

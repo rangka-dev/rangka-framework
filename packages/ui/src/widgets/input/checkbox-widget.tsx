@@ -11,23 +11,13 @@ export function CheckboxWidget({ props, bind, on }: WidgetComponentProps) {
     on.change?.(checked);
   };
 
-  if (disabled) {
-    return (
-      <Field orientation="horizontal">
-        <input
-          type="checkbox"
-          checked={!!bind.value}
-          readOnly
-          className="size-3.5 rounded-sm border border-border accent-primary pointer-events-none"
-        />
-        {label && <Field.Label>{label}</Field.Label>}
-      </Field>
-    );
-  }
-
   return (
     <Field orientation="horizontal" data-invalid={!!bind.error || undefined}>
-      <Checkbox checked={bind.value as boolean | undefined} onCheckedChange={handleChange} />
+      <Checkbox
+        checked={bind.value as boolean | undefined}
+        onCheckedChange={disabled ? undefined : handleChange}
+        disabled={disabled}
+      />
       {label && <Field.Label>{label}</Field.Label>}
       {bind.error && <Field.Error>{bind.error}</Field.Error>}
     </Field>

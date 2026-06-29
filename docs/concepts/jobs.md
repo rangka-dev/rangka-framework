@@ -1,20 +1,19 @@
 ---
 status: stable
 since: 0.1.0
-last-updated: 2026-06-12
+last-updated: 2026-06-29
 description: Background job scheduling and execution
 ---
 
 # Jobs
 
-Not everything should happen while a user waits. Sending emails, generating reports, syncing with external systems, processing queues. These are tasks that belong in the background, running reliably without blocking anyone's request.
+Not everything should happen while a user waits. Sending emails, generating reports, syncing with external systems. These are tasks that belong in the background.
 
-A job is how you express that kind of work in Rangka.
+A job runs reliably without blocking the request that triggered it.
 
 ## Defining a job
 
 ```typescript
-// jobs/send-confirmation.ts
 import { defineJob } from 'rangka';
 
 export default defineJob('sales.send-confirmation', {
@@ -23,19 +22,10 @@ export default defineJob('sales.send-confirmation', {
   backoff: 'exponential',
 
   async handler(data, ctx) {
-    const order = await ctx.db
-      .selectFrom('sales.order')
-      .where('id', '=', data.orderId)
-      .selectAll()
-      .executeTakeFirst();
-
+    const order = await ctx.models.get('sales.order', data.orderId);
     if (!order) return;
 
-    const customer = await ctx.db
-      .selectFrom('sales.customer')
-      .where('id', '=', order.customer)
-      .selectAll()
-      .executeTakeFirst();
+    const customer = await ctx.models.get('sales.customer', order.customer);
 
     await ctx.email.send('order-confirmation', {
       to: customer.email,
@@ -46,8 +36,6 @@ export default defineJob('sales.send-confirmation', {
 ```
 
 ## Configuration
-
-`defineJob(name, config)` — name is the first argument (`{app}.{action}` format).
 
 | Field         | Type       | Description                                      |
 | ------------- | ---------- | ------------------------------------------------ |
@@ -74,28 +62,32 @@ defineHooks('sales.order', {
 
 ```typescript
 await ctx.enqueue('job-name', data, {
-  delay: 60000, // Wait 60 seconds before executing
-  unique: true, // Prevent duplicates
-  uniqueKey: 'order-123', // Custom deduplication key
+  delay: 60000,
+  unique: true,
+  uniqueKey: 'order-123',
 });
 ```
 
+| Option      | Description                          |
+| ----------- | ------------------------------------ |
+| `delay`     | Wait N milliseconds before executing |
+| `unique`    | Prevent duplicate jobs               |
+| `uniqueKey` | Custom deduplication key             |
+
 ## Scheduled jobs
 
-Add a `schedule` field with a cron expression to run jobs on a recurring basis:
+Add a `schedule` field with a cron expression for recurring execution:
 
 ```typescript
-defineJob({
-  name: 'sales.daily-summary',
-  schedule: '0 6 * * *', // Every day at 6:00 AM
+defineJob('sales.daily-summary', {
+  schedule: '0 6 * * *',
 
   async handler(data, ctx) {
     const yesterday = getYesterday();
-    const orders = await ctx.db
-      .selectFrom('sales.order')
-      .where('created_at', '>=', yesterday)
-      .selectAll()
-      .execute();
+    const orders = await ctx.models
+      .query('sales.order')
+      .filter({ created_at: { $gte: yesterday } })
+      .exec();
 
     const summary = computeSummary(orders);
     await ctx.email.send('daily-summary', { to: 'sales-team@company.com', data: summary });
@@ -116,14 +108,12 @@ Standard 5-field: `minute hour day-of-month month day-of-week`
 
 ## Retries
 
-When a handler throws the framework retries based on your configuration:
+When a handler throws, the framework retries based on your configuration:
 
 ```typescript
-defineJob({
-  name: 'sales.sync-to-crm',
+defineJob('sales.sync-to-crm', {
   retries: 5,
   backoff: 'exponential',
-  // Delays: 1s, 2s, 4s, 8s, 16s
 
   async handler(data, ctx) {
     const response = await fetch('https://crm.example.com/api/sync', { ... });
@@ -155,8 +145,7 @@ created → active → completed
 Jobs with the `__event:` prefix automatically listen to framework events:
 
 ```typescript
-defineJob({
-  name: '__event:sales.order.submitted',
+defineJob('__event:sales.order.submitted', {
   async handler(data, ctx) {
     await ctx.enqueue('sales.send-confirmation', { orderId: data.order.id });
   },
@@ -164,3 +153,7 @@ defineJob({
 ```
 
 Same as registering an event listener but with retry and persistence guarantees.
+
+## SQLite mode
+
+Background jobs are disabled when running SQLite. The framework dispatches events synchronously instead. Design jobs to be safe to skip in development if you use SQLite for local development.

@@ -207,7 +207,7 @@ export const widgetPropSchemaSchema = z.object({
 export const widgetDefinitionMetaSchema = z.object({
   name: z.string().min(1),
   label: z.string().min(1),
-  category: z.enum(['input', 'display', 'layout', 'action', 'data']),
+  category: z.enum(['input', 'display', 'layout', 'action', 'data', 'data-container']),
   schema: z.record(z.string(), widgetPropSchemaSchema),
   binding: z.enum(['none', 'field', 'expression', 'record', 'model']),
   triggers: z.array(z.string()),

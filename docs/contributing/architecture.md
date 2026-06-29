@@ -168,15 +168,31 @@ App
 
 ### Widget System
 
-The client renders pages as widget trees. Each `WidgetNode` (from the server page definition) is rendered by `WidgetRenderer`:
+The client renders pages as widget trees using a three-layer architecture:
+
+- **Layer 1 (shared):** `WidgetNode` tree definitions, `WidgetProps` contract, builder DSL
+- **Layer 2 (client):** Controllers, renderer, state store, action dispatcher. Produces no DOM.
+- **Layer 3 (ui):** UIKit implementation. Receives resolved data via `WidgetProps`, renders DOM.
+
+Widget categories:
+
+| Category       | Behavior                            | Examples                                           |
+| -------------- | ----------------------------------- | -------------------------------------------------- |
+| Leaf           | Render-only                         | input, button, badge, text                         |
+| Container      | Pass-through children               | group, grid, card, section                         |
+| Data-container | Controller-backed (fetch + context) | data, form, table, repeat, datagrid, modal, drawer |
+
+The `WidgetRenderer` resolves each node:
 
 1. Resolve visibility conditions (`useCondition`)
-2. Resolve binding (`useBind`) — connects widget to data via field/expression/model
-3. Resolve triggers (`useTriggerHandlers`) — maps actions to handler functions
+2. Resolve binding (`useBind`) via field/expression/model
+3. Resolve triggers (`useTriggerHandlers`) via action dispatcher
 4. Resolve props (expression interpolation, route params)
-5. Render the widget component with `WidgetProps`
+5. Dispatch to controller (if data-container) or UIKit component (if leaf/container)
 
-All widgets receive the same `WidgetProps` interface. Input widgets read from `bind.value` and write through `bind.setValue`. The `FormContext` integrates transparently through `useBind`.
+Data-container widgets have controllers in `packages/client/src/widgets/controllers/`. Controllers fetch data, build `WidgetContext`, and delegate rendering to UIKit components. They never produce DOM directly.
+
+All widgets receive the same `WidgetProps` interface from `@rangka/shared/src/types/ui-kit.ts`. Input widgets read from `bind.value` and write through `bind.setValue`. The `FormContext` integrates transparently through `useBind`.
 
 ### Data Layer
 

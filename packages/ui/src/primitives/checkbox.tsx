@@ -11,18 +11,24 @@ export type CheckboxProps = Omit<ComponentProps<'span'>, 'onChange'> & {
   onCheckedChange?: (checked: boolean) => void;
   /** Show indeterminate state */
   indeterminate?: boolean;
+  /** Whether the checkbox is disabled */
+  disabled?: boolean;
 };
 
 export type CheckboxIndicatorProps = ComponentProps<'span'>;
 
 const Root = forwardRef<HTMLElement, CheckboxProps>(
-  ({ className, checked, defaultChecked, onCheckedChange, indeterminate, ...props }, ref) => (
+  (
+    { className, checked, defaultChecked, onCheckedChange, indeterminate, disabled, ...props },
+    ref,
+  ) => (
     <BaseCheckbox.Root
       ref={ref}
       checked={checked}
       defaultChecked={defaultChecked}
       onCheckedChange={onCheckedChange}
       indeterminate={indeterminate}
+      disabled={disabled}
       className={(state) =>
         cn(
           'h-4 w-4 shrink-0 rounded-sm border border-border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',

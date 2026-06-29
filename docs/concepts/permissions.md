@@ -1,22 +1,22 @@
 ---
 status: stable
 since: 0.1.0
-last-updated: 2026-06-12
+last-updated: 2026-06-29
 description: Roles, model permissions, and field-level access control
 ---
 
 # Permissions
 
-Every business application faces the same fundamental question: who is allowed to do what? A clerk should not approve invoices. A regional manager should only see their territory's data. An admin should have full access but still operate within audit boundaries.
+Every business application faces the same question: who is allowed to do what? A clerk should not approve invoices. A regional manager should only see their territory's data. An admin should have full access but still operate within audit boundaries.
 
-Rangka uses role-based access control that reaches deep. Roles define what a user can see and do, down to individual fields. Modules ship with sensible default roles but admins can create and edit roles through the UI without touching code.
+Rangka uses role-based access control that reaches deep. Roles define what a user can see and do, down to individual fields.
 
 ## The two layers
 
 1. **Code-defined roles** (`defineRoles()`) ship with your app as defaults. They seed the database on first install.
 2. **Database-stored roles** are the runtime source of truth. Admins manage these through the built-in role editor.
 
-Code roles are the starting point. The database is where permissions actually live.
+Code roles are the starting point. The database is where permissions live at runtime.
 
 ## Defining roles
 
@@ -66,17 +66,17 @@ Use `'own'` to restrict operations to records the user created:
 'sales.order': { read: true, create: true, write: 'own', delete: 'own' }
 ```
 
-Owner-based permissions rely on the `created_by` field from the `timestamped` trait. The framework automatically stamps `created_by` with the current user's ID when a record is created. If a model does not have the `timestamped` trait then `'own'` permissions deny all access to that model.
+Owner-based permissions rely on the `created_by` field from the `timestamped` trait. The framework stamps `created_by` with the current user's ID on record creation. If a model does not have the `timestamped` trait, `'own'` permissions deny all access to that model.
 
 **How each action behaves with `'own'`:**
 
-| Action   | Behavior                                                                                                                                                   |
-| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `read`   | List endpoints only return records owned by the user. Single-record endpoints return 404 for records owned by others (not 403 to avoid leaking existence). |
-| `write`  | Returns 403 if the user tries to update a record they did not create.                                                                                      |
-| `delete` | Returns 403 if the user tries to delete a record they did not create.                                                                                      |
+| Action   | Behavior                                                                                                  |
+| -------- | --------------------------------------------------------------------------------------------------------- |
+| `read`   | List endpoints return only owned records. Single-record endpoints return 404 for records owned by others. |
+| `write`  | Returns 403 if the user tries to update a record they did not create.                                     |
+| `delete` | Returns 403 if the user tries to delete a record they did not create.                                     |
 
-**Merge rules:** When a user has multiple roles and one grants `true` while another grants `'own'` on the same action, `true` wins. The most permissive value always takes precedence.
+**Merge rules:** When a user has multiple roles and one grants `true` while another grants `'own'` for the same action, `true` wins. The most permissive value takes precedence.
 
 ```typescript
 // User has: ['sales_user', 'sales_manager']
@@ -104,7 +104,7 @@ sales_user: {
 }
 ```
 
-This affects everything: the API strips hidden fields from responses, rejects writes to read-only fields, and the UI hides or disables inputs accordingly.
+This affects everything. The API strips hidden fields from responses, rejects writes to read-only fields, and the UI hides or disables inputs accordingly.
 
 ## Page-level permissions
 
@@ -151,16 +151,16 @@ A Sales User querying orders only sees orders in their territory. `$user.*` refe
 
 The boot API resolves a user's complete permission set and returns it. The frontend uses this to:
 
-- Show/hide sidebar items
-- Show/hide create, save, delete buttons
+- Show or hide sidebar items
+- Show or hide create, save, delete buttons
 - Disable or hide form fields
-- Show/hide action buttons
+- Show or hide action buttons
 
-Users only see what they can act on. There are no "access denied" dead ends in the interface.
+Users only see what they can act on. No "access denied" dead ends in the interface.
 
 ## Multiple roles
 
-When a user has multiple roles, permissions merge (most permissive wins):
+When a user has multiple roles, permissions merge. The most permissive value wins:
 
 ```typescript
 // User has: ['sales_user', 'finance_user']
@@ -171,7 +171,7 @@ When a user has multiple roles, permissions merge (most permissive wins):
 
 ## API enforcement
 
-Every request passes through: authentication, model permission check, scope filter, row filter, field write check, handler, field strip. Permissions are enforced server-side regardless of what client is making the request.
+Every request passes through: authentication, model permission check, scope filter, row filter, field write check, handler, field strip. Permissions are enforced server-side regardless of what client makes the request.
 
 ## Admin role management
 

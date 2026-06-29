@@ -1,4 +1,5 @@
 import type { ShellLayoutProps } from '@rangka/shared';
+import { useMemo } from 'react';
 import { Shell } from '../shell';
 import { Breadcrumb } from '../breadcrumb';
 import { CommandPalette } from '../command-palette';
@@ -8,6 +9,7 @@ import { Button } from '../../primitives/button';
 import { Avatar } from '../../primitives/avatar';
 import { DropdownMenu } from '../../overlays/dropdown-menu';
 import { useShell } from '../shell-context';
+import { TableFilterBar as ShellFilterBar } from '../../widgets/data/table-filter-bar';
 import { Bell, LogOut, PanelLeft, PanelLeftClose, ChevronDown } from 'lucide-react';
 
 function AppSelector({
@@ -61,21 +63,29 @@ export function ShellLayout({
   onAction,
   onNavigate,
   onAppSwitch,
-  onAllApps: _onAllApps,
   onLogout,
   onSearch,
 }: ShellLayoutProps) {
   const activeNav = activeApp ? navigation.filter((mod) => mod.app === activeApp) : [];
 
-  const sidebarSections = activeNav.flatMap((mod) =>
-    mod.sections.map((section) => ({
-      title: section.section,
-      items: section.items.map((item) => ({
-        label: item.label,
-        path: item.path,
-        icon: item.icon,
-      })),
-    })),
+  const sidebarSections = useMemo(
+    () =>
+      activeNav.flatMap((mod) =>
+        mod.sections.map((section) => ({
+          title: section.section,
+          items: section.items.map((item) => ({
+            label: item.label,
+            path: item.path,
+            icon: item.icon,
+          })),
+        })),
+      ),
+    [activeNav],
+  );
+
+  const activeMod = useMemo(
+    () => navigation.find((n) => n.app === activeApp),
+    [navigation, activeApp],
   );
 
   return (
@@ -85,6 +95,7 @@ export function ShellLayout({
           navigation={navigation}
           user={user}
           activeApp={activeApp}
+          activeMod={activeMod}
           breadcrumbs={breadcrumbs}
           currentPath={currentPath}
           sidebarSections={sidebarSections}
@@ -122,6 +133,7 @@ function ShellLayoutInner({
   navigation,
   user,
   activeApp,
+  activeMod,
   breadcrumbs,
   currentPath,
   sidebarSections,
@@ -137,6 +149,7 @@ function ShellLayoutInner({
   navigation: ShellLayoutProps['navigation'];
   user: ShellLayoutProps['user'];
   activeApp: ShellLayoutProps['activeApp'];
+  activeMod: ShellLayoutProps['navigation'][number] | undefined;
   breadcrumbs: ShellLayoutProps['breadcrumbs'];
   currentPath: string;
   sidebarSections: Array<{
@@ -152,7 +165,6 @@ function ShellLayoutInner({
   onSearch: () => void;
 }) {
   const { railDocked, setRailDocked } = useShell();
-  const activeMod = navigation.find((n) => n.app === activeApp);
 
   return (
     <>
@@ -214,9 +226,7 @@ function ShellLayoutInner({
             <Shell.Sidebar.Header>
               <Shell.Sidebar.Title>
                 <Shell.Sidebar.TitleText>
-                  {activeApp
-                    ? (navigation.find((n) => n.app === activeApp)?.label ?? activeApp)
-                    : 'Select App'}
+                  {activeMod?.label ?? 'Select App'}
                 </Shell.Sidebar.TitleText>
                 <Shell.Sidebar.Toggle />
               </Shell.Sidebar.Title>
@@ -307,7 +317,14 @@ function ShellLayoutInner({
               )}
             </Shell.Main.Header>
 
-            {filterBar}
+            {filterBar && (
+              <ShellFilterBar
+                fields={filterBar.fields}
+                activeFilters={filterBar.activeFilters}
+                onSetFilter={filterBar.onSetFilter}
+                onRemoveFilter={filterBar.onRemoveFilter}
+              />
+            )}
 
             <Shell.Main.Body>{children}</Shell.Main.Body>
           </Shell.Main>

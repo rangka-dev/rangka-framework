@@ -1,4 +1,4 @@
-import { forwardRef, type ComponentProps } from 'react';
+import { forwardRef, memo, type ComponentProps } from 'react';
 import { icons } from 'lucide-react';
 import { cn } from '../lib/cn';
 
@@ -14,8 +14,8 @@ const sizeMap = {
   lg: 'size-6',
 };
 
-export const DynamicIcon = forwardRef<SVGSVGElement, DynamicIconProps>(
-  ({ name, size = 'sm', className, ...props }, ref) => {
+export const DynamicIcon = memo(
+  forwardRef<SVGSVGElement, DynamicIconProps>(({ name, size = 'sm', className, ...props }, ref) => {
     const pascalName = name
       .split('-')
       .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
@@ -31,7 +31,7 @@ export const DynamicIcon = forwardRef<SVGSVGElement, DynamicIconProps>(
         {...props}
       />
     );
-  },
+  }),
 );
 
 DynamicIcon.displayName = 'DynamicIcon';

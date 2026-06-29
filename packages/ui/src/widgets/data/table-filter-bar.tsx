@@ -1,19 +1,9 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { FilterBar } from '../../data/filter-bar';
 import { getOperatorsForType, operatorSymbol } from '../../data/filter-operators';
+import type { FilterFieldDeclaration, ActiveFilter } from '@rangka/shared';
 
-export interface FilterFieldDeclaration {
-  field: string;
-  type: string;
-  label: string;
-  options?: string[];
-}
-
-export interface ActiveFilter {
-  field: string;
-  operator: string;
-  value: unknown;
-}
+export type { FilterFieldDeclaration, ActiveFilter };
 
 export interface TableFilterBarProps {
   fields: FilterFieldDeclaration[];
@@ -69,11 +59,13 @@ export function TableFilterBar({
     resetPopover();
   };
 
-  const filteredFields = fields.filter(
-    (f) => !search || f.label.toLowerCase().includes(search.toLowerCase()),
+  const filteredFields = useMemo(
+    () => fields.filter((f) => !search || f.label.toLowerCase().includes(search.toLowerCase())),
+    [fields, search],
   );
 
-  const getFieldLabel = (field: string) => fields.find((f) => f.field === field)?.label ?? field;
+  const fieldLabelMap = useMemo(() => new Map(fields.map((f) => [f.field, f.label])), [fields]);
+  const getFieldLabel = (field: string) => fieldLabelMap.get(field) ?? field;
 
   if (fields.length === 0) return null;
 
@@ -109,17 +101,12 @@ export function TableFilterBar({
                   ))}
                 </FilterBar.FieldList>
               ) : selectedField ? (
-                <FilterBar.OperatorForm
-                  fieldLabel={selectedField.label}
-                  operators={getOperatorsForType(selectedField.type)}
+                <OperatorStep
+                  selectedField={selectedField}
                   operator={operator}
                   onOperatorChange={setOperator}
                   value={value}
                   onValueChange={setValue}
-                  needsValue={
-                    getOperatorsForType(selectedField.type).find((o) => o.value === operator)
-                      ?.needsValue ?? true
-                  }
                   onApply={handleApply}
                   onBack={() => setStep('fields')}
                 />
@@ -129,6 +116,41 @@ export function TableFilterBar({
         </FilterBar.Content>
       )}
     </FilterBar>
+  );
+}
+
+function OperatorStep({
+  selectedField,
+  operator,
+  onOperatorChange,
+  value,
+  onValueChange,
+  onApply,
+  onBack,
+}: {
+  selectedField: FilterFieldDeclaration;
+  operator: string;
+  onOperatorChange: (v: string) => void;
+  value: string;
+  onValueChange: (v: string) => void;
+  onApply: () => void;
+  onBack: () => void;
+}) {
+  const operators = useMemo(() => getOperatorsForType(selectedField.type), [selectedField.type]);
+  const needsValue = operators.find((o) => o.value === operator)?.needsValue ?? true;
+
+  return (
+    <FilterBar.OperatorForm
+      fieldLabel={selectedField.label}
+      operators={operators}
+      operator={operator}
+      onOperatorChange={onOperatorChange}
+      value={value}
+      onValueChange={onValueChange}
+      needsValue={needsValue}
+      onApply={onApply}
+      onBack={onBack}
+    />
   );
 }
 

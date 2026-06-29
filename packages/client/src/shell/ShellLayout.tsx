@@ -12,7 +12,7 @@ import { dispatch as dispatchAction } from '../widgets/action/dispatcher.js';
 import { evaluateConditions } from '../widgets/condition/index.js';
 import { getFiltersForModel } from '../widgets/reactivity/variables.js';
 import { extractFilterFields } from './extractFilterFields.js';
-import { ShellFilterBar } from './ShellFilterBar.js';
+import { formRef } from '../widgets/form/form-ref.js';
 import type { NavigationTree, WidgetAction, Action } from '@rangka/shared';
 
 export function ShellLayout({ children }: { children: ReactNode }) {
@@ -50,7 +50,7 @@ export function ShellLayout({ children }: { children: ReactNode }) {
   }, [currentPage?.actions, pageState, stateVersion]);
 
   const filterFields = useMemo(() => {
-    if (!currentPage || currentPage.layout !== 'full') return [];
+    if (!currentPage) return [];
     return extractFilterFields(currentPage.widgets, models);
   }, [currentPage, models]);
 
@@ -90,15 +90,15 @@ export function ShellLayout({ children }: { children: ReactNode }) {
     [filterFields, pageState],
   );
 
-  const filterBar =
-    filterFields.length > 0 && filterOpen ? (
-      <ShellFilterBar
-        fields={filterFields}
-        activeFilters={activeFilters}
-        onSetFilter={handleSetFilter}
-        onRemoveFilter={handleRemoveFilter}
-      />
-    ) : null;
+  const filterBar = useMemo(() => {
+    if (filterFields.length === 0 || !filterOpen) return null;
+    return {
+      fields: filterFields,
+      activeFilters,
+      onSetFilter: handleSetFilter,
+      onRemoveFilter: handleRemoveFilter,
+    };
+  }, [filterFields, filterOpen, activeFilters, handleSetFilter, handleRemoveFilter]);
 
   useEffect(() => {
     const pathApp = currentPath.split('/').filter(Boolean)[0];
@@ -144,11 +144,11 @@ export function ShellLayout({ children }: { children: ReactNode }) {
   const handleAction = useCallback(
     (action: WidgetAction) => {
       if (action.type === 'form.submit') {
-        document.dispatchEvent(new CustomEvent('rangka:form.submit'));
+        formRef.current?.submit();
         return;
       }
       if (action.type === 'form.reset') {
-        document.dispatchEvent(new CustomEvent('rangka:form.reset'));
+        formRef.current?.reset();
         return;
       }
       const actionCtx = {

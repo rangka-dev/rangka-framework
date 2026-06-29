@@ -1,7 +1,7 @@
 ---
 status: stable
 since: 0.1.0
-last-updated: 2026-06-10
+last-updated: 2026-06-29
 description: Meta API — boot payload and model metadata endpoints
 ---
 
@@ -232,8 +232,7 @@ interface FieldMeta {
     {
       "key": "invoices",
       "label": "Sales Invoices",
-      "type": "collection",
-      "body": [
+      "widgets": [
         {
           "type": "split",
           "props": { "sizes": [60, 40] },

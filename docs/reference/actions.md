@@ -1,24 +1,37 @@
 ---
 status: stable
 since: 0.2.0
-last-updated: 2026-06-21
-description: WidgetAction types — all available actions with fields, behavior, and examples
+last-updated: 2026-06-29
+description: WidgetAction types with fields, behavior, and examples
 ---
 
 # Actions
 
-API reference for widget actions. See [Actions concept](/concepts/actions) for patterns and usage.
+Widget actions are declarative state transitions. They fire from widget triggers via the `on` field. The framework dispatches each action to the appropriate handler.
 
-Actions are declarative state transitions. They fire from widget triggers via the `on` field. The framework dispatches each action to the appropriate handler.
+See [Actions concept](/concepts/actions) for patterns and usage.
+
+## action helper
+
+The `action` export provides typed shortcuts for all built-in action types.
+
+```typescript
+import { action } from 'rangka';
+
+action('navigate', { path: '/home' });
+action.navigate('/home');
+action.service('sales.submit', { id: '$id' });
+action.sequence([action.submit(), action.navigate('/list')]);
+```
 
 ## setValue
 
 Sets a single field or state key.
 
-| Field   | Type    | Required | Description                        |
-| ------- | ------- | -------- | ---------------------------------- |
-| `field` | string  | yes      | Target key (see prefixes below)    |
-| `value` | unknown | yes      | Value to set. Supports expressions |
+| Field   | Type    | Required | Description                     |
+| ------- | ------- | -------- | ------------------------------- |
+| `field` | string  | yes      | Target key (see prefixes below) |
+| `value` | unknown | yes      | Value to set                    |
 
 ### Field prefixes
 
@@ -34,25 +47,25 @@ Sets a single field or state key.
 ### Examples
 
 ```typescript
-{ type: 'setValue', field: '$state.selectedId', value: '{{id}}' }
-{ type: 'setValue', field: '$filter.sales.order.status', value: 'draft' }
-{ type: 'setValue', field: '$sort.sales.order', value: '-created_at' }
-{ type: 'setValue', field: 'status', value: 'confirmed' }
+action.setValue('$state.selectedId', '{{id}}');
+action.setValue('$filter.sales.order.status', 'draft');
+action.setValue('$sort.sales.order', '-created_at');
+action.setValue('status', 'confirmed');
 ```
 
 ---
 
 ## clearValue
 
-Sets a field to null. Shorthand for `setValue` with `value: null`.
+Sets a field to null.
 
 | Field   | Type   | Required | Description |
 | ------- | ------ | -------- | ----------- |
 | `field` | string | yes      | Target key  |
 
 ```typescript
-{ type: 'clearValue', field: '$state.selectedId' }
-{ type: 'clearValue', field: '$filter.sales.order.status' }
+action.clearValue('$state.selectedId');
+action.clearValue('$filter.sales.order.status');
 ```
 
 ---
@@ -66,10 +79,10 @@ Batch-sets multiple fields in a single re-render cycle.
 | `values` | Record\<string, unknown> | yes      | Map of field keys to values |
 
 ```typescript
-{ type: 'setValues', values: {
+action.setValues({
   '$state.selectedId': '{{id}}',
   '$state.drawerOpen': true,
-} }
+});
 ```
 
 ---
@@ -83,8 +96,8 @@ Navigates to a route path. Supports expression interpolation.
 | `path` | string | yes      | Target route. Supports `{{ }}` |
 
 ```typescript
-{ type: 'navigate', path: '/sales/orders/{{id}}' }
-{ type: 'navigate', path: '/sales/orders' }
+action.navigate('/sales/orders/{{id}}');
+action.navigate('/sales/orders');
 ```
 
 ---
@@ -93,32 +106,27 @@ Navigates to a route path. Supports expression interpolation.
 
 Calls a registered backend service.
 
-| Field       | Type                     | Required | Description                        |
-| ----------- | ------------------------ | -------- | ---------------------------------- |
-| `name`      | string                   | yes      | Service name (e.g. `sales.submit`) |
-| `params`    | Record\<string, unknown> | no       | Explicit params to send            |
-| `context`   | Record\<string, unknown> | no       | Additional context data            |
-| `onSuccess` | WidgetAction             | no       | Action to run on success           |
-| `onError`   | WidgetAction             | no       | Action to run on failure           |
+| Field       | Type                     | Required | Description              |
+| ----------- | ------------------------ | -------- | ------------------------ |
+| `name`      | string                   | yes      | Service name             |
+| `params`    | Record\<string, unknown> | no       | Explicit params to send  |
+| `context`   | string                   | no       | Additional context data  |
+| `onSuccess` | WidgetAction             | no       | Action to run on success |
+| `onError`   | WidgetAction             | no       | Action to run on failure |
 
 When fired inside a data context, the current record is sent automatically. Explicit `params` override the record.
 
 ```typescript
-{ type: 'service', name: 'sales.submitOrder' }
-
-{ type: 'service', name: 'sales.submitOrder',
-  onSuccess: { type: 'navigate', path: '/sales/orders' },
-  onError: { type: 'setValue', field: '$state.error', value: '{{$response.message}}' } }
-
-{ type: 'service', name: 'reports.export', params: { format: 'csv', month: 6 } }
+action.service('sales.submitOrder');
+action.service('sales.export', { format: 'csv', month: 6 });
 ```
-
-### Response access
 
 The `onSuccess` action can access the service response via `$response`:
 
 ```typescript
-onSuccess: { type: 'setValue', field: '$state.newId', value: '{{$response.id}}' }
+{ type: 'service', name: 'sales.submitOrder',
+  onSuccess: { type: 'navigate', path: '/sales/orders' },
+  onError: { type: 'setValue', field: '$state.error', value: '{{$response.message}}' } }
 ```
 
 ---
@@ -132,22 +140,18 @@ Validates form fields. Only works inside a `form` widget.
 | `fields` | string[] | no       | Specific fields to validate. All if omitted |
 
 ```typescript
-{ type: 'validate' }
-{ type: 'validate', fields: ['email', 'phone'] }
+action.validate();
+action.validate(['email', 'phone']);
 ```
 
 ---
 
 ## refreshSource
 
-Invalidates and re-fetches the current data source query.
-
-No fields. Use after a mutation that does not automatically trigger a refetch.
+Invalidates and re-fetches the current data source query. No fields. Use after a mutation that does not automatically trigger a refetch.
 
 ```typescript
-{
-  type: 'refreshSource';
-}
+action.refreshSource();
 ```
 
 ---
@@ -162,10 +166,8 @@ Fetches dependent options for a select or link field.
 | `depends` | string[] | yes      | Fields that the options depend on |
 
 ```typescript
-{ type: 'fetchOptions', field: 'city', depends: ['country'] }
+action.fetchOptions('city', ['country']);
 ```
-
-> **Planned** — handler stub exists but full implementation is pending.
 
 ---
 
@@ -178,7 +180,7 @@ Moves focus to a form field by name.
 | `field` | string | yes      | Field name to focus |
 
 ```typescript
-{ type: 'focus', field: 'email' }
+action.focus('email');
 ```
 
 ---
@@ -193,7 +195,7 @@ Creates a new record via the model API.
 | `data`  | Record\<string, unknown> | yes      | Record data |
 
 ```typescript
-{ type: 'model.create', model: 'sales.order', data: { status: 'draft', customer_id: '{{$state.customerId}}' } }
+action.modelCreate('sales.order', { status: 'draft', customer_id: '{{$state.customerId}}' });
 ```
 
 ---
@@ -209,8 +211,8 @@ Updates an existing record. Defaults to current context record if `model` and `i
 | `data`  | Record\<string, unknown> | yes      | Fields to update                 |
 
 ```typescript
-{ type: 'model.update', data: { status: 'confirmed' } }
-{ type: 'model.update', model: 'sales.order', id: '{{id}}', data: { status: 'archived' } }
+action.modelUpdate({ status: 'confirmed' });
+action.modelUpdate({ status: 'archived' }, { model: 'sales.order', id: '{{id}}' });
 ```
 
 ---
@@ -225,15 +227,15 @@ Deletes a record. Defaults to current context record if `model` and `id` are omi
 | `id`    | string | no       | Record ID (defaults to context)  |
 
 ```typescript
-{ type: 'model.delete' }
-{ type: 'model.delete', model: 'sales.order', id: '{{id}}' }
+action.modelDelete();
+action.modelDelete({ model: 'sales.order', id: '{{id}}' });
 ```
 
 ---
 
 ## model.fetch
 
-Fetches a single record and stores the result.
+Fetches a single record and stores the result in state.
 
 | Field   | Type   | Required | Description                     |
 | ------- | ------ | -------- | ------------------------------- |
@@ -242,7 +244,7 @@ Fetches a single record and stores the result.
 | `into`  | string | yes      | State key to store the result   |
 
 ```typescript
-{ type: 'model.fetch', model: 'sales.customer', id: '{{customer_id}}', into: '$state.customer' }
+action.modelFetch('sales.customer', '{{customer_id}}', '$state.customer');
 ```
 
 ---
@@ -258,7 +260,7 @@ Fetches a collection of records with optional filters.
 | `into`    | string                   | yes      | State key to store the result |
 
 ```typescript
-{ type: 'model.list', model: 'sales.product', filters: { active: true }, into: '$state.products' }
+action.modelList('sales.product', '$state.products', { active: true });
 ```
 
 ---
@@ -272,7 +274,7 @@ Adds a new empty row to a repeater/array field.
 | `field` | string | yes      | Array field name |
 
 ```typescript
-{ type: 'addRow', field: 'line_items' }
+action.addRow('line_items');
 ```
 
 ---
@@ -286,7 +288,7 @@ Removes the current row from a repeater/array field. Only valid inside a `repeat
 | `field` | string | yes      | Array field name |
 
 ```typescript
-{ type: 'removeRow', field: 'line_items' }
+action.removeRow('line_items');
 ```
 
 ---
@@ -300,7 +302,7 @@ Duplicates the current row in a repeater/array field.
 | `field` | string | yes      | Array field name |
 
 ```typescript
-{ type: 'duplicateRow', field: 'line_items' }
+action.duplicateRow('line_items');
 ```
 
 ---
@@ -312,9 +314,7 @@ Submits the form. Only works inside a `form` widget. Validates all fields before
 No fields.
 
 ```typescript
-{
-  type: 'form.submit';
-}
+action.submit();
 ```
 
 On success, the form's `onSuccess` trigger fires. On validation failure, field errors display inline.
@@ -328,9 +328,23 @@ Resets the form to its initial values and clears all validation errors. Only wor
 No fields.
 
 ```typescript
-{
-  type: 'form.reset';
-}
+action.reset();
+```
+
+---
+
+## toast
+
+Displays a notification message.
+
+| Field     | Type   | Required | Description                              |
+| --------- | ------ | -------- | ---------------------------------------- |
+| `message` | string | yes      | Message to display                       |
+| `variant` | enum   | no       | `info`, `success`, `warning`, or `error` |
+
+```typescript
+action.toast('Order submitted');
+action.toast('Failed to save', 'error');
 ```
 
 ---
@@ -344,11 +358,11 @@ Runs multiple actions in order. Each action completes before the next starts.
 | `actions` | WidgetAction[] | yes      | Actions to run in order |
 
 ```typescript
-{ type: 'sequence', actions: [
-  { type: 'validate' },
-  { type: 'service', name: 'sales.submit' },
-  { type: 'navigate', path: '/sales/orders' },
-] }
+action.sequence([
+  action.validate(),
+  action.service('sales.submit'),
+  action.navigate('/sales/orders'),
+]);
 ```
 
 ---
@@ -364,10 +378,11 @@ Branches execution based on a condition.
 | `else`      | WidgetAction | no       | Action to run if condition is false |
 
 ```typescript
-{ type: 'conditional',
-  condition: { field: 'status', operator: 'eq', value: 'draft' },
-  then: { type: 'service', name: 'sales.submit' },
-  else: { type: 'setValue', field: '$state.error', value: 'Can only submit drafts' } }
+action.conditional(
+  { field: 'status', operator: 'eq', value: 'draft' },
+  action.service('sales.submit'),
+  action.toast('Can only submit drafts', 'error'),
+);
 ```
 
 ---
@@ -388,6 +403,6 @@ All string values in actions support `{{ }}` template expressions. The evaluatio
 | `value`     | Trigger argument (e.g. input value on change) |
 
 ```typescript
-{ type: 'setValue', field: '$state.total', value: '{{qty * rate}}' }
-{ type: 'navigate', path: '/orders/{{$route.id}}/edit' }
+action.setValue('$state.total', '{{qty * rate}}');
+action.navigate('/orders/{{$route.id}}/edit');
 ```

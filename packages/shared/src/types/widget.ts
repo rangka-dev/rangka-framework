@@ -8,6 +8,8 @@ export type {
 
 export type { BuiltinWidgetType, WidgetType } from '../validation/schemas/widget-props/index.js';
 
+export type WidgetCategory = 'input' | 'display' | 'layout' | 'action' | 'data' | 'data-container';
+
 import type { Condition, WidgetBinding, WidgetSource } from '../validation/schemas/widget.js';
 import type { WidgetType } from '../validation/schemas/widget-props/index.js';
 
