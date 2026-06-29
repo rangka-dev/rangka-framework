@@ -8,6 +8,8 @@ import type { BootState } from './types.js';
 type BootAction =
   | { type: 'SETUP_REQUIRED' }
   | { type: 'AUTH_REQUIRED'; sessionExpired?: boolean }
+  | { type: 'LOGIN_LOADING' }
+  | { type: 'LOGIN_ERROR'; error: string }
   | { type: 'LOADING' }
   | { type: 'READY'; data: BootResponse }
   | { type: 'ERROR'; error: unknown }
@@ -19,6 +21,10 @@ function bootReducer(_state: BootState, action: BootAction): BootState {
       return { status: 'setup' };
     case 'AUTH_REQUIRED':
       return { status: 'login', sessionExpired: action.sessionExpired };
+    case 'LOGIN_LOADING':
+      return { status: 'login', loading: true };
+    case 'LOGIN_ERROR':
+      return { status: 'login', error: action.error };
     case 'LOADING':
       return { status: 'loading' };
     case 'READY':
@@ -67,15 +73,30 @@ export function useBoot(): UseBootResult {
     const onSessionExpired = () => {
       dispatch({ type: 'AUTH_REQUIRED', sessionExpired: true });
     };
+    const onLogout = () => {
+      clearToken();
+      dispatch({ type: 'RESET' });
+    };
     window.addEventListener('rangka:session-expired', onSessionExpired);
-    return () => window.removeEventListener('rangka:session-expired', onSessionExpired);
+    document.addEventListener('rangka:logout', onLogout);
+    return () => {
+      window.removeEventListener('rangka:session-expired', onSessionExpired);
+      document.removeEventListener('rangka:logout', onLogout);
+    };
   }, []);
 
   const handleLogin = useCallback(
     async (credentials: LoginCredentials) => {
+      dispatch({ type: 'LOGIN_LOADING' });
       const response = await login(credentials);
       if (!response.ok) {
-        throw response;
+        const body = await response.json().catch(() => ({}));
+        const message = body.message ?? 'Invalid email or password';
+        dispatch({ type: 'LOGIN_ERROR', error: message });
+        document.dispatchEvent(
+          new CustomEvent('rangka:toast', { detail: { message, type: 'error' } }),
+        );
+        return;
       }
       await performBoot();
     },

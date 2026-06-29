@@ -1,11 +1,13 @@
 import type { ReactNode } from 'react';
 import { useBootContext } from './BootProvider.js';
+import { useShellComponents } from '../ui/UIProvider.js';
 import { LoginForm } from '../auth/LoginForm.js';
 import { SessionExpired } from '../auth/SessionExpired.js';
 import { SetupForm } from '../auth/SetupForm.js';
 
 export function BootGate({ children }: { children: ReactNode }) {
   const { state, handleLogin, handleSetup, handleSessionExpired, retry } = useBootContext();
+  const { LoginScreen } = useShellComponents();
 
   switch (state.status) {
     case 'checking':
@@ -16,12 +18,21 @@ export function BootGate({ children }: { children: ReactNode }) {
         </div>
       );
     case 'setup':
-      return <SetupForm onSetup={handleSetup} />;
+      return (
+        <LoginScreen>
+          <SetupForm onSetup={handleSetup} />
+        </LoginScreen>
+      );
     case 'login':
-      if (state.sessionExpired) {
-        return <SessionExpired onReLogin={handleSessionExpired} />;
-      }
-      return <LoginForm onLogin={handleLogin} />;
+      return (
+        <LoginScreen>
+          {state.sessionExpired ? (
+            <SessionExpired onReLogin={handleSessionExpired} />
+          ) : (
+            <LoginForm onLogin={handleLogin} error={state.error} loading={state.loading} />
+          )}
+        </LoginScreen>
+      );
     case 'error':
       return (
         <div role="alert">

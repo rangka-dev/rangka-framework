@@ -13,9 +13,13 @@ export interface LoginFormProps {
 export function LoginForm({ onLogin, error, loading }: LoginFormProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [dismissed, setDismissed] = useState(false);
+
+  const visibleError = dismissed ? undefined : error;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setDismissed(false);
     onLogin({ email, password });
   };
 
@@ -25,14 +29,17 @@ export function LoginForm({ onLogin, error, loading }: LoginFormProps) {
         <Card.Title>Sign in</Card.Title>
       </Card.Header>
       <Card.Content>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <Field>
             <Field.Label htmlFor="email">Email</Field.Label>
             <Input
               id="email"
               type="email"
               value={email}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                setEmail(e.target.value);
+                setDismissed(true);
+              }}
               placeholder="you@example.com"
               required
               autoFocus
@@ -44,16 +51,20 @@ export function LoginForm({ onLogin, error, loading }: LoginFormProps) {
               id="password"
               type="password"
               value={password}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                setPassword(e.target.value);
+                setDismissed(true);
+              }}
+              placeholder="Enter your password"
               required
             />
           </Field>
-          {error && <Field.Error>{error}</Field.Error>}
-          <Field>
-            <Button type="submit" disabled={loading}>
-              {loading ? 'Signing in...' : 'Sign in'}
-            </Button>
-          </Field>
+          <div className="min-h-5" aria-live="polite">
+            {visibleError && <Field.Error>{visibleError}</Field.Error>}
+          </div>
+          <Button type="submit" disabled={loading} loading={loading} className="w-full">
+            Sign in
+          </Button>
         </form>
       </Card.Content>
     </Card>
