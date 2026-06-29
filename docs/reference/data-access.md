@@ -1,7 +1,7 @@
 ---
 status: stable
 since: 0.1.0
-last-updated: 2026-06-23
+last-updated: 2026-06-29
 description: ctx.models and ctx.db — querying and mutating data from hooks, services, and jobs
 ---
 

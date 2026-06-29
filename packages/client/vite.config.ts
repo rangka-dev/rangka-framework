@@ -8,6 +8,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@rangka/ui': path.resolve(__dirname, '../ui/src/index.ts'),
     },
   },
   build: {
@@ -16,7 +17,6 @@ export default defineConfig({
         manualChunks: {
           'vendor-query': ['@tanstack/react-query'],
           'vendor-router': ['@tanstack/react-router'],
-          'vendor-radix': ['radix-ui'],
         },
       },
     },

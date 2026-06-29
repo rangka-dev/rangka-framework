@@ -55,3 +55,5 @@ export { CellDateTime, type CellDateTimeProps } from './cell-editors/cell-date-t
 export { CellMultiSelect, type CellMultiSelectProps } from './cell-editors/cell-multi-select';
 export { CellAttachment, type CellAttachmentProps } from './cell-editors/cell-attachment';
 export { CellJson, type CellJsonProps } from './cell-editors/cell-json';
+
+export { getOperatorsForType, operatorSymbol } from './filter-operators';

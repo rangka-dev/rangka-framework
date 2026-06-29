@@ -12,6 +12,7 @@ function makeModel(): ResolvedModel {
     name: 'customer',
     label: 'Customer',
     auditLog: false,
+    crud: true,
     traits: [],
     fields: [
       {

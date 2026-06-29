@@ -1,27 +1,27 @@
 ---
 status: stable
 since: 0.1.0
-last-updated: 2026-06-12
+last-updated: 2026-06-29
 description: Production deployment steps and configuration
 ---
 
 # Deployment
 
-This guide covers running your Rangka application in production behind a reverse proxy.
+How to run your Rangka application in production.
 
-## 1. Build Custom UI (if applicable)
+## 1. Build custom UI
 
-If your project has custom views, fields, or cards, compile them first:
+If your project has custom widgets, compile them first:
 
 ```bash
 rangka build
 ```
 
-This bundles custom components into `.rangka/` with a manifest. If you have no custom UI, skip this step.
+This bundles custom components into `.rangka/` with a manifest. Skip this step if you have no custom widgets.
 
-## 2. Environment Variables
+## 2. Environment variables
 
-Create a `.env` file or set these in your deployment environment:
+Set these in your deployment environment:
 
 ```bash
 # Required
@@ -29,12 +29,12 @@ DATABASE_URL=postgres://user:password@host:5432/rangka_prod
 
 # Optional
 PORT=3000
-LOG_LEVEL=info                    # debug, info, warn, error
+LOG_LEVEL=info
 ```
 
-> **Security:** Never commit `.env` to version control.
+Never commit credentials to version control.
 
-## 3. Start the Server
+## 3. Start the server
 
 ```bash
 rangka start
@@ -42,13 +42,15 @@ rangka start
 
 The server scans your project, connects to PostgreSQL, syncs the schema, and starts listening on port 3000.
 
-For process management, use systemd, PM2, or Docker:
+## Process management
 
-**systemd unit** (`/etc/systemd/system/rangka.service`):
+Use systemd, PM2, or Docker to keep the server running.
+
+**systemd** (`/etc/systemd/system/rangka.service`):
 
 ```ini
 [Unit]
-Description=Rangka ERP
+Description=Rangka
 After=network.target postgresql.service
 
 [Service]
@@ -72,7 +74,7 @@ sudo systemctl start rangka
 **Docker** (`Dockerfile`):
 
 ```dockerfile
-FROM node:18-alpine
+FROM node:20-alpine
 WORKDIR /app
 COPY . .
 RUN npm ci --production
@@ -81,9 +83,9 @@ EXPOSE 3000
 CMD ["npx", "rangka", "start"]
 ```
 
-## 4. Reverse Proxy Setup
+## 4. Reverse proxy
 
-Put Rangka behind a reverse proxy for TLS termination, compression, and static asset caching.
+Put Rangka behind a reverse proxy for TLS termination and compression.
 
 **nginx** (`/etc/nginx/sites-available/rangka`):
 
@@ -100,19 +102,6 @@ server {
     ssl_certificate     /etc/letsencrypt/live/erp.example.com/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/erp.example.com/privkey.pem;
 
-    # API requests
-    location /api/ {
-        proxy_pass http://rangka;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header Connection "";
-        proxy_read_timeout 120s;
-    }
-
-    # SPA fallback — all other routes serve index.html
     location / {
         proxy_pass http://rangka;
         proxy_http_version 1.1;
@@ -121,6 +110,7 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header Connection "";
+        proxy_read_timeout 120s;
     }
 
     client_max_body_size 10m;
@@ -137,33 +127,26 @@ server {
 }
 ```
 
-Enable the site:
-
 ```bash
 sudo ln -s /etc/nginx/sites-available/rangka /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
 ```
 
-## 5. Production Checklist
+## 5. Production checklist
 
-Before going live, verify:
+| Check                                        | Status |
+| -------------------------------------------- | ------ |
+| `DATABASE_URL` points to production database |        |
+| `rangka build` run (if custom widgets exist) |        |
+| TLS configured (never run without HTTPS)     |        |
+| Process manager restarts on crash            |        |
+| Database backups configured                  |        |
+| Log rotation configured                      |        |
 
-- [ ] `DATABASE_URL` points to the production database
-- [ ] `rangka build` has been run (if you have custom UI)
-- [ ] TLS is configured (never run without HTTPS in production)
-- [ ] Process manager restarts the server on crash
-- [ ] Backups are configured for the database
-- [ ] Log rotation is configured
+## Troubleshooting
 
-## Common Issues
+**"No database config found"** — Ensure `rangka.config.ts` in the project root has database settings.
 
-> **"No database config found"** — Ensure `rangka.config.ts` in the project root has database settings.
+**"Connection refused" on port 3000** — Check that your firewall or reverse proxy targets the correct port.
 
-> **"Connection refused" on port 3000** — Check that your firewall or reverse proxy is targeting the correct port.
-
-> **Custom components not loading** — Run `rangka build` before `rangka start`. The server serves from `.rangka/` only if it exists.
-
-## Further Reading
-
-- [CLI reference](/reference/cli) — all available commands
-- [Custom Widgets](/guides/custom-widgets) — building and bundling custom components
+**Custom widgets not loading** — Run `rangka build` before `rangka start`. The server serves from `.rangka/` only if it exists.

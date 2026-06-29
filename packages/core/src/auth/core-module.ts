@@ -28,6 +28,7 @@ function schemaToResolvedModel(schema: {
     name: schema.name,
     label: schema.label,
     auditLog: false,
+    crud: false,
     traits: [],
     fields,
     indexes: schema.indexes,

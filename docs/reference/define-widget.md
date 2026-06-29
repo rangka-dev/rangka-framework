@@ -1,7 +1,7 @@
 ---
 status: stable
 since: 0.2.0
-last-updated: 2026-06-21
+last-updated: 2026-06-29
 description: defineWidget() API — props, triggers, binding, and rendering
 ---
 
@@ -49,7 +49,7 @@ The widget file exports a default object with `meta` and `component`. The framew
 interface WidgetDefinitionMeta {
   name: string;
   label: string;
-  category: 'input' | 'display' | 'layout' | 'action' | 'data';
+  category: 'input' | 'display' | 'layout' | 'action' | 'data' | 'data-container';
   schema: Record<string, WidgetPropSchema>;
   binding: 'none' | 'field' | 'expression' | 'model';
   triggers: string[];

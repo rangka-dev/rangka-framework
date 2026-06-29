@@ -7,7 +7,9 @@ description: Field type rendering, display modes, and customization
 
 # Field Renderers
 
-Every model field type maps to a built-in renderer that handles both form (editable) and list (read-only) contexts. You can override any renderer with a custom widget.
+Every model field type maps to a built-in renderer. Each renderer handles both form (editable) and list (read-only) contexts. You can override any renderer with a custom widget.
+
+Widget components live in `packages/ui/src/widgets/input/`. All accept `WidgetComponentProps` from `@rangka/shared`.
 
 ## Built-in renderers
 
@@ -23,7 +25,7 @@ Every model field type maps to a built-in renderer that handles both form (edita
 | `boolean`  | Checkbox                                      |
 | `enum`     | Dropdown (searchable when > 8 options)        |
 | `date`     | Date picker                                   |
-| `datetime` | Date + time picker                            |
+| `datetime` | Date + time picker (12-hour with AM/PM)       |
 | `link`     | Searchable select (fetches from linked model) |
 
 ### List context
@@ -126,10 +128,10 @@ registerFieldRenderer('rich-text', RichTextEditor, { forTypes: ['LongText'] });
 
 ## Accessibility
 
-Custom renderers should include:
+Custom renderers must include:
 
 - `aria-label` or associated `<label>`
-- `aria-invalid="true"` when error is present
+- `aria-invalid="true"` when an error is present
 - `aria-describedby` pointing to the error message
 - Keyboard operability
 - Visible focus ring

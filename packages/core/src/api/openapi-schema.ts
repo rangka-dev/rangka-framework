@@ -2,11 +2,12 @@ import type { FieldConfig } from '@rangka/shared';
 import type { ResolvedModel } from '../schema/types.js';
 
 export interface JsonSchemaProperty {
-  type: string;
+  type?: string;
   format?: string;
   description?: string;
   enum?: readonly string[];
   items?: { type: string };
+  oneOf?: Array<{ type: string }>;
 }
 
 export interface JsonSchemaObject {
@@ -38,7 +39,7 @@ export function fieldToJsonSchema(config: FieldConfig): JsonSchemaProperty | nul
     case 'enum':
       return { type: 'string', enum: config.options };
     case 'json':
-      return { type: 'object' };
+      return { oneOf: [{ type: 'object' }, { type: 'array' }] };
     case 'link':
       return { type: 'string', description: `Reference to ${config.model}` };
     case 'attachment':

@@ -36,10 +36,19 @@ export function ShellAPIProvider({ children }: { children: ReactNode }) {
   return <ShellContext.Provider value={api}>{children}</ShellContext.Provider>;
 }
 
+const fallbackAPI: ShellAPI = {
+  toast(message: string, type: ToastType = 'info') {
+    document.dispatchEvent(new CustomEvent('rangka:toast', { detail: { message, type } }));
+  },
+  confirm(message: string): Promise<boolean> {
+    return new Promise((resolve) => {
+      document.dispatchEvent(new CustomEvent('rangka:confirm', { detail: { message, resolve } }));
+    });
+  },
+  navigate() {},
+};
+
 export function useShell(): ShellAPI {
   const ctx = useContext(ShellContext);
-  if (!ctx) {
-    throw new Error('useShell must be used within a ShellAPIProvider');
-  }
-  return ctx;
+  return ctx ?? fallbackAPI;
 }

@@ -1,29 +1,29 @@
 ---
 status: stable
 since: 0.2.0
-last-updated: 2026-06-21
+last-updated: 2026-06-29
 description: How to build custom widgets with defineWidget()
 ---
 
 # Custom widgets
 
-The built-in widgets handle most UI needs. When you need something the built-ins cannot express (a drag-and-drop board, a chart, a third-party component) you build a custom widget.
+The built-in widgets handle most UI needs. When you need something they cannot express, you build a custom widget.
 
-## When to use one
+Use cases:
 
-- Interaction patterns beyond standard inputs and tables
-- Third-party components (maps, rich editors, chart libraries)
-- Complex rendering logic that does not map to declarative composition
+- Drag-and-drop boards, charts, maps, rich editors
+- Third-party components from npm
+- Complex rendering that does not map to declarative composition
 - Real-time or WebSocket-driven UI
 
-If you just need to arrange built-in widgets differently, use layout widgets (`split`, `grid`, `group`) instead.
+If you need to arrange built-in widgets differently, use layout widgets (`split`, `grid`, `group`) instead.
 
-## Creating a custom widget
+## Creating a widget
 
-Custom widgets live in your app's `widgets/` directory. Each file exports a `meta` and `component` as its default export.
+Custom widgets live in your app's `widgets/` directory. Each file exports a `meta` and `component`.
 
 ```tsx
-// widgets/pipeline-board.tsx
+// apps/sales/widgets/pipeline-board.tsx
 import { defineWidget } from '@rangka/shared';
 
 const meta = defineWidget({
@@ -43,7 +43,6 @@ function PipelineBoard({ props, on }: any) {
   return (
     <div className="flex flex-col gap-4 bg-card rounded-lg p-4">
       <h2 className="text-sm font-medium text-muted-foreground">Pipeline</h2>
-      {/* implementation */}
       <button onClick={() => on.dealSelect?.('deal-1')}>Select</button>
     </div>
   );
@@ -52,14 +51,16 @@ function PipelineBoard({ props, on }: any) {
 export default { meta, component: PipelineBoard };
 ```
 
-The framework handles registration and loading. You do not call `registerWidget` yourself.
+The framework handles registration. You do not call `registerWidget` yourself.
 
 ## Using it in a page
 
-Reference your widget by name in the page body. It participates in the same system as any built-in widget: same context tree, same binding, same actions, same expressions.
+Reference your widget by name. It participates in the same system as built-in widgets: same context tree, same binding, same actions.
 
 ```typescript
-definePage({
+import { definePage } from 'rangka';
+
+export default definePage({
   key: 'sales.pipeline',
   label: 'Pipeline',
   widgets: [
@@ -74,11 +75,9 @@ definePage({
 });
 ```
 
-## Styling with Tailwind
+## Styling
 
-Custom widgets can use any Tailwind utility class. The build generates CSS containing only the classes your widget references.
-
-Shell theme tokens work automatically:
+Custom widgets can use any Tailwind utility class. Shell theme tokens work automatically:
 
 ```tsx
 <div className="rounded-lg border bg-card text-card-foreground p-4">
@@ -86,15 +85,15 @@ Shell theme tokens work automatically:
 </div>
 ```
 
-The full Tailwind palette is available (emerald, fuchsia, amber, etc.) along with arbitrary values:
+The full Tailwind palette and arbitrary values are available:
 
 ```tsx
-<div className="w-[237px] bg-[#7c3aed] rounded-[13px]">Custom dimensions and colors</div>
+<div className="w-[237px] bg-[#7c3aed] rounded-[13px]">Custom dimensions</div>
 ```
 
 ## Using npm packages
 
-Install any browser-compatible package and import it. The build bundles it into your widget's chunk.
+Install any browser-compatible package. The build bundles it into your widget's chunk.
 
 ```bash
 pnpm add recharts
@@ -114,17 +113,15 @@ function SalesChart({ props }: any) {
 }
 ```
 
-Packages that import their own CSS (like `@xyflow/react/dist/style.css`) are supported. The CSS is extracted and included automatically.
+Packages that import their own CSS are supported. The CSS is extracted and included automatically.
 
-## Communicating with the framework
+## Framework hooks
 
-Import hooks from `@rangka/client` to interact with the shell and framework state.
+Import hooks from `@rangka/client` to interact with the shell and data layer.
 
 ```tsx
 import { usePageState, useShell, useWidgetContext, useModelQuery } from '@rangka/client';
 ```
-
-### Available hooks
 
 | Hook                 | Purpose                                                                  |
 | -------------------- | ------------------------------------------------------------------------ |
@@ -134,7 +131,7 @@ import { usePageState, useShell, useWidgetContext, useModelQuery } from '@rangka
 | `useModelQuery()`    | Fetch a list with pagination, filtering, sorting                         |
 | `useModelRecord()`   | Fetch a single record by model and ID                                    |
 
-### Example: shared state
+### Shared state between widgets
 
 Two widgets on the same page share `$state`:
 
@@ -149,13 +146,13 @@ function Counter() {
 }
 ```
 
-### Example: data fetching
+### Data fetching
 
 ```tsx
 import { useModelQuery } from '@rangka/client';
 
 function OrderList() {
-  const { data, isLoading, error, total } = useModelQuery({
+  const { data, isLoading, error } = useModelQuery({
     model: 'sales.order',
     pageSize: 10,
   });
@@ -173,7 +170,7 @@ function OrderList() {
 }
 ```
 
-### Example: shell interactions
+### Shell interactions
 
 ```tsx
 import { useShell } from '@rangka/client';
@@ -194,7 +191,7 @@ function SaveButton() {
 
 ## Container widgets
 
-If your widget wraps other widgets, set `container: true`. You receive rendered children via the `children` prop.
+If your widget wraps other widgets, set `container: true`. Rendered children arrive via the `children` prop.
 
 ```tsx
 const meta = defineWidget({
@@ -228,38 +225,27 @@ Run `rangka build` to compile your widgets:
 rangka build
 ```
 
-This scans `apps/*/widgets/`, bundles each widget with its npm dependencies, generates Tailwind CSS, and outputs everything to `.rangka/`. Run this after creating or modifying a widget.
+This scans `apps/*/widgets/`, bundles each widget with its dependencies, generates Tailwind CSS, and outputs to `.rangka/`. Run this after creating or modifying a widget.
 
-At runtime, `rangka start` serves the bundles and the shell loads them on demand when a page references them.
+At runtime, `rangka start` serves the bundles. The shell loads them on demand when a page references them.
 
 ## Error handling
 
-If a custom widget throws a runtime error, the framework catches it with an error boundary. The rest of the page continues working. The error is logged to the browser console with the widget name and component stack.
+If a custom widget throws at runtime, the framework catches it with an error boundary. The rest of the page continues working. You will see a red error box in place of the widget and a `console.error` with the full stack trace.
 
-You will see:
-
-- A red error box in place of the widget showing the widget name and error message
-- A `console.error` with the full stack trace and component stack
-
-This means a broken widget cannot crash the entire application.
+A broken widget cannot crash the entire application.
 
 ## Limitations
 
-The following are not yet supported:
-
-- **`useAction()` hook** — programmatic action dispatch from custom widgets is not available yet
-- **`useModelRecord()` hook** — single record fetch is exposed but untested with custom widgets
 - **Server-side rendering** — custom widgets are client-only
-- **Hot reload** — changes require a full `rangka build` + page reload
+- **Hot reload** — changes require `rangka build` + page reload
 - **Custom Tailwind plugins** — the build does not load a user Tailwind config
-- **`dark:` variant** — depends on how the shell applies dark mode
-- **Animations** — `animate-*` classes beyond Tailwind defaults are untested
-- **Widget-to-widget communication** — widgets can only communicate via shared `$state`, not directly
+- **Widget-to-widget communication** — widgets communicate via shared `$state` only
 
 ## Tips
 
 - Keep widgets focused on rendering. Put data logic in services.
-- Pass options through `schema` props so the same widget works in different pages with different configurations.
+- Pass options through `schema` props so the same widget works across pages.
 - Declare only the triggers you actually emit. The framework validates `on` keys against declared triggers.
-- Third-party libraries (charts, maps, editors) get bundled into your widget's chunk. React is provided by the shell.
+- React is provided by the shell. Third-party libraries get bundled into your widget's chunk.
 - Prefer built-in composition when possible. A custom widget for "two columns with a table" is unnecessary when `split` and `table` do the job.

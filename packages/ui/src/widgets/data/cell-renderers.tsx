@@ -20,6 +20,7 @@ export interface CellColumn {
   options?: Array<{ value: string; label: string }>;
   currency?: string;
   precision?: number;
+  namingField?: string;
 }
 
 // --- Display renderers ---
@@ -42,7 +43,9 @@ export function renderDisplay(
     }
 
     case 'money': {
-      const formatted = Number(value).toLocaleString(undefined, {
+      const num = Number(value);
+      if (isNaN(num)) return <span className="truncate">{String(value)}</span>;
+      const formatted = num.toLocaleString(undefined, {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       });
@@ -50,14 +53,19 @@ export function renderDisplay(
     }
 
     case 'int':
-    case 'sequence':
-      return <span className="tabular-nums">{Number(value).toLocaleString()}</span>;
+    case 'sequence': {
+      const num = Number(value);
+      if (isNaN(num)) return <span className="truncate">{String(value)}</span>;
+      return <span className="tabular-nums">{num.toLocaleString()}</span>;
+    }
 
     case 'decimal': {
       const precision = col?.precision ?? 2;
+      const num = Number(value);
+      if (isNaN(num)) return <span className="truncate">{String(value)}</span>;
       return (
         <span className="tabular-nums">
-          {Number(value).toLocaleString(undefined, {
+          {num.toLocaleString(undefined, {
             minimumFractionDigits: precision,
             maximumFractionDigits: precision,
           })}
@@ -72,6 +80,12 @@ export function renderDisplay(
       return <span className="tabular-nums">{formatDateTime(String(value))}</span>;
 
     case 'link': {
+      if (value && typeof value === 'object') {
+        const obj = value as Record<string, unknown>;
+        const namingField = col?.namingField ?? 'name';
+        const label = obj[namingField] ?? obj.name ?? obj.id ?? '';
+        return <span className="text-primary">{String(label)}</span>;
+      }
       const options = col?.options;
       const label = options?.find((o) => o.value === value)?.label ?? String(value);
       return <span className="text-primary">{label}</span>;

@@ -1,6 +1,7 @@
 export { Button, buttonVariants, type ButtonProps } from './button';
 export { Badge, badgeVariants, type BadgeProps } from './badge';
 export { Icon, iconVariants, type IconProps } from './icon';
+export { DynamicIcon, type DynamicIconProps } from './dynamic-icon';
 export { Kbd, kbdVariants, type KbdProps } from './kbd';
 export { Label, labelVariants, type LabelProps } from './label';
 export { Skeleton, skeletonVariants, type SkeletonProps } from './skeleton';

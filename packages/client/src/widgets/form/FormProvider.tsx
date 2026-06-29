@@ -5,22 +5,35 @@ import { FormContextProvider } from './FormContext.js';
 import { useFormState } from './useFormState.js';
 import { useFormValidation } from './useFormValidation.js';
 import { useFormSubmit } from './useFormSubmit.js';
+import { formRef } from './form-ref.js';
 import type { FormContextValue } from './FormContext.js';
 import type { FieldMeta } from '../binding/resolver.js';
 
 export interface FormProviderProps {
   model: string;
   id?: string | null;
+  mode?: 'create' | 'edit' | 'view';
   onSuccess?: (record: Record<string, unknown>, mode: 'create' | 'edit') => void;
   onError?: (errors: Record<string, string>, message: string) => void;
   children: React.ReactNode;
 }
 
-export function FormProvider({ model, id, onSuccess, onError, children }: FormProviderProps) {
-  const mode: 'create' | 'edit' | 'view' = id ? 'edit' : 'create';
+export function FormProvider({
+  model,
+  id,
+  mode: modeProp,
+  onSuccess,
+  onError,
+  children,
+}: FormProviderProps) {
+  const mode: 'create' | 'edit' | 'view' = modeProp ?? (id ? 'edit' : 'create');
 
   const { modelMeta } = useModelMeta(model);
-  const { data: record } = useModelRecord({ model, id, enabled: mode === 'edit' });
+  const { data: record } = useModelRecord({
+    model,
+    id,
+    enabled: mode === 'edit' || mode === 'view',
+  });
 
   const validation = useFormValidation(model);
   const formState = useFormState(validation.validateField);
@@ -35,13 +48,13 @@ export function FormProvider({ model, id, onSuccess, onError, children }: FormPr
   });
 
   useEffect(() => {
-    if (mode === 'edit' && record) {
+    if ((mode === 'edit' || mode === 'view') && record) {
       formState.initValues(record);
     }
   }, [record, mode]);
 
   const reset = useCallback(() => {
-    formState.reset(mode);
+    formState.reset(mode === 'view' ? 'edit' : mode);
   }, [formState, mode]);
 
   const getFieldMeta = useCallback(
@@ -59,6 +72,13 @@ export function FormProvider({ model, id, onSuccess, onError, children }: FormPr
     },
     [modelMeta, mode],
   );
+
+  useEffect(() => {
+    formRef.current = { submit, reset };
+    return () => {
+      formRef.current = null;
+    };
+  }, [submit, reset]);
 
   const contextValue: FormContextValue = useMemo(
     () => ({

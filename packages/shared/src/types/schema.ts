@@ -17,6 +17,7 @@ export interface ModelConfig {
   naming?: NamingConfig;
   scope?: ScopeConfig;
   auditLog?: boolean;
+  crud?: boolean;
   fields: Record<string, FieldConfig>;
   indexes?: IndexConfig[];
   traits?: Trait[];

@@ -1,18 +1,16 @@
 import { useState } from 'react';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
+import { Button } from '@rangka/ui';
+import { Card } from '@rangka/ui';
+import { Field } from '@rangka/ui';
+import { Input } from '@rangka/ui';
 
 export interface LoginFormProps {
   onLogin: (credentials: { email: string; password: string }) => void | Promise<void>;
   error?: string;
   loading?: boolean;
-  className?: string;
 }
 
-export function LoginForm({ onLogin, error, loading, className }: LoginFormProps) {
+export function LoginForm({ onLogin, error, loading }: LoginFormProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -22,46 +20,42 @@ export function LoginForm({ onLogin, error, loading, className }: LoginFormProps
   };
 
   return (
-    <div className={cn('flex min-h-screen items-center justify-center bg-background', className)}>
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>Sign in</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit}>
-            <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor="email">Email</FieldLabel>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  required
-                  autoFocus
-                />
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="password">Password</FieldLabel>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </Field>
-              {error && <FieldError>{error}</FieldError>}
-              <Field>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? 'Signing in...' : 'Sign in'}
-                </Button>
-              </Field>
-            </FieldGroup>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+    <Card>
+      <Card.Header>
+        <Card.Title>Sign in</Card.Title>
+      </Card.Header>
+      <Card.Content>
+        <form onSubmit={handleSubmit}>
+          <Field>
+            <Field.Label htmlFor="email">Email</Field.Label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              required
+              autoFocus
+            />
+          </Field>
+          <Field>
+            <Field.Label htmlFor="password">Password</Field.Label>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+              required
+            />
+          </Field>
+          {error && <Field.Error>{error}</Field.Error>}
+          <Field>
+            <Button type="submit" disabled={loading}>
+              {loading ? 'Signing in...' : 'Sign in'}
+            </Button>
+          </Field>
+        </form>
+      </Card.Content>
+    </Card>
   );
 }

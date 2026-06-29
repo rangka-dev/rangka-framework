@@ -1,7 +1,7 @@
 ---
 status: stable
 since: 0.2.0
-last-updated: 2026-06-15
+last-updated: 2026-06-29
 description: Mental model bridge for jQuery and traditional ERP developers
 ---
 
@@ -11,7 +11,7 @@ If you have built ERP interfaces with jQuery (or Backbone, or vanilla JS with se
 
 ## The fundamental shift
 
-In jQuery, you think in terms of the DOM. You select elements, attach event handlers, manipulate HTML, and manage state by reading from and writing to the page itself.
+In jQuery you think in terms of the DOM. You select elements, attach event handlers, manipulate HTML, and manage state by reading from and writing to the page itself.
 
 ```javascript
 // jQuery: find it, read it, change it
@@ -20,7 +20,7 @@ $('#submit-btn').prop('disabled', status !== 'Draft');
 $('#order-table').DataTable().ajax.reload();
 ```
 
-In Rangka, you never touch the DOM. You describe the screen as a tree of widgets with data bindings. The framework renders and updates the DOM for you. Your job is to declare what should exist and what should happen.
+In Rangka you never touch the DOM. You describe the screen as a tree of widgets with data bindings. The framework renders and updates the DOM for you. Your job is to declare what should exist and what should happen.
 
 ```typescript
 // Rangka: declare it, bind it, the framework handles the rest
@@ -47,7 +47,7 @@ In Rangka, you never touch the DOM. You describe the screen as a tree of widgets
 
 ## The event handler problem
 
-In jQuery, the core pattern is: listen for an event, then imperatively update multiple parts of the page.
+In jQuery the core pattern is: listen for an event, then imperatively update multiple parts of the page.
 
 ```javascript
 $('#order-table').on('click', 'tr', function () {
@@ -64,7 +64,7 @@ $('#order-table').on('click', 'tr', function () {
 });
 ```
 
-In Rangka, the same interaction is one action that sets one value. Everything else reacts.
+In Rangka the same interaction is one action that sets one value. Everything else reacts.
 
 ```typescript
 // One action
@@ -101,7 +101,7 @@ In Rangka, actions that change data automatically refresh affected sources:
   on: { click: { type: 'service', name: 'sales.submitOrder' } } }
 ```
 
-When the service succeeds, the framework refreshes all data sources that reference the affected model. The table updates. The detail updates. You do not manage this.
+When the service succeeds the framework refreshes all data sources that reference the affected model. The table updates. The detail updates. You do not manage this.
 
 ## No more state in the DOM
 
@@ -127,13 +127,13 @@ One source of truth. Widgets read from it. Actions write to it. No conflicts.
 
 ## Server-rendered pages vs widget trees
 
-In a jQuery ERP, the server renders HTML and sends it to the browser. jQuery enhances it with interactivity. Each page is a fresh HTML document.
+In a jQuery ERP the server renders HTML and sends it to the browser. jQuery enhances it with interactivity. Each page is a fresh HTML document.
 
 ```
 Server renders HTML → Browser shows it → jQuery adds behavior
 ```
 
-In Rangka, the server sends data (JSON). The client renders widget trees from page definitions.
+In Rangka the server sends data (JSON). The client renders widget trees from page definitions.
 
 ```
 Server sends page definitions + data → Client renders widgets from the tree
@@ -148,8 +148,8 @@ This means:
 
 ## What you give up
 
-- **Direct DOM control.** You cannot `$('#thing').css('color', 'red')`. Style is handled by widget props and theming.
-- **Progressive enhancement.** Rangka is a client-side app. No JS = no app.
+- **Direct DOM control.** You cannot style elements imperatively. Style is handled by widget props and theming.
+- **Progressive enhancement.** Rangka is a client-side app. No JS means no app.
 - **Familiar plugins.** No DataTables, no Select2, no jQuery UI. Built-in widgets cover these use cases. For anything else, write a custom widget.
 - **Server-rendered HTML.** Pages are client-rendered from JSON definitions.
 
@@ -158,5 +158,5 @@ This means:
 - **No DOM bugs.** State cannot get out of sync with what is displayed.
 - **No manual refresh.** Data updates propagate automatically.
 - **No event soup.** One action, one state change, multiple reactive updates.
-- **Less code.** A page that took 500 lines of jQuery (selectors, handlers, ajax calls, DOM updates) is 30 lines of widget declarations.
-- **Consistency.** Every screen works the same way. No "which developer wrote this page?"
+- **Less code.** A page that took 500 lines of jQuery is 30 lines of widget declarations.
+- **Consistency.** Every screen works the same way.

@@ -8,6 +8,8 @@ export type {
 
 export type { BuiltinWidgetType, WidgetType } from '../validation/schemas/widget-props/index.js';
 
+export type WidgetCategory = 'input' | 'display' | 'layout' | 'action' | 'data' | 'data-container';
+
 import type { Condition, WidgetBinding, WidgetSource } from '../validation/schemas/widget.js';
 import type { WidgetType } from '../validation/schemas/widget-props/index.js';
 
@@ -46,7 +48,8 @@ export type WidgetAction =
   | SequenceAction
   | ConditionalAction
   | FormSubmitAction
-  | FormResetAction;
+  | FormResetAction
+  | ToastAction;
 
 export interface SetValueAction {
   type: 'setValue';
@@ -164,4 +167,10 @@ export interface FormSubmitAction {
 
 export interface FormResetAction {
   type: 'form.reset';
+}
+
+export interface ToastAction {
+  type: 'toast';
+  message: string;
+  variant?: 'info' | 'success' | 'warning' | 'error';
 }

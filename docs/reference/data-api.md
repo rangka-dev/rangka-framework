@@ -1,7 +1,7 @@
 ---
 status: stable
 since: 0.1.0
-last-updated: 2026-06-10
+last-updated: 2026-06-29
 description: REST data API — CRUD endpoints, filtering, and pagination
 ---
 
@@ -113,8 +113,8 @@ GET /api/sales/invoice?filter[notes][isnull]=true
 
 ### Operator Type Restrictions
 
-- `gt`, `gte`, `lt`, `lte` — only valid for numeric (`int`, `decimal`, `money`) and date (`date`, `datetime`) fields. Returns `400` if used on other types.
-- `like` — only valid for `string` and `text` fields. Returns `400` if used on other types. The framework wraps the value with `%` on both sides and uses `ILIKE`. Passing `filter[name][like]=INV` produces `WHERE name ILIKE '%INV%'`.
+- `gt`, `gte`, `lt`, `lte` are only valid for numeric (`int`, `decimal`, `money`) and date (`date`, `datetime`) fields. Returns `400` if used on other types.
+- `like` is only valid for `string` and `text` fields. Returns `400` if used on other types. The framework wraps the value with `%` on both sides and uses `ILIKE`. Passing `filter[name][like]=INV` produces `WHERE name ILIKE '%INV%'`.
 
 ### Value Coercion
 
@@ -264,12 +264,12 @@ All errors follow a consistent shape:
 
 Every request passes through these stages in order:
 
-1. **Authentication** — validate session token
-2. **Model Permission** — check user roles against model CRUD permission
-3. **Scope Filtering** — apply row-level security filters to queries
-4. **Scope Validation** — verify write operations don't violate scope boundaries
-5. **Field Write Guard** — strip fields the user cannot write
-6. **Field Read Strip** — remove fields the user cannot read from responses
+1. **Authentication** validates the session token.
+2. **Model Permission** checks user roles against model CRUD permissions.
+3. **Scope Filtering** applies row-level security filters to queries.
+4. **Scope Validation** verifies write operations don't violate scope boundaries.
+5. **Field Write Guard** strips fields the user cannot write.
+6. **Field Read Strip** removes fields the user cannot read from responses.
 
 ## Content Type
 

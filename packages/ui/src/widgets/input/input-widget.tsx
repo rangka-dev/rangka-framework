@@ -33,7 +33,6 @@ export function InputWidget({ props, bind, on }: WidgetComponentProps) {
         onChange={handleChange}
         placeholder={placeholder}
         disabled={disabled}
-        readOnly={bind.meta?.readOnly}
         className={
           inputType === 'number'
             ? '[&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [appearance:textfield]'

@@ -6,7 +6,7 @@ export function FormWidget({ children }: WidgetComponentProps) {
   };
 
   return (
-    <form data-slot="widget-form" onSubmit={handleSubmit} className="contents">
+    <form data-slot="widget-form" onSubmit={handleSubmit} className="flex flex-col gap-6">
       {children}
     </form>
   );

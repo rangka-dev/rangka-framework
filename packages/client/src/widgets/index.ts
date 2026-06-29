@@ -67,14 +67,4 @@ export { useAction, useTriggerHandlers } from './hooks/index.js';
 export { useDataQuery } from './hooks/index.js';
 export type { DataQueryState } from './hooks/index.js';
 
-export { registerBuiltInWidgets } from './components/register.js';
-export { ButtonWidget } from './components/index.js';
-export { InputWidget } from './components/index.js';
-export { TextWidget } from './components/index.js';
-export { BadgeWidget } from './components/index.js';
-export { IconWidget } from './components/index.js';
-export { ImageWidget } from './components/index.js';
-export { GroupWidget } from './components/index.js';
-export { SectionWidget } from './components/index.js';
-export { DividerWidget } from './components/index.js';
-export { SpacerWidget } from './components/index.js';
+export { widgetControllers } from './controllers/index.js';

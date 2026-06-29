@@ -1,18 +1,24 @@
 import { forwardRef, type ComponentProps } from 'react';
 import { cn } from '../lib/cn';
+import { useShell } from './shell-context';
 
 // --- Shell.Rail ---
 
 export type ShellRailProps = ComponentProps<'nav'>;
 
-const ShellRailRoot = forwardRef<HTMLElement, ShellRailProps>(({ className, ...props }, ref) => (
-  <nav
-    ref={ref}
-    data-slot="shell-rail"
-    className={cn('flex h-full w-15 shrink-0 flex-col justify-between px-2 py-3', className)}
-    {...props}
-  />
-));
+const ShellRailRoot = forwardRef<HTMLElement, ShellRailProps>(({ className, ...props }, ref) => {
+  const { railDocked } = useShell();
+  if (!railDocked) return null;
+
+  return (
+    <nav
+      ref={ref}
+      data-slot="shell-rail"
+      className={cn('flex h-full w-15 shrink-0 flex-col justify-between px-2 py-3', className)}
+      {...props}
+    />
+  );
+});
 ShellRailRoot.displayName = 'Shell.Rail';
 
 // --- Shell.RailItem ---
@@ -73,7 +79,7 @@ const ShellRailLabel = forwardRef<HTMLSpanElement, ShellRailLabelProps>(
     <span
       ref={ref}
       data-slot="shell-rail-label"
-      className={cn('text-[11px] font-medium leading-tight', className)}
+      className={cn('text-[11px] font-medium leading-tight text-center', className)}
       {...props}
     />
   ),

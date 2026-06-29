@@ -55,6 +55,7 @@ function createModel(fields: ResolvedModel['fields']): ResolvedModel {
     app: 'sales',
     name: 'invoice',
     auditLog: false,
+    crud: true,
     traits: [],
     fields,
     indexes: [],

@@ -41,6 +41,7 @@ export function externalModelToResolved(
     name: config.name,
     label: config.label,
     auditLog: false,
+    crud: false,
     traits: [],
     fields,
     indexes: [],

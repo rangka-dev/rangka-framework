@@ -40,6 +40,7 @@ export const startCommand = defineCommand({
       const databaseConfig = resolveDatabaseConfig(dbConfig);
 
       if (databaseConfig.dialect === 'sqlite') {
+        databaseConfig.path = path.resolve(root, databaseConfig.path!);
         console.log(`[rangka] Using SQLite at ${databaseConfig.path}`);
       } else {
         console.log(`[rangka] Connecting to PostgreSQL...`);

@@ -1,20 +1,19 @@
 ---
 status: stable
 since: 0.1.0
-last-updated: 2026-06-12
+last-updated: 2026-06-29
 description: Reusable business logic encapsulated as services
 ---
 
 # Services
 
-Business applications are not just data in and data out. Between the input and the output lives logic. Pricing calculations, state transitions, document generation, integrations with external systems. This logic needs a home and in Rangka that home is a service.
+Business applications have logic between input and output. Pricing calculations, state transitions, document generation, integrations with external systems. A service is where that logic lives.
 
-A service is a named, reusable unit of business logic. It can be called from an action button, from a hook, from another service, or from a background job. It is the single place where you write code that _does something meaningful_ with your data.
+A service is a named, reusable unit of business logic. It can be called from an action button, from a hook, from another service, or from a background job.
 
 ## Defining a service
 
 ```typescript
-// services/pricing.ts
 import { defineService } from 'rangka';
 
 export default defineService({
@@ -24,12 +23,10 @@ export default defineService({
   factory(ctx) {
     return {
       async calculateItemRate(item, priceList, customer) {
-        const baseRate = await ctx.db
-          .selectFrom('sales.item_price')
-          .where('item', '=', item)
-          .where('price_list', '=', priceList)
-          .select('rate')
-          .executeTakeFirst();
+        const baseRate = await ctx.models
+          .query('sales.item_price')
+          .filter({ item, price_list: priceList })
+          .first();
 
         if (!baseRate) return 0;
 
@@ -38,12 +35,10 @@ export default defineService({
       },
 
       async getCustomerDiscount(customer, item) {
-        const rule = await ctx.db
-          .selectFrom('sales.pricing_rule')
-          .where('customer', '=', customer)
-          .where('item', '=', item)
-          .select('discount_percent')
-          .executeTakeFirst();
+        const rule = await ctx.models
+          .query('sales.pricing_rule')
+          .filter({ customer, item })
+          .first();
 
         return rule?.discount_percent || 0;
       },
@@ -60,56 +55,37 @@ export default defineService({
 | `deps`    | `string[]` | Other services that must be available         |
 | `factory` | `function` | Returns the service instance with its methods |
 
-## How services are called
+## Calling services
 
-Services can be called from multiple places. The calling context determines what data the service receives.
+### From widget actions
 
-### From actions (most common)
-
-When a service is bound to an action, the framework handles invocation:
-
-**View-level action with a model source** receives the doc:
+When a service is bound to an action inside a data context, the framework passes the current record:
 
 ```typescript
 // Page definition
-actions: {
-  row: [{ key: 'submit', label: 'Submit', service: 'sales.submitOrder' }],
-}
+widget.button('Submit', {
+  on: { click: action.service('sales.submitOrder') },
+});
 
-// Service
+// Service receives the record from context
 defineService({
   name: 'sales.submitOrder',
   factory(ctx) {
     return {
       async execute(doc) {
         if (doc.status !== 'Draft') throw new Error('Can only submit drafts');
-        if (!doc.items?.length) throw new Error('Order must have items');
-        await ctx.db.update('sales.order', doc.id, { status: 'Submitted' });
+        await ctx.models.update('sales.order', doc.id, { status: 'Submitted' });
       },
     };
   },
 });
 ```
 
-**Page-level action** receives params:
+Page-level actions pass params (or nothing):
 
 ```typescript
-// Page definition
-actions: [
-  { key: 'report', label: 'Monthly Report', service: 'sales.monthlyReport', params: { month: 6 } },
-];
-
-// Service
-defineService({
-  name: 'sales.monthlyReport',
-  factory(ctx) {
-    return {
-      async execute(params) {
-        return await ctx.db.query('sales.order', { filters: { month: params.month } });
-      },
-    };
-  },
-});
+// Action with explicit params
+action.service('sales.monthlyReport', { month: 6, year: 2026 });
 ```
 
 ### From hooks
@@ -136,8 +112,8 @@ defineService({
         const pricing = ctx.service('sales.pricing');
         const ledger = ctx.service('accounting.ledger');
 
-        const total = await pricing.calculateOrderTotal(order.items, order.price_list, order.customer);
-        const invoice = await ctx.db.insertInto('sales.invoice').values({ ... }).execute();
+        const total = await pricing.calculateOrderTotal(order.items);
+        const invoice = await ctx.models.create('sales.invoice', { ... });
 
         await ledger.postEntry({
           voucher_type: 'Sales Invoice',
@@ -155,8 +131,7 @@ defineService({
 ### From jobs
 
 ```typescript
-defineJob({
-  name: 'sales.monthly-summary',
+defineJob('sales.monthly-summary', {
   schedule: '0 6 1 * *',
   async handler(data, ctx) {
     const analytics = ctx.service('sales.analytics');
@@ -168,44 +143,32 @@ defineJob({
 
 ## The context
 
-The factory function receives access to the framework:
+The factory function receives `FrameworkContext`:
 
-```typescript
-interface ServiceContext {
-  db: DatabaseClient;
-  service(name: string): ServiceInstance;
-  enqueue(job: string, data: unknown, opts?: JobOptions): Promise<void>;
-  auth: { user: Record<string, unknown> | null; roles: string[] };
-  scope: unknown;
-  events: EventBus;
-  config: Record<string, unknown>;
-}
-```
-
-| Field     | Description                                            |
-| --------- | ------------------------------------------------------ |
-| `db`      | Database client for queries, inserts, updates, deletes |
-| `service` | Call other services by name                            |
-| `enqueue` | Queue background jobs                                  |
-| `auth`    | Current user and their roles                           |
-| `scope`   | Active scope value (e.g. current company)              |
-| `events`  | Event bus for emit/subscribe                           |
-| `config`  | Application configuration                              |
+| Field     | Description                               |
+| --------- | ----------------------------------------- |
+| `db`      | Raw database client for direct queries    |
+| `models`  | Model access with scopes and permissions  |
+| `service` | Call other services by name               |
+| `enqueue` | Queue background jobs                     |
+| `auth`    | Current user and their roles              |
+| `scope`   | Active scope value (e.g. current company) |
+| `events`  | Event bus for emit/subscribe              |
+| `config`  | Application configuration                 |
 
 ## Error handling
 
-Services reject by throwing errors. The framework handles the rest depending on the calling context:
+Services reject by throwing errors. The framework handles the rest:
 
-- **From an action**: the error message is shown as a toast in the UI. The operation is aborted.
-- **From a hook**: the error aborts the save operation and returns a 400 to the client.
-- **From a job**: the error triggers the job's retry logic.
+- **From an action**: the error message shows as a toast. The operation aborts.
+- **From a hook**: the error aborts the save and returns 400.
+- **From a job**: the error triggers retry logic.
 
 ```typescript
 async execute(doc) {
   if (doc.status !== 'Draft') {
     throw new Error('Can only submit orders in Draft status');
   }
-  // ...
 }
 ```
 

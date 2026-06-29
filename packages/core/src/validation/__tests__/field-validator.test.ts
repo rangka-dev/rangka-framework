@@ -9,6 +9,7 @@ function makeModel(fields: ResolvedField[]): ResolvedModel {
     name: 'item',
     qualifiedName: 'test.item',
     auditLog: false,
+    crud: true,
     traits: [],
     fields,
     indexes: [],

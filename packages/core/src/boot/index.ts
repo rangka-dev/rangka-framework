@@ -31,6 +31,7 @@ import { loadPlugins } from '../plugins/loader.js';
 import { validateApps } from './validator.js';
 import { validateModelReferences } from './cross-validator.js';
 import { validatePageBindings } from './page-utils.js';
+import { generateCrudPages } from './crud-page-generator.js';
 import type { PluginDefinition } from '../plugins/types.js';
 import type { RolesConfig, JobConfig, AppConfig } from '@rangka/shared';
 import type { JobWorkerConfig } from '../jobs/types.js';
@@ -445,6 +446,11 @@ async function initServer(
   for (const app of sortedApps) {
     if (app.pages) allPages.push(...app.pages);
   }
+
+  // Generate CRUD pages for models that don't have manual overrides
+  const manualPageKeys = new Set(allPages.map((p) => p.page.key));
+  const generatedPages = generateCrudPages(registry, manualPageKeys);
+  allPages.push(...generatedPages);
 
   generateRoutes(server, registry, db, {
     permissionRegistry: registries.permissionRegistry,

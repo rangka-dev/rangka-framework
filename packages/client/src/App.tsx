@@ -7,6 +7,7 @@ import { createQueryClient } from './data/queryClient.js';
 import { RouterProvider } from './router/RouterProvider.js';
 import { createShellRouter } from './router/createShellRouter.js';
 import { loadCustomWidgets } from './widgets/loader.js';
+import { ToastRenderer } from './shell/ToastRenderer.js';
 
 function AppInner() {
   const { state, handleSessionExpired } = useBootContext();
@@ -35,6 +36,7 @@ function AppInner() {
         <ShellProviders data={state.data}>
           <QueryProvider client={queryClient}>
             <RouterProvider router={router} />
+            <ToastRenderer />
           </QueryProvider>
         </ShellProviders>
       )}

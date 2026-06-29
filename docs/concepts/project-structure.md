@@ -1,15 +1,15 @@
 ---
 status: stable
 since: 0.1.0
-last-updated: 2026-06-28
+last-updated: 2026-06-29
 description: File and folder conventions, naming rules, and auto-discovery
 ---
 
 # Project structure
 
-A Rangka project is a Node.js application with an app definition. You install the framework, define your app, and run. There are no boilerplate generators and no scaffolding commands to memorize.
+A Rangka project is a Node.js application with an app definition. You install the framework, define your app, and run. No boilerplate generators. No scaffolding commands to memorize.
 
-The structure is intentionally predictable. Once you understand the conventions, you can navigate any Rangka project without surprises.
+The structure is predictable. Once you understand the conventions you can navigate any Rangka project without surprises.
 
 ## Single app (most common)
 
@@ -110,17 +110,17 @@ Only `app.ts` is required. Add directories as you need them.
 
 The framework loads files based on their parent folder:
 
-| Directory     | Expected export     | How it's identified            |
-| ------------- | ------------------- | ------------------------------ |
-| `models/`     | `defineModel()`     | Qualified name: `{app}.{name}` |
-| `pages/`      | `definePage()`      | Page key from config           |
-| `hooks/`      | `defineHooks()`     | Model from first argument      |
-| `services/`   | `defineService()`   | Service name from config       |
-| `jobs/`       | `defineJob()`       | Job name from config           |
-| `fixtures/`   | `defineFixture()`   | Target model from config       |
-| `extensions/` | `defineExtension()` | Target model from first arg    |
-| `widgets/`    | `defineWidget()`    | Widget name from config        |
-| `roles.ts`    | `defineRoles()`     | App root scan                  |
+| Directory     | Expected export     | How it is identified             |
+| ------------- | ------------------- | -------------------------------- |
+| `models/`     | `defineModel()`     | Qualified name: `{app}.{name}`   |
+| `pages/`      | `definePage()`      | Page key from config             |
+| `hooks/`      | `defineHooks()`     | Model from first argument        |
+| `services/`   | `defineService()`   | Service name from config         |
+| `jobs/`       | `defineJob()`       | Job name from config             |
+| `fixtures/`   | `defineFixture()`   | Target model from config         |
+| `extensions/` | `defineExtension()` | Target model from first argument |
+| `widgets/`    | `defineWidget()`    | Widget name from config          |
+| `roles.ts`    | `defineRoles()`     | App root scan                    |
 
 Each file must have a default export with the corresponding `define*()` call. One file, one definition.
 

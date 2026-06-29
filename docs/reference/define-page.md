@@ -1,8 +1,8 @@
 ---
 status: stable
 since: 0.2.0
-last-updated: 2026-06-23
-description: definePage() API — widget tree, routing config, and builder helpers
+last-updated: 2026-06-29
+description: definePage() API with widget tree, routing, and page actions
 ---
 
 # definePage
@@ -54,14 +54,14 @@ interface PageDefinition {
 
 ### Fields
 
-| Field     | Type         | Default     | Description                                                                                    |
-| --------- | ------------ | ----------- | ---------------------------------------------------------------------------------------------- |
-| `key`     | string       | —           | Unique identifier. Format: `app.name`.                                                         |
-| `label`   | string       | —           | Page title. Displayed in breadcrumbs and tab title.                                            |
-| `path`    | string       | auto        | Custom URL path. Auto-generated from key if omitted.                                           |
-| `layout`  | enum         | `'default'` | Page layout mode. `default` adds padding. `full` removes all padding for edge-to-edge content. |
-| `actions` | Action[]     | —           | Topbar buttons rendered by the shell.                                                          |
-| `widgets` | WidgetNode[] | —           | The entire page content as a widget tree.                                                      |
+| Field     | Type         | Default     | Description                                                              |
+| --------- | ------------ | ----------- | ------------------------------------------------------------------------ |
+| `key`     | string       |             | **Required.** Unique identifier. Format: `app.name`.                     |
+| `label`   | string       |             | **Required.** Page title displayed in breadcrumbs and tab title.         |
+| `path`    | string       | auto        | Custom URL path. Auto-generated from key if omitted.                     |
+| `layout`  | enum         | `'default'` | `default` adds padding. `full` removes padding for edge-to-edge content. |
+| `actions` | Action[]     |             | Topbar buttons rendered by the shell.                                    |
+| `widgets` | WidgetNode[] |             | **Required.** The entire page content as a widget tree.                  |
 
 ## Layout
 
@@ -70,7 +70,7 @@ interface PageDefinition {
 | `default` | Standard page padding (`px-6 py-4`). Used for most pages.                          |
 | `full`    | No padding. Content fills edge-to-edge. Used for datagrids and full-bleed widgets. |
 
-Use `layout: 'full'` when the page content is a single widget that should fill the entire viewport. The datagrid widget is the primary use case.
+Use `layout: 'full'` when the page content is a single widget that fills the entire viewport.
 
 ```typescript
 definePage({
@@ -118,6 +118,7 @@ interface Action {
   icon?: string;
   variant?: 'primary' | 'secondary' | 'ghost';
   action?: WidgetAction;
+  visible?: Condition | Condition[];
   items?: ActionItem[];
 }
 
@@ -132,11 +133,12 @@ interface ActionItem {
 
 | Field     | Type         | Description                                        |
 | --------- | ------------ | -------------------------------------------------- |
-| `type`    | enum         | `button`, `menu`, `toggle-group`, `separator`      |
+| `type`    | enum         | `button`, `menu`, `toggle-group`, or `separator`   |
 | `label`   | string       | Button or menu label                               |
 | `icon`    | string       | Lucide icon identifier                             |
 | `variant` | enum         | Button style. Default: `primary`.                  |
 | `action`  | WidgetAction | Structured action (same format as widget triggers) |
+| `visible` | Condition    | Visibility condition for conditional display       |
 | `items`   | ActionItem[] | Menu items (for `menu` type)                       |
 
 ### Examples
@@ -144,26 +146,23 @@ interface ActionItem {
 ```typescript
 import { action } from 'rangka';
 
-// Navigate to a page
 { type: 'button', label: 'New Order', icon: 'plus', action: action.navigate('/sales/orders/new') }
-
-// Call a service
 { type: 'button', label: 'Export', variant: 'secondary', action: action.service('sales.export') }
 ```
 
-Page actions use the same `WidgetAction` format as widget triggers. See [Actions concept](/concepts/actions) for all available action types. The `action` helper provides typed shortcuts for all built-in actions.
+Page actions use the same `WidgetAction` format as widget triggers. See [Actions reference](/reference/actions) for all available action types.
 
 ## Widgets
 
-The `widgets` field is an array of `WidgetNode` objects forming a recursive tree. This is the complete page content. Layout, data fetching, overlays, and interactions are all expressed as widgets in the tree.
+The `widgets` field is an array of `WidgetNode` objects forming a recursive tree. This is the complete page content. Layout, data fetching, overlays, and interactions are all expressed as widgets.
 
-You can write widget nodes as raw objects or use the `widget` helper for a shorter syntax:
+You can write widget nodes as raw objects or use the `widget` helper:
 
 ```typescript
-// Raw WidgetNode — always works
+// Raw WidgetNode
 widgets: [{ type: 'input', bind: { field: 'name' }, props: { required: true } }];
 
-// widget helper — same output, less typing
+// widget helper (same output)
 widgets: [widget.input('name', { required: true })];
 ```
 
@@ -176,8 +175,6 @@ The framework validates pages at startup:
 - Warns about duplicate page keys across apps.
 - Warns about source models that do not exist in the schema registry.
 - Warns about bind.field references that do not exist on the source model in scope.
-
-Pages with the deprecated `body` field are auto-migrated to `widgets` with a warning.
 
 ## Rendering chain
 

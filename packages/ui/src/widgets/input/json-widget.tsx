@@ -44,7 +44,6 @@ export function JsonWidget({ props, bind, on }: WidgetComponentProps) {
         onChange={handleChange}
         onBlur={handleBlur}
         disabled={disabled}
-        readOnly={bind.meta?.readOnly}
         rows={rows}
         spellCheck={false}
         className="font-mono text-2xs"

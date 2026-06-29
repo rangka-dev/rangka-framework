@@ -1,13 +1,13 @@
 ---
 status: stable
 since: 0.1.0
-last-updated: 2026-06-12
+last-updated: 2026-06-29
 description: defineService() API — service definition and dependency injection
 ---
 
 # defineService
 
-Declares a service. A service is a named collection of methods available via dependency injection throughout the framework. Services are the single home for all business logic.
+Declares a service. Services are named collections of methods available via dependency injection throughout the framework. They are the home for all business logic.
 
 See [Services concept](../concepts/services.md) for usage patterns.
 
@@ -50,11 +50,7 @@ export default defineService({
 ## Function Signature
 
 ```typescript
-function defineService<T>(config: {
-  name: string;
-  deps?: string[];
-  factory: (ctx: FrameworkContext) => T;
-}): ServiceDefinition<T>;
+function defineService<T extends ServiceConfig>(config: T): T;
 ```
 
 | Parameter        | Type         | Description                                                                                         |
@@ -78,11 +74,11 @@ interface FrameworkContext {
   service: (name: string) => ServiceInstance;
   enqueue: (job: string, data: unknown, opts?: JobOptions) => Promise<void>;
   events: {
-    emit: (event: string, data?: unknown) => void;
-    on: (event: string, handler: Function) => void;
+    emit: (event: string, payload: unknown) => Promise<void>;
+    on: (event: string, handler: (payload: unknown) => Promise<void>) => void;
   };
-  notify: (message: string, opts?: NotifyOptions) => Promise<void>;
-  email: { send: (opts: EmailOptions) => Promise<void> };
+  notify: (channel: string, message: unknown) => void;
+  email: { send: (template: string, options: Record<string, unknown>) => Promise<void> };
 }
 ```
 
@@ -97,8 +93,8 @@ interface FrameworkContext {
 | `service` | `function`             | Call other services by name (dependency injection).        |
 | `enqueue` | `function`             | Queue background jobs for async processing.                |
 | `events`  | `object`               | Emit and subscribe to application events.                  |
-| `notify`  | `function`             | Send a notification to the current user or a channel.      |
-| `email`   | `object`               | Send emails.                                               |
+| `notify`  | `function`             | Send a real-time notification to a channel.                |
+| `email`   | `object`               | Send emails using named templates.                         |
 
 ## Calling Services
 

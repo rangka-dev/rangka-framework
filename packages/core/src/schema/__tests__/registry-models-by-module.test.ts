@@ -8,6 +8,7 @@ function makeModel(app: string, name: string): ResolvedModel {
     app,
     name,
     auditLog: false,
+    crud: true,
     traits: [],
     fields: [{ name: 'id', config: { type: 'string' }, provenance: { source: 'base' } }],
     indexes: [],

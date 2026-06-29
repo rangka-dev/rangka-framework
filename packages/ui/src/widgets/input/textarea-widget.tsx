@@ -22,7 +22,6 @@ export function TextareaWidget({ props, bind, on }: WidgetComponentProps) {
         onChange={handleChange}
         placeholder={placeholder}
         disabled={disabled}
-        readOnly={bind.meta?.readOnly}
         rows={rows}
       />
       {bind.error && <Field.Error>{bind.error}</Field.Error>}

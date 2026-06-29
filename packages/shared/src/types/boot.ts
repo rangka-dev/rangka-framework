@@ -18,6 +18,7 @@ export interface NavigationTreeItem {
   page: string;
   label: string;
   icon?: string;
+  path: string;
 }
 
 export interface NavigationTreeSection {
@@ -55,6 +56,7 @@ export interface FieldMeta {
 export interface ModelMeta {
   qualifiedName: string;
   label?: string;
+  naming?: string;
   fields: FieldMeta[];
 }
 

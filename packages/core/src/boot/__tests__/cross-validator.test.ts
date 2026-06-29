@@ -14,6 +14,7 @@ function makeModel(
     app: module,
     name,
     auditLog: false,
+    crud: true,
     traits: [],
     fields: fields.map((f) => ({
       name: f.name,

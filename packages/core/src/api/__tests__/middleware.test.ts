@@ -11,6 +11,7 @@ function makeModel(): ResolvedModel {
     app: 'test',
     name: 'item',
     auditLog: false,
+    crud: true,
     traits: [],
     fields: [{ name: 'id', config: { type: 'string' }, provenance: { source: 'base' } }],
     indexes: [],

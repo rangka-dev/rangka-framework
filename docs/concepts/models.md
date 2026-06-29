@@ -1,20 +1,19 @@
 ---
 status: stable
 since: 0.1.0
-last-updated: 2026-06-12
+last-updated: 2026-06-29
 description: Model definition with fields, traits, and relationships
 ---
 
 # Models
 
-Every business application begins with a question: what are the things your system tracks? A model is your answer. It defines a data entity once, and from that single definition the framework produces a database table, a REST API, form inputs, list columns, and permission gates.
+A model defines a data entity. From a single definition, the framework produces a database table, a REST API, form inputs, list columns, and permission gates.
 
-You describe the shape of your data. The framework handles the mechanics of storing, serving, and rendering it.
+You describe the shape of your data. The framework handles storing, serving, and rendering it.
 
 ## Defining a model
 
 ```typescript
-// models/customer.ts
 import { defineModel, field } from 'rangka';
 
 export default defineModel({
@@ -35,20 +34,18 @@ export default defineModel({
 });
 ```
 
-This is a complete entity. The framework handles the table creation, the API endpoints, the form layout, and the list columns.
-
 ## Configuration
 
-| Field      | Type                          | Description                                                        |
-| ---------- | ----------------------------- | ------------------------------------------------------------------ |
-| `name`     | `string`                      | Model name (becomes `{app}.{name}`)                                |
-| `label`    | `string`                      | Human-readable name for the UI                                     |
-| `naming`   | `string`                      | Which field to use as the record's display title                   |
-| `scope`    | `string`                      | Auto-filter queries by user's active scope (e.g. `'core.company'`) |
-| `auditLog` | `boolean`                     | Track all changes to records                                       |
-| `traits`   | `Trait[]`                     | Behaviors to mix in (see [Traits](#traits))                        |
-| `fields`   | `Record<string, FieldConfig>` | Field definitions                                                  |
-| `indexes`  | `IndexConfig[]`               | Database indexes                                                   |
+| Field      | Type                          | Description                                      |
+| ---------- | ----------------------------- | ------------------------------------------------ |
+| `name`     | `string`                      | Model name (becomes `{app}.{name}`)              |
+| `label`    | `string`                      | Human-readable name for the UI                   |
+| `naming`   | `string`                      | Which field to use as the record's display title |
+| `scope`    | `string`                      | Auto-filter queries by user's active scope       |
+| `auditLog` | `boolean`                     | Track all changes to records                     |
+| `traits`   | `Trait[]`                     | Behaviors to mix in (see [Traits](#traits))      |
+| `fields`   | `Record<string, FieldConfig>` | Field definitions                                |
+| `indexes`  | `IndexConfig[]`               | Database indexes                                 |
 
 ## Field types
 
@@ -85,10 +82,7 @@ Auto-incrementing identifiers with formatting:
 
 ```typescript
 fields: {
-  voucher_no: field.sequence({
-    prefix: 'INV-',
-    digits: 5,
-  }),
+  voucher_no: field.sequence({ prefix: 'INV-', digits: 5 }),
   // Generates: INV-00001, INV-00002, ...
 }
 ```
@@ -118,7 +112,7 @@ Strategies: `materialized_path`, `nested_set`, `closure_table`.
 
 ### Link (belongs-to)
 
-A foreign key to another model. Renders as a searchable dropdown in the UI:
+A foreign key to another model. Renders as a searchable dropdown:
 
 ```typescript
 fields: {
@@ -128,7 +122,7 @@ fields: {
 
 ### Has Many (one-to-many)
 
-Records in another model that point back. This does not create a column in the current table, but lets the API include related records via `?include=addresses`:
+Records in another model that point back. Does not create a column. Lets the API include related records via `?include=addresses`:
 
 ```typescript
 fields: {
@@ -138,7 +132,7 @@ fields: {
 
 ### Children (parent-child)
 
-A tighter version of has-many. Children are edited inline with the parent, saved in a single transaction, and cascade-deleted:
+Children are edited inline with the parent, saved in a single transaction, and cascade-deleted:
 
 ```typescript
 fields: {
@@ -175,8 +169,8 @@ All fields share these base options:
 {
   required: true,
   label: 'Display Name',
-  hidden: true,          // Don't show in default views
-  readOnly: true,        // Can't be edited through the API
+  hidden: true,
+  readOnly: true,
   default: 'value',
   validation: {
     format: 'email',
@@ -192,15 +186,13 @@ All fields share these base options:
 
 Traits add standard fields and behaviors to a model.
 
-**`timestamped`** adds `created_at`, `updated_at`, `created_by`, and `updated_by`, automatically managed. The `created_by` and `updated_by` fields are links to `core.user`.
+**`timestamped`** adds `created_at`, `updated_at`, `created_by`, and `updated_by`. The framework stamps these automatically. The `created_by` and `updated_by` fields are links to `core.user`.
 
 **`soft_delete`** adds `archived_at`. DELETE becomes an archive operation. List and get queries exclude archived records by default. Updates and deletes on archived records are blocked.
 
-For status fields and state transitions, define your own enum field and use [actions](/concepts/actions) backed by services to handle the logic.
-
 ## Computed fields
 
-Some values do not come from user input. They are derived from other fields. A total is the sum of line items. An outstanding balance is the difference between what was invoiced and what was paid. Computed fields let you express these relationships declaratively:
+Values derived from other fields. A total is the sum of line items. An outstanding balance is the difference between invoiced and paid.
 
 ```typescript
 fields: {
@@ -216,15 +208,15 @@ fields: {
 }
 ```
 
-Computed fields are virtual. They are evaluated when the record is read and not persisted to the database. They do not create columns.
+Computed fields are virtual. They are evaluated when the record is read and not persisted to the database.
 
 ## Naming
 
-Controls which field shows up as the record's title (in link fields, breadcrumbs, lists):
+Controls which field shows as the record's title (in link fields, breadcrumbs, lists):
 
 ```typescript
-naming: 'customer_name'; // string field as title
-naming: 'invoice_number'; // sequence field as title
+naming: 'customer_name';
+naming: 'invoice_number';
 ```
 
 ## Extensions

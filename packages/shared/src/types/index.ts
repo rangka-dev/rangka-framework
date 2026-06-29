@@ -15,4 +15,5 @@ export type * from './schema-registry.js';
 export type * from './auth.js';
 export type * from './widget.js';
 export type * from './layout.js';
+export type * from './ui-kit.js';
 export * from './model-api.js';
