@@ -9,6 +9,7 @@ import { useDataQuery } from '../hooks/useDataQuery.js';
 import { useSurfaceContext } from '../hooks/useSurfaceContext.js';
 import { buildRowContext } from '../context/builder.js';
 import { useModelMeta } from '../../data/useModelMeta.js';
+import { useMeta } from '../../context/MetaContext.js';
 import { WidgetRenderer } from '../renderer/WidgetRenderer.js';
 
 export function TableController({ props, on, childNodes }: WidgetProps) {
@@ -16,6 +17,7 @@ export function TableController({ props, on, childNodes }: WidgetProps) {
   const store = usePageState();
   const Table = useWidgetComponent('table');
   const surface = useSurfaceContext();
+  const { models } = useMeta();
 
   const model = ctx.model;
   const columns = ctx.__columns ?? [];
@@ -24,22 +26,28 @@ export function TableController({ props, on, childNodes }: WidgetProps) {
 
   const variant = (props.variant as 'card' | 'flat' | undefined) ?? 'flat';
 
-  const source = useModelQuery({
-    model: model || '',
-    pageSize,
-    enabled: smartMode,
-    staticFilters: ctx.sourceFilters,
-  });
-
-  const { filters: activeFilters } = useDataQuery(model || '');
-
-  const records = smartMode ? source.data : (ctx.records ?? []);
-
   const { modelMeta } = useModelMeta(model);
   const hasSearchableFields = useMemo(() => {
     if (!modelMeta) return false;
     return modelMeta.fields.some((f) => f.searchable);
   }, [modelMeta]);
+
+  const linkFields = useMemo(() => {
+    if (!modelMeta) return [];
+    return modelMeta.fields.filter((f) => f.relationship?.type === 'link').map((f) => f.name);
+  }, [modelMeta]);
+
+  const source = useModelQuery({
+    model: model || '',
+    pageSize,
+    enabled: smartMode,
+    staticFilters: ctx.sourceFilters,
+    include: linkFields.length > 0 ? linkFields : undefined,
+  });
+
+  const { filters: activeFilters } = useDataQuery(model || '');
+
+  const records = smartMode ? source.data : (ctx.records ?? []);
 
   const filterableColumns = columns.filter(
     (col: WidgetNode) => col.props?.filterable && col.bind?.field,
@@ -102,6 +110,12 @@ export function TableController({ props, on, childNodes }: WidgetProps) {
       ? fieldDef.options.map((o) => ({ value: String(o), label: String(o) }))
       : undefined;
 
+    let namingField: string | undefined;
+    if (fieldType === 'link' && fieldDef?.relationship?.model) {
+      const relatedMeta = models[fieldDef.relationship.model];
+      namingField = relatedMeta?.naming ?? 'name';
+    }
+
     return {
       field,
       label: (col.props?.label as string) ?? '',
@@ -110,6 +124,7 @@ export function TableController({ props, on, childNodes }: WidgetProps) {
       sortable: col.props?.sortable as boolean | undefined,
       fieldType,
       options,
+      namingField,
       children: col.children,
       renderCell:
         col.children && col.children.length > 0

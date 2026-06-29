@@ -56,6 +56,7 @@ export interface FieldMeta {
 export interface ModelMeta {
   qualifiedName: string;
   label?: string;
+  naming?: string;
   fields: FieldMeta[];
 }
 

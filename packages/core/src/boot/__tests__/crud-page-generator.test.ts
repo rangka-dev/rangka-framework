@@ -207,9 +207,9 @@ describe('generateCrudPages', () => {
       const pages = generateCrudPages(registry, new Set());
 
       const listPage = pages.find((p) => p.page.key === 'sales.invoice')!;
-      expect(listPage.page.actions).toHaveLength(1);
-      expect(listPage.page.actions![0].label).toBe('New');
-      expect(listPage.page.actions![0].action).toEqual({
+      const newAction = listPage.page.actions!.find((a) => a.label === 'New');
+      expect(newAction).toBeDefined();
+      expect(newAction!.action).toEqual({
         type: 'navigate',
         path: '/sales/invoice/new',
       });
@@ -529,7 +529,7 @@ describe('generateCrudPages', () => {
       expect(col.props!.filterable).toBe(true);
     });
 
-    it('does not set filterable on string columns', () => {
+    it('sets filterable on string columns', () => {
       const model = makeModel('sales', 'invoice', [
         makeField('name', { type: 'string', required: true }),
       ]);
@@ -538,7 +538,7 @@ describe('generateCrudPages', () => {
 
       const listPage = pages.find((p) => p.page.key === 'sales.invoice')!;
       const col = listPage.page.widgets[0].children![0];
-      expect(col.props!.filterable).toBeUndefined();
+      expect(col.props!.filterable).toBe(true);
     });
   });
 });

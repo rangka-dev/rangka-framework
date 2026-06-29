@@ -10,13 +10,16 @@ import { usePageState, useStateVersion } from '../widgets/hooks/usePageState.js'
 import { useActionHandlers } from '../widgets/shell/useActionHandlers.js';
 import { dispatch as dispatchAction } from '../widgets/action/dispatcher.js';
 import { evaluateConditions } from '../widgets/condition/index.js';
+import { getFiltersForModel } from '../widgets/reactivity/variables.js';
+import { extractFilterFields } from './extractFilterFields.js';
+import { ShellFilterBar } from './ShellFilterBar.js';
 import type { NavigationTree, WidgetAction, Action } from '@rangka/shared';
 
 export function ShellLayout({ children }: { children: ReactNode }) {
   const { Layout } = useShellComponents();
   const router = useRouter();
   const currentPath = useRouterState({ select: (s) => s.location.pathname });
-  const { navigation, pages } = useMeta();
+  const { navigation, pages, models } = useMeta();
   const { activeApp, setActiveApp, clearActiveApp } = useApp();
   const { state } = useBootContext();
   const crumbs = useBreadcrumbs(currentPath, navigation, pages);
@@ -45,6 +48,57 @@ export function ShellLayout({ children }: { children: ReactNode }) {
       return evaluateConditions(act.visible, stateSnapshot);
     });
   }, [currentPage?.actions, pageState, stateVersion]);
+
+  const filterFields = useMemo(() => {
+    if (!currentPage || currentPage.layout !== 'full') return [];
+    return extractFilterFields(currentPage.widgets, models);
+  }, [currentPage, models]);
+
+  const filterOpen = useMemo(() => {
+    return Boolean(pageState.get('filterOpen'));
+  }, [pageState, stateVersion]);
+
+  const activeFilters = useMemo(() => {
+    if (!filterFields.length) return [];
+    const stateMap = new Map<string, unknown>();
+    for (const key of pageState.keys()) {
+      stateMap.set(key, pageState.get(key));
+    }
+    const model = filterFields[0]?.model ?? '';
+    return getFiltersForModel(stateMap, model);
+  }, [filterFields, pageState, stateVersion]);
+
+  const handleSetFilter = useCallback(
+    (field: string, operator: string, value: unknown) => {
+      const model = filterFields[0]?.model ?? '';
+      const key =
+        operator === 'eq' ? `$filter.${model}.${field}` : `$filter.${model}.${field}__${operator}`;
+      pageState.set(key, value);
+      pageState.set(`$page.${model}`, 1);
+    },
+    [filterFields, pageState],
+  );
+
+  const handleRemoveFilter = useCallback(
+    (field: string, operator: string) => {
+      const model = filterFields[0]?.model ?? '';
+      const key =
+        operator === 'eq' ? `$filter.${model}.${field}` : `$filter.${model}.${field}__${operator}`;
+      pageState.set(key, null);
+      pageState.set(`$page.${model}`, 1);
+    },
+    [filterFields, pageState],
+  );
+
+  const filterBar =
+    filterFields.length > 0 && filterOpen ? (
+      <ShellFilterBar
+        fields={filterFields}
+        activeFilters={activeFilters}
+        onSetFilter={handleSetFilter}
+        onRemoveFilter={handleRemoveFilter}
+      />
+    ) : null;
 
   useEffect(() => {
     const pathApp = currentPath.split('/').filter(Boolean)[0];
@@ -119,6 +173,7 @@ export function ShellLayout({ children }: { children: ReactNode }) {
       breadcrumbs={crumbs}
       currentPath={currentPath}
       pageActions={visibleActions}
+      filterBar={filterBar}
       onAction={handleAction}
       onNavigate={handleNavigate}
       onAppSwitch={handleAppSwitch}

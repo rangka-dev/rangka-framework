@@ -64,17 +64,30 @@ function generateListPage(model: ResolvedModel): PageDefinition | null {
   const basePath = `/${model.app}/${model.name}`;
   const peekFields = getPeekFields(model);
 
+  const hasFilterableColumns = columns.some((col) => col.props?.filterable);
+
   return {
     key: model.qualifiedName,
     label: pluralize(modelLabel),
     path: basePath,
     layout: 'full',
     actions: [
+      ...(hasFilterableColumns
+        ? [
+            {
+              type: 'button' as const,
+              label: 'Filter',
+              icon: 'funnel',
+              variant: 'secondary' as const,
+              action: action.setValue('$state.filterOpen', '{{!$state.filterOpen}}'),
+            },
+          ]
+        : []),
       {
-        type: 'button',
+        type: 'button' as const,
         label: 'New',
         icon: 'plus',
-        variant: 'primary',
+        variant: 'primary' as const,
         action: action.navigate(`${basePath}/new`),
       },
     ],
@@ -266,6 +279,7 @@ function getListColumns(model: ResolvedModel): import('@rangka/shared').WidgetNo
     if (field.name === 'id') continue;
     if (isHidden(field.config)) continue;
     if (SKIP_LIST_TYPES.has(field.config.type)) continue;
+    if (STAMP_FIELDS.has(field.name)) continue;
 
     if (field.name === model.naming || field.config.type === 'sequence') {
       prioritized.unshift(field);
@@ -321,12 +335,11 @@ function getPeekFields(model: ResolvedModel): import('@rangka/shared').WidgetNod
     if (isHidden(field.config)) continue;
     if (SKIP_LIST_TYPES.has(field.config.type)) continue;
     if (STAMP_FIELDS.has(field.name)) continue;
-    if (field.config.type === 'link' || field.config.type === 'dynamicLink') continue;
 
     if (field.name === model.naming || isRequired(field.config)) {
-      if (basic.length < 6) basic.push(field);
+      basic.push(field);
     } else {
-      if (details.length < 4) details.push(field);
+      details.push(field);
     }
   }
 
@@ -472,6 +485,11 @@ function getColumnWidth(field: ResolvedField): string | undefined {
       return '140px';
     case 'sequence':
       return '140px';
+    case 'link':
+    case 'dynamicLink':
+      return '160px';
+    case 'string':
+      return '180px';
     default:
       return undefined;
   }
@@ -479,6 +497,8 @@ function getColumnWidth(field: ResolvedField): string | undefined {
 
 function isFilterableType(type: string): boolean {
   return (
+    type === 'string' ||
+    type === 'text' ||
     type === 'enum' ||
     type === 'boolean' ||
     type === 'link' ||

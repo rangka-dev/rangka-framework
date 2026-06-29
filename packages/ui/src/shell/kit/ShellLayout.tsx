@@ -57,6 +57,7 @@ export function ShellLayout({
   breadcrumbs,
   currentPath,
   pageActions,
+  filterBar,
   onAction,
   onNavigate,
   onAppSwitch,
@@ -88,6 +89,7 @@ export function ShellLayout({
           currentPath={currentPath}
           sidebarSections={sidebarSections}
           pageActions={pageActions}
+          filterBar={filterBar}
           onAction={onAction}
           onNavigate={onNavigate}
           onAppSwitch={onAppSwitch}
@@ -124,6 +126,7 @@ function ShellLayoutInner({
   currentPath,
   sidebarSections,
   pageActions,
+  filterBar,
   onAction,
   onNavigate,
   onAppSwitch,
@@ -141,6 +144,7 @@ function ShellLayoutInner({
     items: Array<{ label: string; path: string; icon?: string }>;
   }>;
   pageActions: ShellLayoutProps['pageActions'];
+  filterBar: ShellLayoutProps['filterBar'];
   onAction: ShellLayoutProps['onAction'];
   onNavigate: (path: string) => void;
   onAppSwitch: (app: string) => void;
@@ -302,6 +306,8 @@ function ShellLayoutInner({
                 </Shell.Main.Actions>
               )}
             </Shell.Main.Header>
+
+            {filterBar}
 
             <Shell.Main.Body>{children}</Shell.Main.Body>
           </Shell.Main>

@@ -43,6 +43,7 @@ export interface ShellLayoutProps {
   breadcrumbs: { label: string; path?: string }[];
   currentPath: string;
   pageActions?: Action[];
+  filterBar?: ReactNode;
   onAction?: (action: WidgetAction) => void;
   onNavigate: (path: string) => void;
   onAppSwitch: (app: string) => void;

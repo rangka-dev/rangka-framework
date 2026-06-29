@@ -203,6 +203,7 @@ function buildModelMeta(
     result[name] = {
       qualifiedName: model.qualifiedName,
       label: model.label,
+      naming: model.naming ?? undefined,
       fields: model.fields.map((field) => resolvedFieldToMeta(field)),
     };
   }

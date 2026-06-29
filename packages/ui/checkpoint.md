@@ -2,6 +2,8 @@
 
 ## What's done
 
+### Inline filter (card layout)
+
 - `filterable: true` on columns works — `TableController` resolves field metadata
 - Inline `TableFilterBar` renders above table when `surface === 'card'` (default layout)
 - Filter operators utility (`packages/ui/src/data/filter-operators.ts`)
@@ -12,69 +14,34 @@
 - `SurfaceProvider` wraps pages based on layout in `buildRouteTree.tsx`
 - Same field+operator: second filter replaces first (API limitation — server only supports one value per field+operator)
 
-## What's NOT done — full layout page-level filter
+### Page-level filter (full layout)
 
-For `layout: 'full'` pages (auto CRUD list pages), the table does NOT render inline filters (`surface === 'page'`). The filter UI should appear at the page level: trigger button in `Shell.Main.Actions`, filter chips below the header.
-
-## The problem to solve
-
-The page-level filter bar needs to know which fields are filterable. This information lives in the table's column definitions deep in the widget tree. Two approaches were tried and abandoned:
-
-### Approach 1: Context bubble-up (FilterRegistryProvider) — ABANDONED
-
-- `FilterRegistryProvider` at shell level, `useRegisterFilters` in `TableController`
-- **Failed**: infinite render loops. Registry state changes cascade through the tree. The provider's `value` gets a new identity → consumers re-render → effects re-fire → setState → loop.
-- All code was removed.
-
-### Approach 2: Static widget tree scan — NOT YET IMPLEMENTED
-
-- During route rendering (in `PageRoute` or `ShellLayout`), traverse `page.widgets` to find column nodes with `props.filterable === true`
-- Resolve field metadata from `modelMeta` (available via `useMeta()` or boot payload)
-- Pass filter declarations + handlers to shell as props
-- No runtime context needed — it's a one-time read of the page definition
-
-## How to implement (recommended approach)
-
-1. In `buildRouteTree.tsx` or the client's `ShellLayout`, scan current page's widget tree:
-   - Find `type: 'table'` or `type: 'data'` nodes
-   - Find their column children with `props.filterable === true`
-   - Extract field names and resolve types/labels from `modelMeta`
-
-2. Pass the resolved `filterFields[]` to the shell `Layout` component (add a prop to `ShellLayoutProps`)
-
-3. The UI's `ShellLayout` renders:
-   - `FilterBar.Trigger` in `Shell.Main.Actions` (alongside page action buttons)
-   - `FilterBar.Content` (chips + popover) below `Shell.Main.Header` when expanded
-
-4. Filter handlers write to page state store — same mechanism as inline filters:
-   - `store.set('$filter.{model}.{field}__${op}', value)`
-   - `useModelQuery` picks it up automatically
-
-5. Auto CRUD generator already produces `layout: 'full'` list pages with filterable columns — no changes needed there.
+- `ShellLayout` scans current page's widget tree to extract filterable columns from table nodes
+- `extractFilterFields.ts` utility walks widget tree, resolves field metadata from `useMeta().models`
+- Filter trigger is a regular page action using `action.setValue('$state.filterOpen', '{{!$state.filterOpen}}')`
+- CRUD generator adds filter toggle action to list pages when filterable columns exist
+- `ShellLayout` watches `pageState.get('filterOpen')` — renders `ShellFilterBar` when truthy
+- `ShellFilterBar` uses `FilterBar.*` composition components from `@rangka/ui`
+- Filter bar rendered via `filterBar` prop on `ShellLayoutProps`, slotted between header and body
+- Filter handlers write to `$filter.*` keys in page state — same mechanism as inline filters
+- Active filters read from page state using `getFiltersForModel()`
 
 ## Key files
 
-| File                                                                  | Status                                                          |
-| --------------------------------------------------------------------- | --------------------------------------------------------------- |
-| `packages/ui/src/data/filter-operators.ts`                            | Done                                                            |
-| `packages/ui/src/data/__tests__/filter-operators.test.ts`             | Done                                                            |
-| `packages/ui/src/widgets/data/table-filter-bar.tsx`                   | Done                                                            |
-| `packages/ui/src/widgets/data/__tests__/table-filter-bar.api.test.ts` | Done                                                            |
-| `packages/ui/src/widgets/data/table-widget.tsx`                       | Done (inline filters gated on `surface === 'card'`)             |
-| `packages/client/src/widgets/controllers/TableController.tsx`         | Done (resolves filterFields, reads activeFilters, passes to UI) |
-| `packages/client/src/router/buildRouteTree.tsx`                       | Done (SurfaceProvider wraps pages)                              |
-| `packages/core/src/boot/crud-page-generator.ts`                       | Done (sets filterable on columns)                               |
-| `packages/core/src/boot/__tests__/crud-page-generator.test.ts`        | Done (5 new tests)                                              |
-| `packages/shared/src/types/ui-kit.ts`                                 | Reverted (no filter slots)                                      |
-| `packages/client/src/shell/ShellLayout.tsx`                           | Reverted (no filter registry)                                   |
-| `packages/ui/src/shell/kit/ShellLayout.tsx`                           | Reverted (no filter slots)                                      |
-
-## Files to clean up
-
-- `packages/client/src/widgets/filter/` directory was removed
-- `packages/client/src/shell/HeaderFilterBar.tsx` was removed
-- `packages/ui/src/widgets/data/header-filter-bar-widget.tsx` was removed
-
-## Uncommitted changes
-
-Run `git diff --stat` to see current working state. The inline filter for card layout is complete and working. The full-layout page-level filter is the remaining work.
+| File                                                                  | Status                                                            |
+| --------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `packages/ui/src/data/filter-operators.ts`                            | Done                                                              |
+| `packages/ui/src/data/__tests__/filter-operators.test.ts`             | Done                                                              |
+| `packages/ui/src/data/filter-bar.tsx`                                 | Done                                                              |
+| `packages/ui/src/widgets/data/table-filter-bar.tsx`                   | Done                                                              |
+| `packages/ui/src/widgets/data/__tests__/table-filter-bar.api.test.ts` | Done                                                              |
+| `packages/ui/src/widgets/data/table-widget.tsx`                       | Done (inline filters gated on `surface === 'card'`)               |
+| `packages/ui/src/shell/kit/ShellLayout.tsx`                           | Done (filterBar slot between header and body)                     |
+| `packages/client/src/widgets/controllers/TableController.tsx`         | Done (resolves filterFields, reads activeFilters, passes to UI)   |
+| `packages/client/src/router/buildRouteTree.tsx`                       | Done (SurfaceProvider wraps pages)                                |
+| `packages/client/src/shell/ShellLayout.tsx`                           | Done (filter field extraction, state watch, filter bar rendering) |
+| `packages/client/src/shell/extractFilterFields.ts`                    | Done (widget tree scan utility)                                   |
+| `packages/client/src/shell/ShellFilterBar.tsx`                        | Done (filter bar orchestration component)                         |
+| `packages/core/src/boot/crud-page-generator.ts`                       | Done (filter toggle action + filterable columns)                  |
+| `packages/core/src/boot/__tests__/crud-page-generator.test.ts`        | Done (5 filter tests)                                             |
+| `packages/shared/src/types/ui-kit.ts`                                 | Done (filterBar prop on ShellLayoutProps)                         |

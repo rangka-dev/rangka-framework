@@ -15,6 +15,7 @@ interface ColumnDef {
   options?: Array<{ value: string; label: string }>;
   currency?: string;
   precision?: number;
+  namingField?: string;
   children?: WidgetNode[];
   renderCell?: (row: Record<string, unknown>, index: number) => ReactNode;
 }
@@ -133,6 +134,7 @@ function toCellColumn(col: ColumnDef): CellColumn {
     options: col.options,
     currency: col.currency,
     precision: col.precision,
+    namingField: col.namingField,
   };
 }
 

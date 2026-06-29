@@ -10,6 +10,7 @@ export interface UseModelQueryOptions {
   pageSize?: number;
   enabled?: boolean;
   staticFilters?: Record<string, unknown>;
+  include?: string[];
 }
 
 export interface UseModelQueryResult {
@@ -48,7 +49,7 @@ function staticFiltersToParams(filters: Record<string, unknown>): Record<string,
 }
 
 export function useModelQuery(options: UseModelQueryOptions): UseModelQueryResult {
-  const { model, pageSize = 20, enabled = true, staticFilters } = options;
+  const { model, pageSize = 20, enabled = true, staticFilters, include } = options;
   const { filters, sort, page: storePage, search } = useDataQuery(model);
   const page = storePage ?? 1;
 
@@ -66,8 +67,11 @@ export function useModelQuery(options: UseModelQueryOptions): UseModelQueryResul
     if (search) {
       params.search = search;
     }
+    if (include && include.length > 0) {
+      params.include = include.join(',');
+    }
     return params;
-  }, [filters, sort, page, pageSize, search, staticFilters]);
+  }, [filters, sort, page, pageSize, search, staticFilters, include]);
 
   const path = modelToPath(model);
   const queryKey = ['model', model, queryParams];

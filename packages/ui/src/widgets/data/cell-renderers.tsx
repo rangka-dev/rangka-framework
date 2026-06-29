@@ -20,6 +20,7 @@ export interface CellColumn {
   options?: Array<{ value: string; label: string }>;
   currency?: string;
   precision?: number;
+  namingField?: string;
 }
 
 // --- Display renderers ---
@@ -79,6 +80,12 @@ export function renderDisplay(
       return <span className="tabular-nums">{formatDateTime(String(value))}</span>;
 
     case 'link': {
+      if (value && typeof value === 'object') {
+        const obj = value as Record<string, unknown>;
+        const namingField = col?.namingField ?? 'name';
+        const label = obj[namingField] ?? obj.name ?? obj.id ?? '';
+        return <span className="text-primary">{String(label)}</span>;
+      }
       const options = col?.options;
       const label = options?.find((o) => o.value === value)?.label ?? String(value);
       return <span className="text-primary">{label}</span>;
