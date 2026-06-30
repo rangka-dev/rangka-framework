@@ -223,7 +223,7 @@ const DatagridRow = forwardRef<HTMLDivElement, DatagridRowProps>(
       data-selected={selected || undefined}
       data-active={active || undefined}
       className={cn(
-        'absolute left-0 min-w-full grid border-b border-border/50',
+        'absolute top-0 left-0 min-w-full grid border-b border-border/50 will-change-transform',
         selected && 'bg-primary/5',
         active && 'bg-foreground/3',
         !selected && !active && 'hover:bg-foreground/3',
@@ -233,7 +233,7 @@ const DatagridRow = forwardRef<HTMLDivElement, DatagridRowProps>(
         ...style,
         gridTemplateColumns: gridTemplate,
         height: rowHeight,
-        transform: offset != null ? `translateY(${offset}px)` : undefined,
+        transform: offset != null ? `translate3d(0, ${offset}px, 0)` : undefined,
       }}
       {...props}
     />
