@@ -233,7 +233,7 @@ export function renderEditor(
 
 function formatDate(iso: string): string {
   try {
-    return formatFns(parseISO(iso), 'PPP');
+    return formatFns(parseISO(iso), 'MMM dd, yyyy');
   } catch {
     return iso;
   }
@@ -241,7 +241,7 @@ function formatDate(iso: string): string {
 
 function formatDateTime(iso: string): string {
   try {
-    return formatFns(parseISO(iso), 'PPP p');
+    return formatFns(parseISO(iso), 'MMM dd, yyyy h:mm a');
   } catch {
     return iso;
   }

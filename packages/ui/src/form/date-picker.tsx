@@ -63,7 +63,7 @@ const DatePickerRoot = forwardRef<HTMLDivElement, DatePickerProps>(
           >
             <Icon icon={CalendarIcon} size="sm" className="text-muted-foreground" />
             {dateValue ? (
-              <span>{format(dateValue, 'PPP')}</span>
+              <span>{format(dateValue, 'MMM dd, yyyy')}</span>
             ) : (
               <span className="text-muted-foreground">{placeholder}</span>
             )}

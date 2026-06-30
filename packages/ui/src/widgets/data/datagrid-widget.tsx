@@ -9,7 +9,7 @@ import type { WidgetComponentProps, WidgetNode } from '../types';
 interface ColumnDef {
   field: string;
   label: string;
-  width?: number;
+  width?: number | string;
   sortable?: boolean;
   editable?: boolean;
   fieldType?: string;
@@ -44,7 +44,12 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
 
   const gridTemplate = [
     ...(selectable ? ['40px'] : []),
-    ...columns.map((col) => `${col.width ?? 150}px`),
+    ...columns.map((col) => {
+      const w = col.width;
+      if (w == null) return '150px';
+      if (typeof w === 'string') return w.endsWith('px') ? w : `${w}px`;
+      return `${w}px`;
+    }),
   ].join(' ');
 
   const [activeCell, setActiveCell] = useState<CellRef | null>(null);
@@ -253,7 +258,7 @@ function resolveColumns(
       .map((node) => ({
         field: (node.props?.field as string) ?? '',
         label: (node.props?.label as string) ?? '',
-        width: node.props?.width as number | undefined,
+        width: node.props?.width as number | string | undefined,
         sortable: node.props?.sortable as boolean | undefined,
         editable: node.props?.editable as boolean | undefined,
         fieldType: node.props?.fieldType as string | undefined,

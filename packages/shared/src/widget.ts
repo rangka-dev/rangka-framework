@@ -116,6 +116,8 @@ interface DrawerOptions {
 }
 
 interface DatagridOptions {
+  sortable?: boolean;
+  pageSize?: number;
   visible?: Condition | Condition[];
   on?: Record<string, WidgetAction | WidgetAction[]>;
   props?: Record<string, unknown>;
@@ -392,15 +394,18 @@ export const widget = Object.assign(
     },
 
     datagrid(
-      field: string,
+      model: string,
       optsOrChildren: DatagridOptions | WidgetNode[],
       maybeChildren?: WidgetNode[],
     ): WidgetNode {
       const isOpts = !Array.isArray(optsOrChildren);
       const opts = isOpts ? optsOrChildren : undefined;
       const children = isOpts ? maybeChildren! : optsOrChildren;
-      const node: WidgetNode = { type: 'datagrid', bind: { field }, children };
-      if (opts?.props) node.props = opts.props;
+      const props: Record<string, unknown> = { ...opts?.props };
+      if (opts?.sortable) props.sortable = opts.sortable;
+      if (opts?.pageSize) props.pageSize = opts.pageSize;
+      const node: WidgetNode = { type: 'datagrid', source: { model }, children };
+      if (Object.keys(props).length > 0) node.props = props;
       if (opts?.visible) node.visible = opts.visible;
       if (opts?.on) node.on = opts.on;
       return node;

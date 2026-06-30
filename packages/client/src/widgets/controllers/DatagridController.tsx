@@ -1,23 +1,36 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
+import type { WidgetNode } from '@rangka/shared';
 import type { WidgetProps } from '../types.js';
 import { useWidgetComponent } from '../../ui/UIProvider.js';
 import { useWidgetContext } from '../hooks/useWidgetContext.js';
 import { usePageState } from '../hooks/usePageState.js';
 import { useModelQuery } from '../data/useModelQuery.js';
+import { useModelMeta } from '../../data/useModelMeta.js';
+import { useMeta } from '../../context/MetaContext.js';
 
 export function DatagridController({ props, on, childNodes }: WidgetProps) {
   const ctx = useWidgetContext();
   const store = usePageState();
   const Datagrid = useWidgetComponent('datagrid');
+  const { models } = useMeta();
 
   const model = ctx.model;
-  const pageSize = props.pageSize as number | undefined;
+  const columns = ctx.__columns ?? [];
+  const pageSize = (props.pageSize as number | undefined) ?? 50;
+
+  const { modelMeta } = useModelMeta(model);
+
+  const linkFields = useMemo(() => {
+    if (!modelMeta) return [];
+    return modelMeta.fields.filter((f) => f.relationship?.type === 'link').map((f) => f.name);
+  }, [modelMeta]);
 
   const source = useModelQuery({
     model: model || '',
-    pageSize: pageSize ?? 50,
+    pageSize,
     enabled: Boolean(model),
     staticFilters: ctx.sourceFilters,
+    include: linkFields.length > 0 ? linkFields : undefined,
   });
 
   const records = source.data ?? [];
@@ -56,9 +69,38 @@ export function DatagridController({ props, on, childNodes }: WidgetProps) {
     ? { field: source.sort[0].field, direction: source.sort[0].direction }
     : undefined;
 
+  const resolvedColumns = columns.map((col: WidgetNode) => {
+    const field = col.bind?.field ?? '';
+    const fieldDef = modelMeta?.fields.find((f) => f.name === field);
+    const fieldType = (col.props?.fieldType as string | undefined) ?? fieldDef?.type;
+    const options = fieldDef?.options
+      ? fieldDef.options.map((o) => ({ value: String(o), label: String(o) }))
+      : undefined;
+
+    let namingField: string | undefined;
+    if (fieldType === 'link' && fieldDef?.relationship?.model) {
+      const relatedMeta = models[fieldDef.relationship.model];
+      namingField = relatedMeta?.naming ?? 'name';
+    }
+
+    return {
+      field,
+      label: (col.props?.label as string) ?? fieldDef?.label ?? field,
+      width: col.props?.width as number | string | undefined,
+      sortable: col.props?.sortable as boolean | undefined,
+      editable: col.props?.editable as boolean | undefined,
+      fieldType,
+      options,
+      currency: col.props?.currency as string | undefined,
+      precision: col.props?.precision as number | undefined,
+      namingField,
+    };
+  });
+
   const datagridWidgetProps: WidgetProps = {
     props: {
       ...props,
+      columns: resolvedColumns,
       loading: source.isLoading,
       fetching: source.isFetching && records.length > 0,
       page: source.page,
