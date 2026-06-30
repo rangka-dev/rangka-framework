@@ -1,7 +1,6 @@
 import {
   forwardRef,
   useState,
-  useCallback,
   useRef,
   useEffect,
   type ComponentProps,
@@ -11,7 +10,6 @@ import { createPortal } from 'react-dom';
 import { ChevronDown, Search } from 'lucide-react';
 import { cn } from '../../lib/cn';
 import { Icon } from '../../primitives/icon';
-import { useClickOutside } from '../../lib/use-click-outside';
 
 // --- CellSelect (Root) ---
 
@@ -50,10 +48,20 @@ export const CellSelect = forwardRef<HTMLDivElement, CellSelectProps>(
     const [open, setOpen] = useState(defaultOpen);
     const [search, setSearch] = useState('');
     const triggerRef = useRef<HTMLButtonElement>(null);
-    const containerRef = useClickOutside<HTMLDivElement>(
-      useCallback(() => setOpen(false), []),
-      open,
-    );
+    const containerRef = useRef<HTMLDivElement>(null);
+    const portalRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+      if (!open) return;
+      const handleMouseDown = (e: MouseEvent) => {
+        const target = e.target as Node;
+        if (containerRef.current?.contains(target)) return;
+        if (portalRef.current?.contains(target)) return;
+        setOpen(false);
+      };
+      document.addEventListener('mousedown', handleMouseDown);
+      return () => document.removeEventListener('mousedown', handleMouseDown);
+    }, [open]);
 
     const filtered = searchable
       ? options.filter((o) => o.label.toLowerCase().includes(search.toLowerCase()))
@@ -84,7 +92,7 @@ export const CellSelect = forwardRef<HTMLDivElement, CellSelectProps>(
           <Icon icon={ChevronDown} size="sm" className="shrink-0 text-muted-foreground" />
         </button>
         {open && (
-          <CellSelectDropdown anchorRef={triggerRef}>
+          <CellSelectDropdown anchorRef={triggerRef} portalRef={portalRef}>
             {searchable && (
               <div className="flex items-center gap-2 border-b border-border-subtle px-3 py-2">
                 <Icon icon={Search} size="sm" className="shrink-0 text-foreground/50" />
@@ -133,9 +141,11 @@ CellSelect.displayName = 'CellSelect';
 
 function CellSelectDropdown({
   anchorRef,
+  portalRef,
   children,
 }: {
   anchorRef: React.RefObject<HTMLElement | null>;
+  portalRef: React.RefObject<HTMLDivElement | null>;
   children: ReactNode;
 }) {
   const [pos, setPos] = useState<{ top: number; left: number; width: number } | null>(null);
@@ -151,6 +161,7 @@ function CellSelectDropdown({
 
   return createPortal(
     <div
+      ref={portalRef}
       className="fixed z-50 rounded-md border border-border bg-surface shadow-md"
       style={{ top: pos.top, left: pos.left, width: Math.max(pos.width, 180) }}
     >
