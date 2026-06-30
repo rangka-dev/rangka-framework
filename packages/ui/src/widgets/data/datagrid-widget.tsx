@@ -116,9 +116,9 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
   );
 
   // Grid templates
-  const selectCol = selectable ? '40px ' : '';
-  const buildGridTemplate = (cols: ColumnDef[]) =>
-    selectCol + cols.map((col) => `${colState.getWidth(col.field)}px`).join(' ');
+  const buildGridTemplate = (cols: ColumnDef[], includeSelect = false) =>
+    (includeSelect ? '40px ' : '') +
+    cols.map((col) => `${colState.getWidth(col.field)}px`).join(' ');
 
   // Edit state
   const [activeCell, setActiveCell] = useState<CellRef | null>(null);
@@ -307,10 +307,14 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
     ));
 
   // --- Render a section (header + body) ---
-  const renderSection = (sectionColumns: ColumnDef[], gridTemplate: string) => (
+  const renderSection = (
+    sectionColumns: ColumnDef[],
+    gridTemplate: string,
+    showSelect: boolean,
+  ) => (
     <>
       <Datagrid.Header gridTemplate={gridTemplate}>
-        {selectable && (
+        {showSelect && (
           <Datagrid.SelectHeader
             allSelected={selectedRows.length === records.length && records.length > 0}
             indeterminate={selectedRows.length > 0 && selectedRows.length < records.length}
@@ -338,7 +342,7 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
               rowHeight={rowHeight}
               offset={i * rowHeight}
             >
-              {selectable && <Datagrid.Cell />}
+              {showSelect && <Datagrid.Cell />}
               {sectionColumns.map((col) => (
                 <Datagrid.Cell key={col.field}>
                   <span className="h-4 w-3/4 animate-pulse rounded bg-foreground/10" />
@@ -367,7 +371,7 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
                 selected={isSelected}
                 onClick={() => on.rowClick?.(row)}
               >
-                {selectable && (
+                {showSelect && (
                   <Datagrid.SelectCell
                     rowNumber={idx + 1}
                     selected={isSelected}
@@ -403,27 +407,43 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
                   showShadow={scrollShadow.left}
                   style={{ width: colState.pinnedLeftWidth + (selectable ? 40 : 0) }}
                 >
-                  {renderSection(pinnedLeftColumns, buildGridTemplate(pinnedLeftColumns))}
+                  {renderSection(
+                    pinnedLeftColumns,
+                    buildGridTemplate(pinnedLeftColumns, selectable),
+                    selectable,
+                  )}
                 </Datagrid.PinnedSection>
               )}
               <Datagrid.ScrollableSection
                 ref={horizontalScrollRef}
                 onScroll={handleHorizontalScroll}
               >
-                {renderSection(centerColumns, buildGridTemplate(centerColumns))}
+                {renderSection(
+                  centerColumns,
+                  buildGridTemplate(centerColumns, !pinnedLeftColumns.length && selectable),
+                  !pinnedLeftColumns.length && selectable,
+                )}
               </Datagrid.ScrollableSection>
               {pinnedRightColumns.length > 0 && (
                 <Datagrid.PinnedSection
                   side="right"
                   showShadow={scrollShadow.right}
-                  style={{ width: colState.pinnedRightWidth + (selectable ? 40 : 0) }}
+                  style={{ width: colState.pinnedRightWidth }}
                 >
-                  {renderSection(pinnedRightColumns, buildGridTemplate(pinnedRightColumns))}
+                  {renderSection(
+                    pinnedRightColumns,
+                    buildGridTemplate(pinnedRightColumns, false),
+                    false,
+                  )}
                 </Datagrid.PinnedSection>
               )}
             </div>
           ) : (
-            renderSection(colState.orderedColumns, buildGridTemplate(colState.orderedColumns))
+            renderSection(
+              colState.orderedColumns,
+              buildGridTemplate(colState.orderedColumns, selectable),
+              selectable,
+            )
           )}
         </Datagrid.ScrollArea>
 

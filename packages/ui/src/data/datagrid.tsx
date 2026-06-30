@@ -75,7 +75,7 @@ const DatagridHeader = forwardRef<HTMLDivElement, DatagridHeaderProps>(
       ref={ref}
       role="row"
       data-slot="datagrid-header"
-      className={cn('sticky top-0 z-10 grid border-b border-border bg-card', className)}
+      className={cn('sticky top-0 z-20 grid border-b border-border bg-card', className)}
       style={{ ...style, gridTemplateColumns: gridTemplate }}
       {...props}
     />
@@ -417,7 +417,7 @@ const DatagridPinnedSection = forwardRef<HTMLDivElement, DatagridPinnedSectionPr
       data-slot="datagrid-pinned-section"
       data-side={side}
       className={cn(
-        'flex flex-col flex-shrink-0 z-20 bg-card',
+        'flex flex-col flex-shrink-0 relative z-20 bg-card overflow-visible',
         side === 'left' && showShadow && 'shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]',
         side === 'right' && showShadow && 'shadow-[-2px_0_4px_-2px_rgba(0,0,0,0.1)]',
         className,
@@ -438,7 +438,7 @@ const DatagridScrollableSection = forwardRef<HTMLDivElement, DatagridScrollableS
     <div
       ref={ref}
       data-slot="datagrid-scrollable-section"
-      className={cn('flex flex-col flex-1 min-w-0 overflow-x-auto', className)}
+      className={cn('flex flex-col flex-1 min-w-0 overflow-x-auto relative z-10', className)}
       {...props}
     />
   ),
