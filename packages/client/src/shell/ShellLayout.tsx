@@ -152,7 +152,7 @@ export function ShellLayout({ children }: { children: ReactNode }) {
         return;
       }
       const actionCtx = {
-        widgetContext: { record: {}, model: '', mode: 'view' as const },
+        widgetContext: { record: {}, model: '', mode: 'record' as const },
         state: pageState,
       };
       dispatchAction(action, actionCtx, handlers);

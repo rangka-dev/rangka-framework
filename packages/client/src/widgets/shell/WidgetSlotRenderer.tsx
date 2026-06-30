@@ -11,7 +11,7 @@ export interface WidgetSlotRendererProps {
   nodes: WidgetNode[];
   record?: Record<string, unknown>;
   model?: string;
-  mode?: 'view' | 'edit';
+  mode?: 'create' | 'record';
   fieldMeta?: Record<string, FieldMeta>;
   sourceQueryKey?: unknown[];
   onRecordChange?: (record: Record<string, unknown>) => void;
@@ -21,7 +21,7 @@ export function WidgetSlotRenderer({
   nodes,
   record: initialRecord,
   model,
-  mode = 'view',
+  mode = 'record',
   fieldMeta,
   sourceQueryKey,
   onRecordChange,

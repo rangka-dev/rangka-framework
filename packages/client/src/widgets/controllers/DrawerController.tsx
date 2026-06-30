@@ -27,7 +27,7 @@ export function DrawerController({ props, on, children }: WidgetProps) {
         setValue: (val) => handleOpenChange(val as boolean),
       }}
       on={{ close: () => handleOpenChange(false) }}
-      context={{ record: {}, model: '', mode: 'view' }}
+      context={{ record: {}, model: '', mode: 'record' }}
     >
       {children}
     </Drawer>

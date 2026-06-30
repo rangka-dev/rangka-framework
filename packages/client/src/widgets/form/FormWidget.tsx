@@ -9,7 +9,7 @@ export function FormWidget({ bind, on, children }: WidgetProps) {
   const id = bind.id ?? undefined;
 
   const handleSuccess = useCallback(
-    (record: Record<string, unknown>, mode: 'create' | 'edit') => {
+    (record: Record<string, unknown>, mode: 'create' | 'record') => {
       on.success?.({ record, mode });
     },
     [on],

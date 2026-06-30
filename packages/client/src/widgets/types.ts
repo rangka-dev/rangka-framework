@@ -20,7 +20,7 @@ export interface WidgetProps {
   context: {
     record: Record<string, unknown>;
     model: string;
-    mode: 'view' | 'edit';
+    mode: 'create' | 'record';
     index?: number;
   };
   childNodes?: WidgetNode[];

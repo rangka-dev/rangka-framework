@@ -2,7 +2,7 @@ import { createContext, useContext } from 'react';
 import type { FieldMeta } from '../binding/resolver.js';
 
 export interface FormContextValue {
-  mode: 'create' | 'edit' | 'view';
+  mode: 'create' | 'record';
   values: Record<string, unknown>;
   errors: Record<string, string>;
   dirty: Set<string>;
@@ -18,6 +18,7 @@ export interface FormContextValue {
   submit(): Promise<void>;
   reset(): void;
   isDirty(): boolean;
+  saveField(field: string, value: unknown): Promise<void>;
 }
 
 const FormContextReact = createContext<FormContextValue | null>(null);

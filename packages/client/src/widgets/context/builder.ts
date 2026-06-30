@@ -54,7 +54,7 @@ export function buildRowContext(
 export function createRootContext(
   record: Record<string, unknown>,
   model: string,
-  mode: 'view' | 'edit' = 'view',
+  mode: 'create' | 'record' = 'record',
 ): WidgetContext {
   return {
     record,

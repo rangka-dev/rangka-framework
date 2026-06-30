@@ -7,11 +7,11 @@ import type { UseFormValidationResult } from './useFormValidation.js';
 
 export interface UseFormSubmitOptions {
   model: string;
-  mode: 'create' | 'edit' | 'view';
+  mode: 'create' | 'record';
   id: string | null | undefined;
   formState: UseFormStateResult;
   validation: UseFormValidationResult;
-  onSuccess?: (record: Record<string, unknown>, mode: 'create' | 'edit') => void;
+  onSuccess?: (record: Record<string, unknown>, mode: 'create' | 'record') => void;
   onError?: (errors: Record<string, string>, message: string) => void;
 }
 
@@ -24,15 +24,12 @@ export function useFormSubmit(options: UseFormSubmitOptions): UseFormSubmitResul
   const queryClient = useQueryClient();
 
   const submit = useCallback(async () => {
-    if (mode === 'view') return;
-
     const { state, setErrors, setSubmitting, getDirtyFields, initValues } = formState;
     const { values } = state;
 
     const errors = validation.validateAll(values);
     if (Object.keys(errors).length > 0) {
       setErrors(errors);
-      // Mark all fields as touched so errors display
       for (const field of Object.keys(errors)) {
         formState.setTouched(field);
       }
@@ -45,7 +42,7 @@ export function useFormSubmit(options: UseFormSubmitOptions): UseFormSubmitResul
       const basePath = modelToPath(model);
       let payload: Record<string, unknown>;
 
-      if (mode === 'edit') {
+      if (mode === 'record') {
         const dirty = getDirtyFields();
         payload = {};
         for (const field of dirty) {
@@ -60,8 +57,8 @@ export function useFormSubmit(options: UseFormSubmitOptions): UseFormSubmitResul
         }
       }
 
-      const url = mode === 'edit' ? `${basePath}/${id}` : basePath;
-      const method = mode === 'edit' ? 'PUT' : 'POST';
+      const url = mode === 'record' ? `${basePath}/${id}` : basePath;
+      const method = mode === 'record' ? 'PUT' : 'POST';
 
       const response = await apiClient(url, {
         method,

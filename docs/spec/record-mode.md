@@ -2,6 +2,8 @@
 
 The form widget gains a new rendering mode for existing records. Instead of a global view/edit toggle, each field renders as a read-only display and transitions to an inline editor on click. Fields save independently on blur.
 
+No changes to the widget DSL or WidgetProps contract. The change is internal to the UI layer.
+
 ## Problem
 
 The current edit page uses a global `$state.editing` toggle that switches all fields between view and edit simultaneously. This creates two problems:
@@ -13,40 +15,35 @@ Business app users spend most of their time reviewing records and making small c
 
 ## Solution
 
-Replace the three form modes (`create | edit | view`) with two:
+When a form has an `id` binding (existing record), input widgets render in record mode. When a form has no `id` (new record), input widgets render in create mode. The form already derives mode from `id` presence. The only change is how the UI layer responds to that mode.
 
 | Mode     | When          | Rendering                                          | Save behavior          |
 | -------- | ------------- | -------------------------------------------------- | ---------------------- |
 | `create` | No record ID  | Traditional form (label above input, all editable) | Batch submit           |
 | `record` | Has record ID | Per-field display (label \| value), click to edit  | Per-field save on blur |
 
-The form auto-detects mode from binding. If `bind.id` is present the form loads a record and renders in record mode. If absent it renders in create mode.
-
 ---
 
-## 1. Public API
+## 1. No API changes
+
+The widget DSL stays exactly the same. These page definitions work today and will work with record mode. No new props, no new widget types.
 
 ### Record mode (existing record)
 
 ```typescript
 widget.form('sales.order', { id: '$route.id' }, [
-  widget.grid({ columns: 2 }, [
-    widget.input('customer_name'),
-    widget.select('status'),
-    widget.money('total'),
-    widget.datepicker('due_date'),
-  ]),
-  widget.section('Line Items', [
-    widget.datagrid('items', [
-      widget.column('product_id'),
-      widget.column('qty'),
-      widget.column('rate'),
+  widget.section('General', [
+    widget.grid({ columns: 2 }, [
+      widget.input('customer_name'),
+      widget.select('status'),
+      widget.money('total'),
+      widget.datepicker('due_date'),
     ]),
   ]),
 ]);
 ```
 
-No mode prop needed. The form sees `id: '$route.id'` and renders in record mode. Each field displays as `label | formatted value`. Clicking a field opens it for editing. Blur or Enter saves. Escape cancels.
+The form sees `id: '$route.id'` and passes `mode: 'record'` to children via context. Each input widget renders as `label | formatted value`. Clicking a field opens its editor. Blur or Enter saves. Escape cancels.
 
 ### Create mode (new record)
 
@@ -57,18 +54,20 @@ widget.form(
     on: { success: action.navigate('/sales/orders/{{id}}') },
   },
   [
-    widget.grid({ columns: 2 }, [
-      widget.input('customer_name'),
-      widget.select('status'),
-      widget.money('total'),
-      widget.datepicker('due_date'),
+    widget.section('General', [
+      widget.grid({ columns: 2 }, [
+        widget.input('customer_name'),
+        widget.select('status'),
+        widget.money('total'),
+        widget.datepicker('due_date'),
+      ]),
     ]),
     widget.button('Save', { variant: 'primary', on: { click: action.submit() } }),
   ],
 );
 ```
 
-No ID means create mode. All fields render as traditional inputs with labels above. A submit button triggers batch save.
+No ID means create mode. All fields render as traditional inputs with labels above. Unchanged from today.
 
 ### Drawer peek (from list page)
 
@@ -83,11 +82,9 @@ widget.drawer(
   [
     widget.form('sales.order', { id: '$state.selectedId' }, [
       widget.section('Overview', [
-        widget.grid({ columns: 2 }, [
-          widget.input('customer_name'),
-          widget.select('status'),
-          widget.money('total'),
-        ]),
+        widget.input('customer_name'),
+        widget.select('status'),
+        widget.money('total'),
       ]),
       widget.group({ direction: 'row', gap: 'sm', justify: 'end' }, [
         widget.button('Open', {
@@ -101,77 +98,113 @@ widget.drawer(
 );
 ```
 
-Same form widget, same behavior. The drawer provides the container. Fields inside are per-field editable.
+Same form widget. The drawer provides the container. Fields render in record mode because the form has an `id`.
 
 ---
 
 ## 2. Mode derivation
 
-```
-bind.id present → record mode
-bind.id absent  → create mode
+The FormProvider already derives mode:
+
+```typescript
+// Current (unchanged)
+const mode = modeProp ?? (id ? 'edit' : 'create');
 ```
 
-The `mode` prop on FormProvider is removed from public API. Internal mode is derived from binding only. Permissions may further restrict: if the user lacks write permission on a field, that field stays read-only (no click-to-edit).
+The change: rename `'edit'` to `'record'` internally. For backward compat, if someone passes `mode: 'edit'` or `mode: 'view'`, both map to `'record'`.
+
+```typescript
+// New derivation
+const mode = deriveMode(modeProp, id);
+
+function deriveMode(modeProp, id) {
+  if (!id) return 'create';
+  if (modeProp === 'create') return 'create';
+  return 'record'; // 'edit', 'view', or undefined all become 'record'
+}
+```
+
+The `mode` is exposed to child widgets via `FormContext.mode` (already exists). Input widgets read it to decide their render path.
 
 ---
 
 ## 3. Input widget rendering
 
-Every input widget gains two render paths. The widget checks `formContext.mode` to decide which path to use.
+Each input widget gains a conditional at the top of its render function. No new components, no new props, no new interfaces.
 
-### Record mode render (default state)
+```typescript
+// Example: InputWidget
+export function InputWidget({ props, bind, on, context }: WidgetComponentProps) {
+  // Record mode: render compact display with click-to-edit
+  if (context.mode === 'record') {
+    return <RecordFieldRender /* ... */ />;
+  }
+
+  // Create mode: render traditional input (existing code, unchanged)
+  return (
+    <Field>
+      <Field.Label>{label}</Field.Label>
+      <Input /* ... */ />
+    </Field>
+  );
+}
+```
+
+The `RecordFieldRender` is an internal helper (not exported, not a widget). It handles the display/edit toggle for that specific field type.
+
+### Record mode field layout
+
+Each field renders as a fixed-height row (36px):
 
 ```
 ┌──────────────────────────────────────────┐
-│ Status           Active                  │  ← label | formatted value
+│ [icon] Label          Formatted Value    │
 └──────────────────────────────────────────┘
 ```
 
-Clicking the value area transitions to editing:
+- Label area: fixed 140px width, field type icon + label text
+- Value area: flex-1, formatted value with font-medium
+- Row height fixed at 36px. Editors that need more space (date picker, select dropdown) render as floating popovers below the row.
+- Hover shows subtle background + pencil icon on the right
+- Click opens the editor
 
-```
-┌──────────────────────────────────────────┐
-│ Status           [Active ▾]              │  ← label | inline editor
-└──────────────────────────────────────────┘
-```
+### Editor types by field
 
-### Create mode render
+| Widget                | Inline editor                     | Popover editor                  |
+| --------------------- | --------------------------------- | ------------------------------- |
+| `input` (string)      | Text input in-row                 | —                               |
+| `input` (int/decimal) | Number input in-row               | —                               |
+| `money`               | Number input with $ prefix in-row | —                               |
+| `select` / enum       | —                                 | Dropdown list below row         |
+| `datepicker`          | —                                 | Calendar below row              |
+| `datetime`            | —                                 | Calendar + time input below row |
+| `checkbox`            | Toggles directly on click         | —                               |
+| `link`                | —                                 | Searchable dropdown below row   |
+| `textarea`            | Text input in-row (single line)   | —                               |
+| `json`                | —                                 | Code editor popover             |
+| `code`                | —                                 | Code editor popover             |
+| `attachment`          | —                                 | File picker popover             |
 
-```
-┌──────────────────────────────────────────┐
-│ Status                                   │
-│ ┌──────────────────────────────────────┐ │
-│ │ Active ▾                             │ │  ← label above, full-width input
-│ └──────────────────────────────────────┘ │
-└──────────────────────────────────────────┘
-```
+Inline editors render inside the 36px row without changing height. Popover editors float absolutely below the row.
 
 ### Display formatting by field type
 
-| Widget            | Display format                                       | Editor              |
-| ----------------- | ---------------------------------------------------- | ------------------- |
-| `input` (string)  | Plain text, empty shows `—`                          | Text input          |
-| `input` (int)     | Formatted integer                                    | Number input        |
-| `input` (decimal) | Formatted decimal                                    | Number input        |
-| `money`           | Currency formatted (e.g., `$1,234.56`)               | Money input         |
-| `select` / enum   | Option label (not value)                             | Dropdown            |
-| `datepicker`      | Formatted date (e.g., `Jun 30, 2026`)                | Date picker         |
-| `datetime`        | Formatted datetime (e.g., `Jun 30, 2026 3:45 PM`)    | DateTime picker     |
-| `checkbox`        | Toggle switch (always interactive, no click-to-edit) | Toggle              |
-| `link`            | Related record display name                          | Link search/select  |
-| `textarea`        | Truncated text, full on hover/click                  | Expandable textarea |
-| `json`            | `{...}` indicator or key count                       | JSON editor         |
-| `code`            | Truncated preview                                    | Code editor         |
-| `attachment`      | Filename or thumbnail                                | File picker         |
-
-### Empty state
-
-Fields with no value display `—` (em dash character) in muted text. Clicking still opens the editor.
+| Field type | Display format                                    | Empty state             |
+| ---------- | ------------------------------------------------- | ----------------------- |
+| string     | Plain text                                        | "Empty" (italic, muted) |
+| int        | Formatted integer with locale separators          | "Empty"                 |
+| decimal    | Formatted with 2 decimal places                   | "Empty"                 |
+| money      | Currency formatted (e.g., `$1,234.56`)            | "Empty"                 |
+| enum       | Badge with option label                           | "Empty"                 |
+| date       | Formatted date (e.g., `Jun 30, 2026`)             | "Empty"                 |
+| datetime   | Formatted datetime (e.g., `Jun 30, 2026 3:45 PM`) | "Empty"                 |
+| boolean    | Checkbox (always interactive)                     | Unchecked               |
+| link       | Record display name in primary color              | "Empty"                 |
+| textarea   | Single-line truncated text                        | "Empty"                 |
 
 ### Read-only fields
 
-Fields where `bind.meta.readOnly === true` or the user lacks field-level write permission render in display mode without the click-to-edit affordance. No hover highlight, no cursor change.
+Fields where `bind.meta.readOnly === true` render in display mode without click-to-edit. No hover highlight, no cursor change, no pencil icon.
 
 ---
 
@@ -190,7 +223,7 @@ DISPLAY → (click) → EDITING → (blur/Enter) → SAVING → (success) → DI
 ### Behavior
 
 1. **Click**: Field transitions to editing. The current value populates the editor. Focus moves to the input.
-2. **Blur or Enter**: Field submits a PATCH request with only the changed field. Shows a brief saving indicator.
+2. **Blur or Enter**: Field submits a PATCH request with only the changed field. Shows a brief saving indicator (opacity fade).
 3. **Escape**: Reverts to the original value. Returns to display mode.
 4. **Error**: Field stays in editing mode. Shows validation error below the input.
 5. **Concurrent edits**: Multiple fields can be in editing state simultaneously. Each saves independently.
@@ -200,7 +233,7 @@ DISPLAY → (click) → EDITING → (blur/Enter) → SAVING → (success) → DI
 Per-field save uses the same endpoint as datagrid cell edit:
 
 ```
-PATCH /api/{module}/{model}/{id}
+PUT /api/{module}/{model}/{id}
 Body: { "field_name": "new_value" }
 ```
 
@@ -214,49 +247,29 @@ The display value updates immediately on blur. If the server rejects the change,
 
 ## 5. FormProvider changes
 
-### Current interface
+### Internal changes only
+
+The FormProvider interface does not change for app developers. Internally:
+
+1. Mode derivation maps `'edit'` and `'view'` to `'record'` when `id` is present.
+2. A new internal `saveField(field, value)` method on FormContext handles per-field PATCH.
+3. Input widgets call `saveField` on blur in record mode instead of the batch `submit`.
 
 ```typescript
-interface FormProviderProps {
-  model: string;
-  id?: string | null;
-  mode?: 'create' | 'edit' | 'view';
-  onSuccess?: (record, mode) => void;
-  onError?: (errors, message) => void;
-  children: ReactNode;
-}
-```
-
-### New interface
-
-```typescript
-interface FormProviderProps {
-  model: string;
-  id?: string | null;
-  onSuccess?: (record) => void;
-  onError?: (errors, message) => void;
-  onFieldSave?: (field: string, value: unknown) => void;
-  children: ReactNode;
-}
-```
-
-Changes:
-
-- `mode` prop removed. Derived from `id` presence.
-- `onFieldSave` callback added for per-field save notifications.
-- Internal mode is `'create' | 'record'`.
-
-### FormContext changes
-
-```typescript
+// Added to FormContextValue (internal, not public API)
 interface FormContextValue {
   mode: 'create' | 'record';
-  // ... existing fields (values, errors, touched, dirty, submitting)
-  saveField: (field: string, value: unknown) => Promise<void>; // new
+  // ... existing fields unchanged
+  saveField: (field: string, value: unknown) => Promise<void>;
 }
 ```
 
-The `saveField` method handles the PATCH call, optimistic update, and error handling for a single field. Input widgets call this on blur instead of the batch `submit`.
+The `saveField` method:
+
+- Updates the local form values optimistically
+- Calls `PUT /api/{module}/{model}/{id}` with the single field
+- On success: value persists
+- On error: reverts value, returns error string for the field
 
 ---
 
@@ -264,9 +277,7 @@ The `saveField` method handles the PATCH call, optimistic update, and error hand
 
 ### List page
 
-No change. Already generates `widget.table` + `widget.drawer` with peek fields.
-
-The drawer changes from using `widget.data` (view only) to `widget.form` (record mode, per-field editable):
+The drawer changes from `widget.data` to `widget.form`:
 
 ```typescript
 // Before
@@ -276,20 +287,22 @@ widget.data(model.qualifiedName, { id: '$state.selectedId' }, [...peekFields]);
 widget.form(model.qualifiedName, { id: '$state.selectedId' }, [...peekFields]);
 ```
 
+This makes drawer fields editable instead of just display-only.
+
 ### Create page
 
-No change. Form with no ID renders in create mode as before.
+No change.
 
 ### Edit page (becomes record page)
 
-Simplifies significantly. Drops the edit/cancel/save buttons from page actions. Drops the `mode: '$state.editing'` prop.
+Drops the edit/cancel/save buttons and the `mode` prop:
 
 ```typescript
 // Before
 actions: [
-  { label: 'Edit', visible: { field: '$state.editing', operator: 'neq', value: true }, action: action.setValue('$state.editing', true) },
-  { label: 'Cancel', visible: { field: '$state.editing', operator: 'eq', value: true }, action: action.sequence([action.reset(), action.setValue('$state.editing', false)]) },
-  { label: 'Save', visible: { field: '$state.editing', operator: 'eq', value: true }, action: action.submit() },
+  { label: 'Edit', action: action.setValue('$state.editing', true) },
+  { label: 'Cancel', action: action.sequence([action.reset(), action.setValue('$state.editing', false)]) },
+  { label: 'Save', action: action.submit() },
 ],
 widgets: [widget.form(model, { id: '$route.id', mode: '$state.editing' }, sections)]
 
@@ -300,118 +313,123 @@ actions: [
 widgets: [widget.form(model, { id: '$route.id' }, sections)]
 ```
 
----
+### Record page header
 
-## 7. Layout in record mode
+The generated page includes a record header showing:
 
-Record mode fields render in a 2-column grid by default. Each row is one field with label on the left and value on the right.
+- **Title**: the model's naming field value (e.g., "Acme Corp")
+- **Subtitle**: sequence field value if the model has one (e.g., "ORD-00142")
 
-```
-┌─────────────────────────────────────────────────────┐
-│ Customer Name      Acme Corp                        │
-├─────────────────────────────────────────────────────┤
-│ Status             Active                           │
-├─────────────────────────────────────────────────────┤
-│ Total              $12,500.00                       │
-├─────────────────────────────────────────────────────┤
-│ Due Date           Jun 30, 2026                     │
-└─────────────────────────────────────────────────────┘
-```
-
-The label column takes fixed width (~40%). The value column fills remaining space. Rows have subtle bottom borders for visual separation.
-
-This layout is determined by the Field component, not the grid widget. A `widget.grid({ columns: 2 })` wrapper in create mode gives a 2-column form. In record mode, each field internally renders as a `label | value` row regardless of grid configuration.
+No badge, no concatenated fields. The fields themselves are visible in the sections below.
 
 ---
 
-## 8. Sections in record mode
+## 7. Layout behavior
 
-Section widgets render with a collapsible header. Fields inside render as per-field editable rows. The section title acts as a group label (like Twenty's General, Business, Contact groups).
+Layout widgets (`grid`, `section`, `group`, `stack`) are unchanged. They render the same structure regardless of mode. The difference is that input widgets inside them are shorter in record mode (36px fixed height vs ~64px with label above).
 
-```
-┌─────────────────────────────────────────────────────┐
-│ ▼ Overview                                          │
-├─────────────────────────────────────────────────────┤
-│ Customer Name      Acme Corp                        │
-│ Status             Active                           │
-│ Total              $12,500.00                       │
-├─────────────────────────────────────────────────────┤
-│ ▶ System (collapsed)                                │
-└─────────────────────────────────────────────────────┘
-```
+A `widget.grid({ columns: 2 })` in record mode creates a 2-column grid where each cell is a compact field row. In create mode the same grid creates a 2-column form with full inputs.
+
+The section widget renders with a collapsible header. In record mode it acts as a visual group separator.
 
 ---
 
-## 9. Permissions integration
+## 8. Permissions integration
 
 Field-level permissions control editability in record mode:
 
-| Permission   | Behavior                                            |
-| ------------ | --------------------------------------------------- |
-| Read + Write | Normal click-to-edit                                |
-| Read only    | Display value, no hover highlight, no click-to-edit |
-| No read      | Field hidden entirely                               |
+| Permission   | Behavior                                  |
+| ------------ | ----------------------------------------- |
+| Read + Write | Normal click-to-edit                      |
+| Read only    | Display value, no hover, no click-to-edit |
+| No read      | Field hidden entirely                     |
 
 Model-level permissions:
 
-| Permission          | Behavior                                                    |
-| ------------------- | ----------------------------------------------------------- |
-| Can update model    | Record mode with click-to-edit                              |
-| Cannot update model | All fields render read-only (no click-to-edit on any field) |
+| Permission          | Behavior                       |
+| ------------------- | ------------------------------ |
+| Can update model    | Record mode with click-to-edit |
+| Cannot update model | All fields render read-only    |
 
 ---
 
-## 10. Backward compatibility
+## 9. Backward compatibility
 
-### Breaking changes
+### No breaking API changes
 
-- `mode` prop on `widget.form` is removed. Forms with `mode: 'view'` or `mode: '$state.editing'` need migration.
-- The auto-generated edit page no longer has edit/cancel/save buttons.
+The widget DSL does not change. Existing page definitions continue to work. The `mode` prop on forms still works:
 
-### Migration path
+- `mode: 'view'` → maps to `'record'` (fields are read-only but with record mode layout)
+- `mode: 'edit'` → maps to `'record'` (fields are per-field editable)
+- `mode: 'create'` → stays as create (traditional form)
+- No `mode` prop + has `id` → `'record'`
+- No `mode` prop + no `id` → `'create'`
 
-- `widget.form(model, { id, mode: 'view' })` becomes `widget.form(model, { id })` (record mode is default for existing records).
-- `widget.form(model, { id, mode: 'edit' })` becomes `widget.form(model, { id })` (same result, fields are always per-field editable).
-- Custom pages with `$state.editing` toggle: remove the toggle and related actions. Record mode handles it.
-- Forms that intentionally need batch submit for existing records (rare): add `batch: true` prop to opt out of per-field save.
+### Batch submit opt-out
 
-### Opt-out for batch submit
-
-Some forms need all-or-nothing saves (e.g., forms with cross-field validation where fields depend on each other). Add a `batch: true` prop:
+Forms that need all-or-nothing saves (cross-field validation) can pass `batch: true`:
 
 ```typescript
-widget.form('sales.order', { id: '$route.id', batch: true }, [
-  // Renders traditional form with all fields editable + Save button
-]);
+widget.form('sales.order', { id: '$route.id', batch: true }, [...])
 ```
 
-This renders like the old edit mode: all fields as inputs, requires explicit submit.
+This renders traditional form with all fields editable and requires explicit submit. Same as the old `mode: 'edit'` behavior.
+
+---
+
+## 10. Implementation scope
+
+All changes are in two packages:
+
+### packages/ui (UI layer)
+
+- Each input widget file gains a record mode render path
+- New internal helper for record field display/edit toggle
+- No new exported components
+- No new widget types
+
+### packages/client (client layer)
+
+- FormProvider: mode derivation change (`'edit'` → `'record'`)
+- FormProvider: add internal `saveField` method
+- FormController: pass derived mode to UI
+- CRUD page generator: simplify edit page output
+
+### packages/shared
+
+- No changes. WidgetProps, WidgetNode, widget builders all unchanged.
 
 ---
 
 ## 11. Implementation phases
 
-### Phase 1: Record mode foundation
+### Phase 1: Foundation
 
-- Add `saveField` to FormProvider
-- Add `mode: 'record'` derivation logic
-- Add display render path to `InputWidget` and `SelectWidget`
-- Wire click-to-edit state machine
+- FormProvider mode derivation (internal rename)
+- Add `saveField` to FormContext
+- InputWidget and SelectWidget gain record mode render path
+- Wire click-to-edit state machine with proper editors
 
 ### Phase 2: All input widgets
 
-- Add display render path to remaining widgets (datepicker, datetime, money, link, textarea, checkbox, json, code, attachment)
-- Add value formatting utilities per field type
+- DatePickerWidget: calendar popover editor
+- DateTimeWidget: calendar + time popover editor
+- MoneyWidget: inline $ input editor
+- LinkWidget: searchable dropdown popover editor
+- CheckboxWidget: direct toggle (no editor state)
+- TextareaWidget: inline text editor
+- Remaining widgets (json, code, attachment): popover editors
 
 ### Phase 3: CRUD generator
 
-- Update `generateEditPage` to drop mode toggle
-- Update `generateListPage` drawer to use `widget.form` instead of `widget.data`
+- Update `generateEditPage` to drop mode toggle and action buttons
+- Update `generateListPage` drawer to use `widget.form`
+- Add record header generation (title from naming field, subtitle from sequence)
 - Update tests
 
 ### Phase 4: Polish
 
-- Add hover affordance on editable fields
-- Add saving indicator (subtle spinner or checkmark)
-- Add keyboard navigation (Tab between fields)
+- Saving indicator (opacity fade on the value)
+- Keyboard navigation (Tab between fields)
 - Handle concurrent saves gracefully
+- Error display below the field row
