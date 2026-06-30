@@ -19,6 +19,9 @@ import {
   Code,
   Paperclip,
   FileText,
+  PanelLeftClose,
+  PanelRightClose,
+  PinOff,
 } from 'lucide-react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { cn } from '../../lib/cn';
@@ -29,21 +32,15 @@ import { Button } from '../../primitives/button';
 import { Icon } from '../../primitives/icon';
 import { Popover } from '../../overlays/popover';
 import { renderDisplay, renderEditor, type CellColumn } from './cell-renderers';
+import { useColumnState, type ColumnDef } from './use-column-state';
+import { useColumnResize } from './use-column-resize';
+import {
+  DatagridDndProvider,
+  useSortableHeaderCell,
+  DragOverlayCell,
+} from './datagrid-dnd-context';
 import type { WidgetComponentProps, WidgetNode } from '../types';
 import type { FilterFieldDeclaration, ActiveFilter } from '@rangka/shared';
-
-interface ColumnDef {
-  field: string;
-  label: string;
-  width?: number | string;
-  sortable?: boolean;
-  filterable?: boolean;
-  editable?: boolean;
-  fieldType?: string;
-  options?: Array<{ value: string; label: string }>;
-  currency?: string;
-  precision?: number;
-}
 
 interface CellRef {
   rowId: string;
@@ -90,22 +87,40 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
   const columns = resolveColumns(props.columns as ColumnDef[] | undefined, childNodes);
   const records = (bind.value as Record<string, unknown>[]) ?? [];
 
-  // Only show skeleton on true initial load — not on filter/sort changes
   const showSkeleton = loading && records.length === 0;
 
   const rowHeights = { compact: 32, default: 40, comfortable: 52 };
   const rowHeight = rowHeights[rowHeightKey];
 
-  const gridTemplate = [
-    ...(selectable ? ['40px'] : []),
-    ...columns.map((col) => {
-      const w = col.width;
-      if (w == null) return '150px';
-      if (typeof w === 'string') return w.endsWith('px') ? w : `${w}px`;
-      return `${w}px`;
-    }),
-  ].join(' ');
+  // Column state (resize, reorder, pinning)
+  const colState = useColumnState(columns);
+  const { pinnedLeftColumns, centerColumns, pinnedRightColumns, hasPinning } = colState;
 
+  // Resize
+  const { startResize } = useColumnResize({
+    onResize: (field, width) => colState.resize(field, width),
+    onResizeEnd: (field, width) => on.columnResize?.(field, width),
+  });
+
+  // Reorder
+  const handleReorder = useCallback(
+    (activeField: string, overField: string) => {
+      const order = colState.state.order;
+      const fromIndex = order.indexOf(activeField);
+      const toIndex = order.indexOf(overField);
+      if (fromIndex === -1 || toIndex === -1) return;
+      colState.reorder(fromIndex, toIndex);
+      on.columnReorder?.(colState.state.order);
+    },
+    [colState, on],
+  );
+
+  // Grid templates
+  const selectCol = selectable ? '40px ' : '';
+  const buildGridTemplate = (cols: ColumnDef[]) =>
+    selectCol + cols.map((col) => `${colState.getWidth(col.field)}px`).join(' ');
+
+  // Edit state
   const [activeCell, setActiveCell] = useState<CellRef | null>(null);
   const [editingCell, setEditingCell] = useState<CellRef | null>(null);
   const gridRef = useRef<HTMLDivElement>(null);
@@ -118,7 +133,6 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
     const key = cellKey(rowId, field);
     if (localValues.current.has(key)) {
       const localVal = localValues.current.get(key);
-      // Clear once the cache has caught up
       if (row[field] === localVal) {
         localValues.current.delete(key);
       }
@@ -140,9 +154,7 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
 
     const handleMouseDown = (e: MouseEvent) => {
       const target = e.target as Node;
-      // Don't deactivate if clicking inside the grid
       if (gridRef.current && gridRef.current.contains(target)) return;
-      // Don't deactivate if clicking inside a portaled cell editor (dropdowns, date pickers)
       const portal =
         (target as HTMLElement).closest?.('[data-slot="datagrid-cell-portal"]') ||
         (target as HTMLElement).closest?.('.fixed.z-50');
@@ -220,6 +232,158 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
 
   const hasActiveFilters = activeFilters.length > 0;
 
+  // Horizontal scroll shadow detection
+  const [scrollShadow, setScrollShadow] = useState<{ left: boolean; right: boolean }>({
+    left: false,
+    right: false,
+  });
+  const horizontalScrollRef = useRef<HTMLDivElement>(null);
+
+  const handleHorizontalScroll = useCallback(() => {
+    const el = horizontalScrollRef.current;
+    if (!el) return;
+    setScrollShadow({
+      left: el.scrollLeft > 0,
+      right: el.scrollLeft < el.scrollWidth - el.clientWidth - 1,
+    });
+  }, []);
+
+  // --- Render cells for a section ---
+  const renderCells = (sectionColumns: ColumnDef[], row: Record<string, unknown>, rowId: string) =>
+    sectionColumns.map((col) => {
+      const cellActive = isCellActive(rowId, col.field);
+      const cellEditing = isCellEditing(rowId, col.field);
+      const cellValue = getCellValue(row, rowId, col.field);
+
+      return (
+        <Datagrid.Cell
+          key={col.field}
+          active={cellActive}
+          editing={cellEditing}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleCellClick(rowId, col.field, col);
+          }}
+          onKeyDown={(e) => handleCellKeyDown(e, rowId, col.field, col)}
+          tabIndex={cellActive ? 0 : -1}
+        >
+          {cellEditing ? (
+            <EditableCell
+              fieldType={col.fieldType}
+              value={cellValue}
+              col={toCellColumn(col)}
+              onCommit={(val) => handleCommit(rowId, col.field, val)}
+              onCancel={() => handleCancel(rowId, col.field)}
+            />
+          ) : (
+            renderDisplay(col.fieldType, cellValue, toCellColumn(col))
+          )}
+        </Datagrid.Cell>
+      );
+    });
+
+  // --- Render header cells for a section ---
+  const renderHeaderCells = (sectionColumns: ColumnDef[]) =>
+    sectionColumns.map((col) => (
+      <SortableHeaderCell
+        key={col.field}
+        col={col}
+        sorted={getSortState(col.field)}
+        pinned={colState.state.pinned[col.field] || false}
+        filterFields={filterFields}
+        width={colState.getWidth(col.field)}
+        onSort={(direction) => on.sort?.(col.field, direction)}
+        onSetFilter={(field, operator, value) => on.setFilter?.(field, operator, value)}
+        onPin={(side) => {
+          colState.pin(col.field, side);
+          on.columnPin?.(col.field, side);
+        }}
+        onUnpin={() => {
+          colState.unpin(col.field);
+          on.columnPin?.(col.field, false);
+        }}
+        onResizeStart={(e) => startResize(col.field, colState.getWidth(col.field), e)}
+      />
+    ));
+
+  // --- Render a section (header + body) ---
+  const renderSection = (sectionColumns: ColumnDef[], gridTemplate: string) => (
+    <>
+      <Datagrid.Header gridTemplate={gridTemplate}>
+        {selectable && (
+          <Datagrid.SelectHeader
+            allSelected={selectedRows.length === records.length && records.length > 0}
+            indeterminate={selectedRows.length > 0 && selectedRows.length < records.length}
+            onSelectAll={(checked) => on.selectAll?.(checked)}
+          />
+        )}
+        <DatagridDndProvider
+          items={sectionColumns.map((c) => c.field)}
+          onReorder={handleReorder}
+          renderOverlay={(field) => {
+            const col = sectionColumns.find((c) => c.field === field);
+            return col ? <DragOverlayCell label={col.label} /> : null;
+          }}
+        >
+          {renderHeaderCells(sectionColumns)}
+        </DatagridDndProvider>
+      </Datagrid.Header>
+
+      <Datagrid.Body totalHeight={showSkeleton ? undefined : virtualizer.getTotalSize()}>
+        {showSkeleton ? (
+          Array.from({ length: 10 }, (_, i) => (
+            <Datagrid.Row
+              key={`skeleton-${i}`}
+              gridTemplate={gridTemplate}
+              rowHeight={rowHeight}
+              offset={i * rowHeight}
+            >
+              {selectable && <Datagrid.Cell />}
+              {sectionColumns.map((col) => (
+                <Datagrid.Cell key={col.field}>
+                  <span className="h-4 w-3/4 animate-pulse rounded bg-foreground/10" />
+                </Datagrid.Cell>
+              ))}
+            </Datagrid.Row>
+          ))
+        ) : records.length === 0 ? (
+          <Datagrid.Row gridTemplate="1fr" rowHeight={rowHeight * 3} offset={0}>
+            <Datagrid.Cell className="text-muted-foreground justify-center">
+              {emptyText}
+            </Datagrid.Cell>
+          </Datagrid.Row>
+        ) : (
+          virtualizer.getVirtualItems().map((virtualRow) => {
+            const row = records[virtualRow.index];
+            const idx = virtualRow.index;
+            const rowId = (row.id as string) ?? String(idx);
+            const isSelected = selectedRows.includes(rowId);
+            return (
+              <Datagrid.Row
+                key={rowId}
+                gridTemplate={gridTemplate}
+                rowHeight={rowHeight}
+                offset={virtualRow.start}
+                selected={isSelected}
+                onClick={() => on.rowClick?.(row)}
+              >
+                {selectable && (
+                  <Datagrid.SelectCell
+                    rowNumber={idx + 1}
+                    selected={isSelected}
+                    onSelectChange={(checked) => on.select?.(row, checked)}
+                  />
+                )}
+                {renderCells(sectionColumns, row, rowId)}
+              </Datagrid.Row>
+            );
+          })
+        )}
+      </Datagrid.Body>
+    </>
+  );
+
+  // --- Main render ---
   return (
     <div className="flex flex-col flex-1 min-h-0">
       {hasActiveFilters && (
@@ -231,107 +395,36 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
       )}
       <Datagrid ref={gridRef} maxHeight={maxHeight}>
         <Datagrid.ScrollArea ref={scrollRef}>
-          <Datagrid.Header gridTemplate={gridTemplate}>
-            {selectable && (
-              <Datagrid.SelectHeader
-                allSelected={selectedRows.length === records.length && records.length > 0}
-                indeterminate={selectedRows.length > 0 && selectedRows.length < records.length}
-                onSelectAll={(checked) => on.selectAll?.(checked)}
-              />
-            )}
-            {columns.map((col) => (
-              <ColumnHeaderWithPopover
-                key={col.field}
-                col={col}
-                sorted={getSortState(col.field)}
-                filterFields={filterFields}
-                onSort={(direction) => on.sort?.(col.field, direction)}
-                onSetFilter={(field, operator, value) => on.setFilter?.(field, operator, value)}
-              />
-            ))}
-          </Datagrid.Header>
-
-          <Datagrid.Body totalHeight={showSkeleton ? undefined : virtualizer.getTotalSize()}>
-            {showSkeleton ? (
-              Array.from({ length: 10 }, (_, i) => (
-                <Datagrid.Row
-                  key={`skeleton-${i}`}
-                  gridTemplate={gridTemplate}
-                  rowHeight={rowHeight}
-                  offset={i * rowHeight}
+          {hasPinning ? (
+            <div className="flex min-h-0">
+              {pinnedLeftColumns.length > 0 && (
+                <Datagrid.PinnedSection
+                  side="left"
+                  showShadow={scrollShadow.left}
+                  style={{ width: colState.pinnedLeftWidth + (selectable ? 40 : 0) }}
                 >
-                  {selectable && <Datagrid.Cell />}
-                  {columns.map((col) => (
-                    <Datagrid.Cell key={col.field}>
-                      <span className="h-4 w-3/4 animate-pulse rounded bg-foreground/10" />
-                    </Datagrid.Cell>
-                  ))}
-                </Datagrid.Row>
-              ))
-            ) : records.length === 0 ? (
-              <Datagrid.Row gridTemplate="1fr" rowHeight={rowHeight * 3} offset={0}>
-                <Datagrid.Cell className="text-muted-foreground justify-center">
-                  {emptyText}
-                </Datagrid.Cell>
-              </Datagrid.Row>
-            ) : (
-              virtualizer.getVirtualItems().map((virtualRow) => {
-                const row = records[virtualRow.index];
-                const idx = virtualRow.index;
-                const rowId = (row.id as string) ?? String(idx);
-                const isSelected = selectedRows.includes(rowId);
-                return (
-                  <Datagrid.Row
-                    key={rowId}
-                    gridTemplate={gridTemplate}
-                    rowHeight={rowHeight}
-                    offset={virtualRow.start}
-                    selected={isSelected}
-                    onClick={() => on.rowClick?.(row)}
-                  >
-                    {selectable && (
-                      <Datagrid.SelectCell
-                        rowNumber={idx + 1}
-                        selected={isSelected}
-                        onSelectChange={(checked) => on.select?.(row, checked)}
-                      />
-                    )}
-                    {columns.map((col) => {
-                      const cellActive = isCellActive(rowId, col.field);
-                      const cellEditing = isCellEditing(rowId, col.field);
-                      const cellValue = getCellValue(row, rowId, col.field);
-
-                      return (
-                        <Datagrid.Cell
-                          key={col.field}
-                          active={cellActive}
-                          editing={cellEditing}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleCellClick(rowId, col.field, col);
-                          }}
-                          onKeyDown={(e) => handleCellKeyDown(e, rowId, col.field, col)}
-                          tabIndex={cellActive ? 0 : -1}
-                        >
-                          {cellEditing ? (
-                            <EditableCell
-                              fieldType={col.fieldType}
-                              value={cellValue}
-                              col={toCellColumn(col)}
-                              onCommit={(val) => handleCommit(rowId, col.field, val)}
-                              onCancel={() => handleCancel(rowId, col.field)}
-                            />
-                          ) : (
-                            renderDisplay(col.fieldType, cellValue, toCellColumn(col))
-                          )}
-                        </Datagrid.Cell>
-                      );
-                    })}
-                  </Datagrid.Row>
-                );
-              })
-            )}
-          </Datagrid.Body>
+                  {renderSection(pinnedLeftColumns, buildGridTemplate(pinnedLeftColumns))}
+                </Datagrid.PinnedSection>
+              )}
+              <Datagrid.ScrollableSection
+                ref={horizontalScrollRef}
+                onScroll={handleHorizontalScroll}
+              >
+                {renderSection(centerColumns, buildGridTemplate(centerColumns))}
+              </Datagrid.ScrollableSection>
+              {pinnedRightColumns.length > 0 && (
+                <Datagrid.PinnedSection
+                  side="right"
+                  showShadow={scrollShadow.right}
+                  style={{ width: colState.pinnedRightWidth + (selectable ? 40 : 0) }}
+                >
+                  {renderSection(pinnedRightColumns, buildGridTemplate(pinnedRightColumns))}
+                </Datagrid.PinnedSection>
+              )}
+            </div>
+          ) : (
+            renderSection(colState.orderedColumns, buildGridTemplate(colState.orderedColumns))
+          )}
         </Datagrid.ScrollArea>
 
         <Datagrid.Footer>
@@ -391,7 +484,6 @@ function EditableCell({ fieldType, value, col, onCommit, onCancel }: EditableCel
   const handleBlur = useCallback(
     (e: React.FocusEvent) => {
       if (committed.current || isImmediate) return;
-      // Don't commit if focus moved to a portaled element (dropdown, datepicker)
       const related = e.relatedTarget as HTMLElement | null;
       if (related?.closest?.('.fixed.z-50')) return;
       committed.current = true;
@@ -426,24 +518,36 @@ function EditableCell({ fieldType, value, col, onCommit, onCancel }: EditableCel
   );
 }
 
-// --- Column Header with Popover ---
+// --- Sortable Header Cell (with DnD + resize + popover) ---
 
-interface ColumnHeaderPopoverProps {
+interface SortableHeaderCellProps {
   col: ColumnDef;
   sorted: 'asc' | 'desc' | null;
+  pinned: 'left' | 'right' | false;
   filterFields: FilterFieldDeclaration[];
+  width: number;
   onSort: (direction: 'asc' | 'desc' | null) => void;
   onSetFilter: (field: string, operator: string, value: unknown) => void;
+  onPin: (side: 'left' | 'right') => void;
+  onUnpin: () => void;
+  onResizeStart: (e: React.PointerEvent) => void;
 }
 
-function ColumnHeaderWithPopover({
+function SortableHeaderCell({
   col,
   sorted,
+  pinned,
   filterFields,
+  width: _width,
   onSort,
   onSetFilter,
-}: ColumnHeaderPopoverProps) {
-  const [open, setOpen] = useState(false);
+  onPin,
+  onUnpin,
+  onResizeStart,
+}: SortableHeaderCellProps) {
+  const { attributes, listeners, setNodeRef, style, isDragging } = useSortableHeaderCell(col.field);
+
+  const [popoverOpen, setPopoverOpen] = useState(false);
   const [step, setStep] = useState<'menu' | 'filter'>('menu');
   const [operator, setOperator] = useState('');
   const [value, setValue] = useState('');
@@ -461,25 +565,23 @@ function ColumnHeaderWithPopover({
   };
 
   const handleOpenChange = (isOpen: boolean) => {
-    setOpen(isOpen);
+    setPopoverOpen(isOpen);
     if (!isOpen) resetState();
   };
 
   const handleSortAsc = () => {
     onSort('asc');
-    setOpen(false);
+    setPopoverOpen(false);
     resetState();
   };
-
   const handleSortDesc = () => {
     onSort('desc');
-    setOpen(false);
+    setPopoverOpen(false);
     resetState();
   };
-
   const handleClearSort = () => {
     onSort(null);
-    setOpen(false);
+    setPopoverOpen(false);
     resetState();
   };
 
@@ -494,76 +596,115 @@ function ColumnHeaderWithPopover({
     const op = operators.find((o) => o.value === operator);
     const filterValue = op?.needsValue === false ? (operator === 'eq' ? true : false) : value;
     onSetFilter(col.field, operator, filterValue);
-    setOpen(false);
+    setPopoverOpen(false);
     resetState();
   };
 
+  const typeIcon = col.fieldType ? fieldTypeIcons[col.fieldType] : undefined;
+
   return (
-    <Popover open={open} onOpenChange={handleOpenChange}>
-      <Popover.Trigger
-        className={cn(
-          'flex items-center gap-1 px-3 h-9 text-xs font-medium text-foreground/50 border-r border-border last:border-r-0',
-          'cursor-pointer select-none hover:text-foreground hover:bg-foreground/4 transition-colors',
-        )}
-      >
-        {col.fieldType && fieldTypeIcons[col.fieldType] && (
-          <Icon icon={fieldTypeIcons[col.fieldType]} size="sm" className="shrink-0 opacity-50" />
-        )}
-        <span className="flex-1 truncate text-left">{col.label}</span>
-        {col.sortable !== false && sorted === 'asc' && (
-          <Icon icon={ChevronUp} size="sm" className="text-foreground" />
-        )}
-        {col.sortable !== false && sorted === 'desc' && (
-          <Icon icon={ChevronDown} size="sm" className="text-foreground" />
-        )}
-        {col.sortable !== false && !sorted && (
-          <Icon icon={ChevronsUpDown} size="sm" className="opacity-40" />
-        )}
-      </Popover.Trigger>
-      <Popover.Content side="bottom" align="start" className="w-52 p-0">
-        {step === 'menu' ? (
-          <div className="flex flex-col py-1">
-            {col.sortable !== false && (
-              <>
-                <PopoverMenuItem
-                  icon={ArrowUpNarrowWide}
-                  label="Sort ascending"
-                  active={sorted === 'asc'}
-                  onClick={handleSortAsc}
-                />
-                <PopoverMenuItem
-                  icon={ArrowDownNarrowWide}
-                  label="Sort descending"
-                  active={sorted === 'desc'}
-                  onClick={handleSortDesc}
-                />
-                {sorted && (
-                  <PopoverMenuItem icon={XCircle} label="Clear sort" onClick={handleClearSort} />
-                )}
-              </>
-            )}
-            {col.sortable !== false && col.filterable !== false && (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn('relative flex items-center', isDragging && 'opacity-50')}
+      {...attributes}
+    >
+      <Popover open={popoverOpen} onOpenChange={handleOpenChange}>
+        <Popover.Trigger
+          className={cn(
+            'flex items-center gap-1 px-3 h-9 w-full text-xs font-medium text-foreground/50 border-r border-border',
+            'cursor-pointer select-none hover:text-foreground hover:bg-foreground/4 transition-colors',
+          )}
+          {...listeners}
+        >
+          {typeIcon && <Icon icon={typeIcon} size="sm" className="shrink-0 opacity-50" />}
+          <span className="flex-1 truncate text-left">{col.label}</span>
+          {col.sortable !== false && sorted === 'asc' && (
+            <Icon icon={ChevronUp} size="sm" className="text-foreground" />
+          )}
+          {col.sortable !== false && sorted === 'desc' && (
+            <Icon icon={ChevronDown} size="sm" className="text-foreground" />
+          )}
+          {col.sortable !== false && !sorted && (
+            <Icon icon={ChevronsUpDown} size="sm" className="opacity-40" />
+          )}
+        </Popover.Trigger>
+        <Popover.Content side="bottom" align="start" className="w-52 p-0">
+          {step === 'menu' ? (
+            <div className="flex flex-col py-1">
+              {col.sortable !== false && (
+                <>
+                  <PopoverMenuItem
+                    icon={ArrowUpNarrowWide}
+                    label="Sort ascending"
+                    active={sorted === 'asc'}
+                    onClick={handleSortAsc}
+                  />
+                  <PopoverMenuItem
+                    icon={ArrowDownNarrowWide}
+                    label="Sort descending"
+                    active={sorted === 'desc'}
+                    onClick={handleSortDesc}
+                  />
+                  {sorted && (
+                    <PopoverMenuItem icon={XCircle} label="Clear sort" onClick={handleClearSort} />
+                  )}
+                </>
+              )}
+              {col.filterable !== false && filterField && (
+                <>
+                  <div className="my-1 border-t border-border" />
+                  <PopoverMenuItem icon={Filter} label="Filter..." onClick={handleFilterClick} />
+                </>
+              )}
               <div className="my-1 border-t border-border" />
-            )}
-            {col.filterable !== false && filterField && (
-              <PopoverMenuItem icon={Filter} label="Filter..." onClick={handleFilterClick} />
-            )}
-          </div>
-        ) : (
-          <FilterBar.OperatorForm
-            fieldLabel={col.label}
-            operators={operators}
-            operator={operator}
-            onOperatorChange={setOperator}
-            value={value}
-            onValueChange={setValue}
-            needsValue={operators.find((o) => o.value === operator)?.needsValue ?? true}
-            onApply={handleApplyFilter}
-            onBack={() => setStep('menu')}
-          />
-        )}
-      </Popover.Content>
-    </Popover>
+              {!pinned ? (
+                <>
+                  <PopoverMenuItem
+                    icon={PanelLeftClose}
+                    label="Pin to left"
+                    onClick={() => {
+                      onPin('left');
+                      setPopoverOpen(false);
+                    }}
+                  />
+                  <PopoverMenuItem
+                    icon={PanelRightClose}
+                    label="Pin to right"
+                    onClick={() => {
+                      onPin('right');
+                      setPopoverOpen(false);
+                    }}
+                  />
+                </>
+              ) : (
+                <PopoverMenuItem
+                  icon={PinOff}
+                  label="Unpin"
+                  onClick={() => {
+                    onUnpin();
+                    setPopoverOpen(false);
+                  }}
+                />
+              )}
+            </div>
+          ) : (
+            <FilterBar.OperatorForm
+              fieldLabel={col.label}
+              operators={operators}
+              operator={operator}
+              onOperatorChange={setOperator}
+              value={value}
+              onValueChange={setValue}
+              needsValue={operators.find((o) => o.value === operator)?.needsValue ?? true}
+              onApply={handleApplyFilter}
+              onBack={() => setStep('menu')}
+            />
+          )}
+        </Popover.Content>
+      </Popover>
+      <Datagrid.ResizeHandle onPointerDown={onResizeStart} />
+    </div>
   );
 }
 

@@ -401,6 +401,50 @@ const DatagridFooterCount = forwardRef<HTMLSpanElement, DatagridFooterCountProps
 );
 DatagridFooterCount.displayName = 'Datagrid.FooterCount';
 
+// --- Datagrid.PinnedSection ---
+
+export type DatagridPinnedSectionProps = ComponentProps<'div'> & {
+  /** Which side this section is pinned to */
+  side: 'left' | 'right';
+  /** Whether the center content is scrolled (shows shadow) */
+  showShadow?: boolean;
+};
+
+const DatagridPinnedSection = forwardRef<HTMLDivElement, DatagridPinnedSectionProps>(
+  ({ className, side, showShadow, style, ...props }, ref) => (
+    <div
+      ref={ref}
+      data-slot="datagrid-pinned-section"
+      data-side={side}
+      className={cn(
+        'flex flex-col flex-shrink-0 z-20 bg-card',
+        side === 'left' && showShadow && 'shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]',
+        side === 'right' && showShadow && 'shadow-[-2px_0_4px_-2px_rgba(0,0,0,0.1)]',
+        className,
+      )}
+      style={style}
+      {...props}
+    />
+  ),
+);
+DatagridPinnedSection.displayName = 'Datagrid.PinnedSection';
+
+// --- Datagrid.ScrollableSection ---
+
+export type DatagridScrollableSectionProps = ComponentProps<'div'>;
+
+const DatagridScrollableSection = forwardRef<HTMLDivElement, DatagridScrollableSectionProps>(
+  ({ className, ...props }, ref) => (
+    <div
+      ref={ref}
+      data-slot="datagrid-scrollable-section"
+      className={cn('flex flex-col flex-1 min-w-0 overflow-x-auto', className)}
+      {...props}
+    />
+  ),
+);
+DatagridScrollableSection.displayName = 'Datagrid.ScrollableSection';
+
 // --- Compose ---
 
 export const Datagrid = Object.assign(DatagridRoot, {
@@ -415,4 +459,6 @@ export const Datagrid = Object.assign(DatagridRoot, {
   SelectHeader: DatagridSelectHeader,
   Footer: DatagridFooter,
   FooterCount: DatagridFooterCount,
+  PinnedSection: DatagridPinnedSection,
+  ScrollableSection: DatagridScrollableSection,
 });
