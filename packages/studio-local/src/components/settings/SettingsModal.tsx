@@ -25,7 +25,8 @@ interface SettingsModalProps {
 }
 
 export function SettingsModal({ open, onClose }: SettingsModalProps) {
-  const { settings, availableModels, loadSettings, saveSettings, fetchModels } = useStudio();
+  const { settings, availableModels, modelsFetchCount, loadSettings, saveSettings, fetchModels } =
+    useStudio();
   const [provider, setProvider] = useState<Provider>('anthropic');
   const [apiKey, setApiKey] = useState('');
   const [baseUrl, setBaseUrl] = useState('');
@@ -46,17 +47,21 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
       setBaseUrl(settings.baseUrl ?? '');
       setSelectedModels(settings.selectedModels ?? []);
       if (settings.apiKey && availableModels.length === 0) {
-        fetchModels();
+        fetchModels({
+          provider: settings.provider,
+          apiKey: settings.apiKey,
+          baseUrl: settings.baseUrl,
+        });
         setFetching(true);
       }
     }
   }, [settings]);
 
   useEffect(() => {
-    if (fetching && availableModels.length > 0) {
+    if (fetching) {
       setFetching(false);
     }
-  }, [availableModels, fetching]);
+  }, [modelsFetchCount]);
 
   const providerModels = useMemo(
     () => availableModels.filter((m) => m.provider === provider),
@@ -76,7 +81,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
 
   const handleFetchModels = () => {
     setFetching(true);
-    fetchModels();
+    fetchModels({ provider, apiKey, baseUrl: baseUrl || undefined });
   };
 
   const toggleModel = (modelId: string) => {

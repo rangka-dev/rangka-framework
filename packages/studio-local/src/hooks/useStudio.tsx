@@ -68,6 +68,7 @@ interface StudioContextValue {
   sessionLoaded: boolean;
   settings: StudioConfig | null;
   availableModels: AvailableModel[];
+  modelsFetchCount: number;
   currentSession: { id: string; name?: string } | null;
   sessions: SessionInfo[];
   resources: ResourceModule[];
@@ -81,7 +82,11 @@ interface StudioContextValue {
   rejectSchema: (reason?: string) => void;
   loadSettings: () => void;
   saveSettings: (config: StudioConfig) => void;
-  fetchModels: () => void;
+  fetchModels: (params: {
+    provider: 'anthropic' | 'openai';
+    apiKey: string;
+    baseUrl?: string;
+  }) => void;
   setModel: (modelId: string) => void;
   listSessions: () => void;
   newSession: () => void;
@@ -111,6 +116,7 @@ export function StudioProvider({ children }: { children: ReactNode }) {
   const [sessionLoaded, setSessionLoaded] = useState(false);
   const [settings, setSettings] = useState<StudioConfig | null>(null);
   const [availableModels, setAvailableModels] = useState<AvailableModel[]>([]);
+  const [modelsFetchCount, setModelsFetchCount] = useState(0);
   const [currentSession, setCurrentSession] = useState<{ id: string; name?: string } | null>(null);
   const [sessions, setSessions] = useState<SessionInfo[]>([]);
   const [resources, setResources] = useState<ResourceModule[]>([]);
@@ -328,6 +334,7 @@ export function StudioProvider({ children }: { children: ReactNode }) {
 
         case 'settings.models':
           setAvailableModels((msg as unknown as { models: AvailableModel[] }).models);
+          setModelsFetchCount((c) => c + 1);
           break;
 
         case 'session.current':
@@ -452,9 +459,12 @@ export function StudioProvider({ children }: { children: ReactNode }) {
     connRef.current?.send({ type: 'settings.save', config });
   }, []);
 
-  const fetchModels = useCallback(() => {
-    connRef.current?.send({ type: 'settings.fetch_models' });
-  }, []);
+  const fetchModels = useCallback(
+    (params: { provider: 'anthropic' | 'openai'; apiKey: string; baseUrl?: string }) => {
+      connRef.current?.send({ type: 'settings.fetch_models', ...params });
+    },
+    [],
+  );
 
   const setModel = useCallback((modelId: string) => {
     connRef.current?.send({ type: 'settings.set_model', modelId });
@@ -510,6 +520,7 @@ export function StudioProvider({ children }: { children: ReactNode }) {
         sessionLoaded,
         settings,
         availableModels,
+        modelsFetchCount,
         currentSession,
         sessions,
         resources,
