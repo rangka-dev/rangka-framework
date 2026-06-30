@@ -73,6 +73,7 @@ interface ColumnOptions {
   align?: 'left' | 'center' | 'right';
   sortable?: boolean;
   filterable?: boolean;
+  editable?: boolean;
   visible?: Condition | Condition[];
   on?: Record<string, WidgetAction | WidgetAction[]>;
 }

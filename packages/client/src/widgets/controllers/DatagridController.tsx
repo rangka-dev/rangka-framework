@@ -5,8 +5,10 @@ import { useWidgetComponent } from '../../ui/UIProvider.js';
 import { useWidgetContext } from '../hooks/useWidgetContext.js';
 import { usePageState } from '../hooks/usePageState.js';
 import { useModelQuery } from '../data/useModelQuery.js';
+import { useDataQuery } from '../hooks/useDataQuery.js';
 import { useModelMeta } from '../../data/useModelMeta.js';
 import { useMeta } from '../../context/MetaContext.js';
+import { useMutation } from '../../data/useMutation.js';
 
 export function DatagridController({ props, on, childNodes }: WidgetProps) {
   const ctx = useWidgetContext();
@@ -19,6 +21,7 @@ export function DatagridController({ props, on, childNodes }: WidgetProps) {
   const pageSize = (props.pageSize as number | undefined) ?? 50;
 
   const { modelMeta } = useModelMeta(model);
+  const mutation = useMutation(model || '');
 
   const linkFields = useMemo(() => {
     if (!modelMeta) return [];
@@ -33,20 +36,30 @@ export function DatagridController({ props, on, childNodes }: WidgetProps) {
     include: linkFields.length > 0 ? linkFields : undefined,
   });
 
+  const { filters: activeFilters } = useDataQuery(model || '');
+
   const records = source.data ?? [];
 
   const handleSort = useCallback(
-    (field: string) => {
+    (field: string, direction?: 'asc' | 'desc' | null) => {
       if (!model) return;
-      const current = source.sort?.[0];
-      let newSort: string | undefined;
 
-      if (current?.field === field && current.direction === 'asc') {
+      let newSort: string | undefined;
+      if (direction === 'asc') {
+        newSort = field;
+      } else if (direction === 'desc') {
         newSort = `-${field}`;
-      } else if (current?.field === field && current.direction === 'desc') {
+      } else if (direction === null) {
         newSort = undefined;
       } else {
-        newSort = field;
+        const current = source.sort?.[0];
+        if (current?.field === field && current.direction === 'asc') {
+          newSort = `-${field}`;
+        } else if (current?.field === field && current.direction === 'desc') {
+          newSort = undefined;
+        } else {
+          newSort = field;
+        }
       }
 
       store.set(`$sort.${model}`, newSort ?? null);
@@ -61,6 +74,41 @@ export function DatagridController({ props, on, childNodes }: WidgetProps) {
       store.set(`$page.${model}`, newPage);
     },
     [model, store],
+  );
+
+  const handleSetFilter = useCallback(
+    (field: string, operator: string, value: unknown) => {
+      if (!model) return;
+      const key =
+        operator === 'eq' ? `$filter.${model}.${field}` : `$filter.${model}.${field}__${operator}`;
+      store.set(key, value);
+      store.set(`$page.${model}`, 1);
+    },
+    [model, store],
+  );
+
+  const handleRemoveFilter = useCallback(
+    (field: string, operator: string) => {
+      if (!model) return;
+      const key =
+        operator === 'eq' ? `$filter.${model}.${field}` : `$filter.${model}.${field}__${operator}`;
+      store.set(key, null);
+      store.set(`$page.${model}`, 1);
+    },
+    [model, store],
+  );
+
+  const handleCellChange = useCallback(
+    async (rowId: string, field: string, value: unknown) => {
+      if (!model) return;
+      try {
+        await mutation.update(rowId, { [field]: value });
+      } catch {
+        // Widget handles error display via the returned promise rejection
+      }
+      on.cellChange?.(rowId, field, value);
+    },
+    [model, mutation, on],
   );
 
   if (!Datagrid) return null;
@@ -87,8 +135,9 @@ export function DatagridController({ props, on, childNodes }: WidgetProps) {
       field,
       label: (col.props?.label as string) ?? fieldDef?.label ?? field,
       width: col.props?.width as number | string | undefined,
-      sortable: col.props?.sortable as boolean | undefined,
-      editable: col.props?.editable as boolean | undefined,
+      sortable: (col.props?.sortable as boolean | undefined) ?? true,
+      filterable: (col.props?.filterable as boolean | undefined) ?? true,
+      editable: (col.props?.editable as boolean | undefined) ?? true,
       fieldType,
       options,
       currency: col.props?.currency as string | undefined,
@@ -96,6 +145,21 @@ export function DatagridController({ props, on, childNodes }: WidgetProps) {
       namingField,
     };
   });
+
+  const filterFields = useMemo(() => {
+    if (!model || !modelMeta) return [];
+    return resolvedColumns
+      .filter((col) => col.filterable)
+      .map((col) => {
+        const fieldDef = modelMeta.fields.find((f) => f.name === col.field);
+        return {
+          field: col.field,
+          type: fieldDef?.type ?? 'string',
+          label: col.label,
+          options: fieldDef?.options ? [...fieldDef.options] : undefined,
+        };
+      });
+  }, [model, modelMeta, resolvedColumns]);
 
   const datagridWidgetProps: WidgetProps = {
     props: {
@@ -107,12 +171,24 @@ export function DatagridController({ props, on, childNodes }: WidgetProps) {
       pageSize: source.pageSize,
       total: source.total,
       sorted,
+      filterFields,
+      activeFilters: activeFilters.map((f) => ({
+        field: f.field,
+        operator: f.operator,
+        value: f.value,
+      })),
     },
     bind: { value: records },
     on: {
-      sort: (...args: unknown[]) => handleSort(args[0] as string),
+      sort: (...args: unknown[]) =>
+        handleSort(args[0] as string, args[1] as 'asc' | 'desc' | null | undefined),
       pageChange: (...args: unknown[]) => handlePageChange(args[0] as number),
-      cellChange: on.cellChange,
+      setFilter: (...args: unknown[]) =>
+        handleSetFilter(args[0] as string, args[1] as string, args[2]),
+      removeFilter: (...args: unknown[]) =>
+        handleRemoveFilter(args[0] as string, args[1] as string),
+      cellChange: (...args: unknown[]) =>
+        handleCellChange(args[0] as string, args[1] as string, args[2]),
       rowClick: on.rowClick,
       ...on,
     },
