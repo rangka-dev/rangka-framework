@@ -22,6 +22,7 @@ import {
   PanelLeftClose,
   PanelRightClose,
   PinOff,
+  Pin,
 } from 'lucide-react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { cn } from '../../lib/cn';
@@ -399,9 +400,10 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
       )}
       <Datagrid ref={gridRef} maxHeight={maxHeight}>
         <Datagrid.ScrollArea ref={scrollRef}>
-          {hasPinning ? (
+          {hasPinning || selectable ? (
             <div className="flex min-h-0">
-              {pinnedLeftColumns.length > 0 && (
+              {/* Select + pinned left columns always pinned */}
+              {(selectable || pinnedLeftColumns.length > 0) && (
                 <Datagrid.PinnedSection
                   side="left"
                   showShadow={scrollShadow.left}
@@ -418,11 +420,7 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
                 ref={horizontalScrollRef}
                 onScroll={handleHorizontalScroll}
               >
-                {renderSection(
-                  centerColumns,
-                  buildGridTemplate(centerColumns, !pinnedLeftColumns.length && selectable),
-                  !pinnedLeftColumns.length && selectable,
-                )}
+                {renderSection(centerColumns, buildGridTemplate(centerColumns, false), false)}
               </Datagrid.ScrollableSection>
               {pinnedRightColumns.length > 0 && (
                 <Datagrid.PinnedSection
@@ -441,8 +439,8 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
           ) : (
             renderSection(
               colState.orderedColumns,
-              buildGridTemplate(colState.orderedColumns, selectable),
-              selectable,
+              buildGridTemplate(colState.orderedColumns, false),
+              false,
             )
           )}
         </Datagrid.ScrollArea>
@@ -637,6 +635,7 @@ function SortableHeaderCell({
           )}
           {...listeners}
         >
+          {pinned && <Icon icon={Pin} size="sm" className="shrink-0 opacity-50" />}
           {typeIcon && <Icon icon={typeIcon} size="sm" className="shrink-0 opacity-50" />}
           <span className="flex-1 truncate text-left">{col.label}</span>
           {col.sortable !== false && sorted === 'asc' && (

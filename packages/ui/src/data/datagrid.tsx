@@ -75,7 +75,7 @@ const DatagridHeader = forwardRef<HTMLDivElement, DatagridHeaderProps>(
       ref={ref}
       role="row"
       data-slot="datagrid-header"
-      className={cn('sticky top-0 z-20 grid border-b border-border bg-card', className)}
+      className={cn('sticky top-0 z-20 grid min-w-fit border-b border-border bg-card', className)}
       style={{ ...style, gridTemplateColumns: gridTemplate }}
       {...props}
     />
@@ -341,7 +341,7 @@ const DatagridSelectHeader = forwardRef<HTMLDivElement, DatagridSelectHeaderProp
       ref={ref}
       role="columnheader"
       data-slot="datagrid-select-header"
-      className={cn('flex items-center justify-center border-r border-border', className)}
+      className={cn('flex items-center justify-center h-9 border-r border-border', className)}
       {...props}
     >
       <input
