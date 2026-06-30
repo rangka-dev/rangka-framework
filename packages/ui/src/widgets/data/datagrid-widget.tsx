@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo, memo } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
   Plus,
@@ -23,6 +23,7 @@ import {
   PanelRightClose,
   PinOff,
   Pin,
+  Loader2,
 } from 'lucide-react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { cn } from '../../lib/cn';
@@ -47,6 +48,115 @@ interface CellRef {
   rowId: string;
   field: string;
 }
+
+// --- Memoized Virtual Row ---
+
+interface VirtualRowProps {
+  row: Record<string, unknown>;
+  rowId: string;
+  index: number;
+  offset: number;
+  gridTemplate: string;
+  rowHeight: number;
+  columns: ColumnDef[];
+  showSelect: boolean;
+  selected: boolean;
+  activeRowId: string | null;
+  activeField: string | null;
+  editingRowId: string | null;
+  editingField: string | null;
+  onRowClick: ((row: Record<string, unknown>) => void) | undefined;
+  onSelect: ((row: Record<string, unknown>, checked: boolean) => void) | undefined;
+  onCellClick: (rowId: string, field: string, col: ColumnDef) => void;
+  onCellKeyDown: (e: React.KeyboardEvent, rowId: string, field: string, col: ColumnDef) => void;
+  onCommit: (rowId: string, field: string, value: unknown) => void;
+  onCancel: (rowId: string, field: string) => void;
+  getCellValue: (row: Record<string, unknown>, rowId: string, field: string) => unknown;
+}
+
+const VirtualRow = memo(function VirtualRow({
+  row,
+  rowId,
+  index,
+  offset,
+  gridTemplate,
+  rowHeight,
+  columns,
+  showSelect,
+  selected,
+  activeRowId,
+  activeField,
+  editingRowId,
+  editingField,
+  onRowClick,
+  onSelect,
+  onCellClick,
+  onCellKeyDown,
+  onCommit,
+  onCancel,
+  getCellValue,
+}: VirtualRowProps) {
+  return (
+    <Datagrid.Row
+      gridTemplate={gridTemplate}
+      rowHeight={rowHeight}
+      offset={offset}
+      selected={selected}
+      onClick={onRowClick ? () => onRowClick(row) : undefined}
+    >
+      {showSelect && (
+        <Datagrid.SelectCell
+          rowNumber={index + 1}
+          selected={selected}
+          onSelectChange={onSelect ? (checked) => onSelect(row, checked) : undefined}
+        />
+      )}
+      {columns.map((col) => {
+        const cellActive = activeRowId === rowId && activeField === col.field;
+        const cellEditing = editingRowId === rowId && editingField === col.field;
+        const cellValue = getCellValue(row, rowId, col.field);
+
+        return (
+          <Datagrid.Cell
+            key={col.field}
+            active={cellActive}
+            editing={cellEditing}
+            onClick={(e) => {
+              e.stopPropagation();
+              onCellClick(rowId, col.field, col);
+            }}
+            onKeyDown={(e) => onCellKeyDown(e, rowId, col.field, col)}
+            tabIndex={cellActive ? 0 : -1}
+          >
+            {cellEditing ? (
+              <EditableCell
+                fieldType={col.fieldType}
+                value={cellValue}
+                col={{
+                  field: col.field,
+                  fieldType: col.fieldType,
+                  options: col.options,
+                  currency: col.currency,
+                  precision: col.precision,
+                }}
+                onCommit={(val) => onCommit(rowId, col.field, val)}
+                onCancel={() => onCancel(rowId, col.field)}
+              />
+            ) : (
+              renderDisplay(col.fieldType, cellValue, {
+                field: col.field,
+                fieldType: col.fieldType,
+                options: col.options,
+                currency: col.currency,
+                precision: col.precision,
+              })
+            )}
+          </Datagrid.Cell>
+        );
+      })}
+    </Datagrid.Row>
+  );
+});
 
 // --- Field type icon mapping ---
 
@@ -77,6 +187,8 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
   const maxHeight = props.maxHeight as number | undefined;
   const emptyText = (props.emptyText as string) ?? 'No records';
   const loading = props.loading as boolean | undefined;
+  const fetching = props.fetching as boolean | undefined;
+  const hasMore = (props.hasMore as boolean) ?? false;
   const addRow = (props.addRow as boolean) ?? false;
   const editable = (props.editable as boolean) ?? true;
 
@@ -154,6 +266,20 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
     overscan: 10,
   });
 
+  // Infinite scroll: fetch next page when near bottom
+  const loadMoreRef = useRef(on.loadMore);
+  loadMoreRef.current = on.loadMore;
+
+  useEffect(() => {
+    if (!hasMore || fetching) return;
+    const items = virtualizer.getVirtualItems();
+    if (items.length === 0) return;
+    const lastItem = items[items.length - 1];
+    if (lastItem.index >= records.length - 10) {
+      loadMoreRef.current?.();
+    }
+  }, [virtualizer.getVirtualItems(), hasMore, fetching, records.length]);
+
   useEffect(() => {
     if (!activeCell && !editingCell) return;
 
@@ -222,20 +348,6 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
     setActiveCell({ rowId, field });
   }, []);
 
-  const isCellActive = (rowId: string, field: string) =>
-    activeCell?.rowId === rowId && activeCell?.field === field;
-
-  const isCellEditing = (rowId: string, field: string) =>
-    editingCell?.rowId === rowId && editingCell?.field === field;
-
-  const toCellColumn = (col: ColumnDef): CellColumn => ({
-    field: col.field,
-    fieldType: col.fieldType,
-    options: col.options,
-    currency: col.currency,
-    precision: col.precision,
-  });
-
   const hasActiveFilters = activeFilters.length > 0;
 
   // Horizontal scroll shadow detection (ref-based to avoid re-renders)
@@ -260,39 +372,66 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
     }
   }, []);
 
-  // --- Render cells for a section ---
-  const renderCells = (sectionColumns: ColumnDef[], row: Record<string, unknown>, rowId: string) =>
-    sectionColumns.map((col) => {
-      const cellActive = isCellActive(rowId, col.field);
-      const cellEditing = isCellEditing(rowId, col.field);
-      const cellValue = getCellValue(row, rowId, col.field);
-
-      return (
-        <Datagrid.Cell
-          key={col.field}
-          active={cellActive}
-          editing={cellEditing}
-          onClick={(e) => {
-            e.stopPropagation();
-            handleCellClick(rowId, col.field, col);
-          }}
-          onKeyDown={(e) => handleCellKeyDown(e, rowId, col.field, col)}
-          tabIndex={cellActive ? 0 : -1}
-        >
-          {cellEditing ? (
-            <EditableCell
-              fieldType={col.fieldType}
-              value={cellValue}
-              col={toCellColumn(col)}
-              onCommit={(val) => handleCommit(rowId, col.field, val)}
-              onCancel={() => handleCancel(rowId, col.field)}
+  // --- Render body for a section ---
+  const renderBody = (sectionColumns: ColumnDef[], gridTemplate: string, showSelect: boolean) => (
+    <Datagrid.Body totalHeight={showSkeleton ? undefined : virtualizer.getTotalSize()}>
+      {showSkeleton ? (
+        Array.from({ length: 10 }, (_, i) => (
+          <Datagrid.Row
+            key={`skeleton-${i}`}
+            gridTemplate={gridTemplate}
+            rowHeight={rowHeight}
+            offset={i * rowHeight}
+          >
+            {showSelect && <Datagrid.Cell />}
+            {sectionColumns.map((col) => (
+              <Datagrid.Cell key={col.field}>
+                <span className="h-4 w-3/4 animate-pulse rounded bg-foreground/10" />
+              </Datagrid.Cell>
+            ))}
+          </Datagrid.Row>
+        ))
+      ) : records.length === 0 ? (
+        <Datagrid.Row gridTemplate="1fr" rowHeight={rowHeight * 3} offset={0}>
+          <Datagrid.Cell className="text-muted-foreground justify-center">
+            {emptyText}
+          </Datagrid.Cell>
+        </Datagrid.Row>
+      ) : (
+        virtualizer.getVirtualItems().map((virtualRow) => {
+          const row = records[virtualRow.index];
+          const idx = virtualRow.index;
+          const rowId = (row.id as string) ?? String(idx);
+          const isSelected = selectedRows.includes(rowId);
+          return (
+            <VirtualRow
+              key={rowId}
+              row={row}
+              rowId={rowId}
+              index={idx}
+              offset={virtualRow.start}
+              gridTemplate={gridTemplate}
+              rowHeight={rowHeight}
+              columns={sectionColumns}
+              showSelect={showSelect}
+              selected={isSelected}
+              activeRowId={activeCell?.rowId ?? null}
+              activeField={activeCell?.field ?? null}
+              editingRowId={editingCell?.rowId ?? null}
+              editingField={editingCell?.field ?? null}
+              onRowClick={on.rowClick}
+              onSelect={on.select}
+              onCellClick={handleCellClick}
+              onCellKeyDown={handleCellKeyDown}
+              onCommit={handleCommit}
+              onCancel={handleCancel}
+              getCellValue={getCellValue}
             />
-          ) : (
-            renderDisplay(col.fieldType, cellValue, toCellColumn(col))
-          )}
-        </Datagrid.Cell>
-      );
-    });
+          );
+        })
+      )}
+    </Datagrid.Body>
+  );
 
   // --- Render header cells for a section ---
   const renderHeaderCells = (sectionColumns: ColumnDef[]) =>
@@ -338,61 +477,6 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
         {renderHeaderCells(sectionColumns)}
       </DatagridDndProvider>
     </Datagrid.Header>
-  );
-
-  // --- Render body for a section ---
-  const renderBody = (sectionColumns: ColumnDef[], gridTemplate: string, showSelect: boolean) => (
-    <Datagrid.Body totalHeight={showSkeleton ? undefined : virtualizer.getTotalSize()}>
-      {showSkeleton ? (
-        Array.from({ length: 10 }, (_, i) => (
-          <Datagrid.Row
-            key={`skeleton-${i}`}
-            gridTemplate={gridTemplate}
-            rowHeight={rowHeight}
-            offset={i * rowHeight}
-          >
-            {showSelect && <Datagrid.Cell />}
-            {sectionColumns.map((col) => (
-              <Datagrid.Cell key={col.field}>
-                <span className="h-4 w-3/4 animate-pulse rounded bg-foreground/10" />
-              </Datagrid.Cell>
-            ))}
-          </Datagrid.Row>
-        ))
-      ) : records.length === 0 ? (
-        <Datagrid.Row gridTemplate="1fr" rowHeight={rowHeight * 3} offset={0}>
-          <Datagrid.Cell className="text-muted-foreground justify-center">
-            {emptyText}
-          </Datagrid.Cell>
-        </Datagrid.Row>
-      ) : (
-        virtualizer.getVirtualItems().map((virtualRow) => {
-          const row = records[virtualRow.index];
-          const idx = virtualRow.index;
-          const rowId = (row.id as string) ?? String(idx);
-          const isSelected = selectedRows.includes(rowId);
-          return (
-            <Datagrid.Row
-              key={rowId}
-              gridTemplate={gridTemplate}
-              rowHeight={rowHeight}
-              offset={virtualRow.start}
-              selected={isSelected}
-              onClick={() => on.rowClick?.(row)}
-            >
-              {showSelect && (
-                <Datagrid.SelectCell
-                  rowNumber={idx + 1}
-                  selected={isSelected}
-                  onSelectChange={(checked) => on.select?.(row, checked)}
-                />
-              )}
-              {renderCells(sectionColumns, row, rowId)}
-            </Datagrid.Row>
-          );
-        })
-      )}
-    </Datagrid.Body>
   );
 
   // --- Main render ---
@@ -482,7 +566,13 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
               <span>Add row</span>
             </Button>
           )}
-          {!addRow && <span />}
+          {!addRow && fetching && (
+            <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Icon icon={Loader2} size="sm" className="animate-spin" />
+              <span>Loading more...</span>
+            </span>
+          )}
+          {!addRow && !fetching && <span />}
           <Datagrid.FooterCount count={records.length} total={props.total as number | undefined} />
         </Datagrid.Footer>
       </Datagrid>

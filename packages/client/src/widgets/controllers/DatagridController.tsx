@@ -5,7 +5,7 @@ import type { WidgetProps } from '../types.js';
 import { useWidgetComponent } from '../../ui/UIProvider.js';
 import { useWidgetContext } from '../hooks/useWidgetContext.js';
 import { usePageState } from '../hooks/usePageState.js';
-import { useModelQuery } from '../data/useModelQuery.js';
+import { useInfiniteModelQuery } from '../data/useInfiniteModelQuery.js';
 import { useDataQuery } from '../hooks/useDataQuery.js';
 import { useModelMeta } from '../../data/useModelMeta.js';
 import { useMeta } from '../../context/MetaContext.js';
@@ -31,7 +31,7 @@ export function DatagridController({ props, on, childNodes }: WidgetProps) {
     return modelMeta.fields.filter((f) => f.relationship?.type === 'link').map((f) => f.name);
   }, [modelMeta]);
 
-  const source = useModelQuery({
+  const source = useInfiniteModelQuery({
     model: model || '',
     pageSize,
     enabled: Boolean(model),
@@ -105,17 +105,8 @@ export function DatagridController({ props, on, childNodes }: WidgetProps) {
       }
 
       store.set(`$sort.${model}`, newSort ?? null);
-      store.set(`$page.${model}`, 1);
     },
     [model, source.sort, store],
-  );
-
-  const handlePageChange = useCallback(
-    (newPage: number) => {
-      if (!model) return;
-      store.set(`$page.${model}`, newPage);
-    },
-    [model, store],
   );
 
   const handleSetFilter = useCallback(
@@ -124,7 +115,6 @@ export function DatagridController({ props, on, childNodes }: WidgetProps) {
       const key =
         operator === 'eq' ? `$filter.${model}.${field}` : `$filter.${model}.${field}__${operator}`;
       store.set(key, value);
-      store.set(`$page.${model}`, 1);
     },
     [model, store],
   );
@@ -135,7 +125,6 @@ export function DatagridController({ props, on, childNodes }: WidgetProps) {
       const key =
         operator === 'eq' ? `$filter.${model}.${field}` : `$filter.${model}.${field}__${operator}`;
       store.set(key, null);
-      store.set(`$page.${model}`, 1);
     },
     [model, store],
   );
@@ -195,10 +184,9 @@ export function DatagridController({ props, on, childNodes }: WidgetProps) {
       ...props,
       columns: resolvedColumns,
       loading: source.isLoading,
-      fetching: source.isFetching && records.length > 0,
-      page: source.page,
-      pageSize: source.pageSize,
+      fetching: source.isFetchingNextPage,
       total: source.total,
+      hasMore: source.hasNextPage,
       sorted,
       filterFields,
       activeFilters: activeFilters.map((f) => ({
@@ -211,7 +199,7 @@ export function DatagridController({ props, on, childNodes }: WidgetProps) {
     on: {
       sort: (...args: unknown[]) =>
         handleSort(args[0] as string, args[1] as 'asc' | 'desc' | null | undefined),
-      pageChange: (...args: unknown[]) => handlePageChange(args[0] as number),
+      loadMore: () => source.fetchNextPage(),
       setFilter: (...args: unknown[]) =>
         handleSetFilter(args[0] as string, args[1] as string, args[2]),
       removeFilter: (...args: unknown[]) =>
