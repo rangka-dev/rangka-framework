@@ -1,4 +1,4 @@
-import { useReducer, useCallback, useMemo } from 'react';
+import { useReducer, useCallback, useMemo, useRef } from 'react';
 
 export const COLUMN_MIN_WIDTH = 60;
 const DEFAULT_WIDTH = 150;
@@ -174,10 +174,10 @@ export function useColumnState(columns: ColumnDef[]): UseColumnStateResult {
     dispatch({ type: 'UNPIN', field });
   }, []);
 
-  const getWidth = useCallback(
-    (field: string) => state.widths[field] ?? DEFAULT_WIDTH,
-    [state.widths],
-  );
+  const widthsRef = useRef(state.widths);
+  widthsRef.current = state.widths;
+
+  const getWidth = useCallback((field: string) => widthsRef.current[field] ?? DEFAULT_WIDTH, []);
 
   return {
     state,

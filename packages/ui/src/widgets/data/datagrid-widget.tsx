@@ -116,13 +116,17 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
     [colState, on],
   );
 
-  // Grid templates
-  const buildGridTemplate = (cols: ColumnDef[], includeSelect = false) =>
-    (includeSelect ? '40px ' : '') +
-    cols.map((col) => `${colState.getWidth(col.field)}px`).join(' ');
+  // Grid templates (use pre-computed memoized templates from the hook)
+  const pinnedLeftGrid = selectable
+    ? `40px ${colState.pinnedLeftTemplate}`.trim()
+    : colState.pinnedLeftTemplate;
+  const centerGrid = colState.centerTemplate;
+  const pinnedRightGrid = colState.pinnedRightTemplate;
 
   // Edit state
   const [activeCell, setActiveCell] = useState<CellRef | null>(null);
+  const activeCellRef = useRef<CellRef | null>(null);
+  activeCellRef.current = activeCell;
   const [editingCell, setEditingCell] = useState<CellRef | null>(null);
   const gridRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -177,7 +181,8 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
 
   const handleCellClick = useCallback(
     (rowId: string, field: string, col: ColumnDef) => {
-      const isAlreadyActive = activeCell?.rowId === rowId && activeCell?.field === field;
+      const current = activeCellRef.current;
+      const isAlreadyActive = current?.rowId === rowId && current?.field === field;
 
       if (isAlreadyActive && editable && col.editable !== false) {
         setEditingCell({ rowId, field });
@@ -187,7 +192,7 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
       }
       on.cellClick?.(rowId, field);
     },
-    [activeCell, editable, on],
+    [editable, on],
   );
 
   const handleCellKeyDown = useCallback(
@@ -233,20 +238,26 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
 
   const hasActiveFilters = activeFilters.length > 0;
 
-  // Horizontal scroll shadow detection
-  const [scrollShadow, setScrollShadow] = useState<{ left: boolean; right: boolean }>({
-    left: false,
-    right: false,
-  });
+  // Horizontal scroll shadow detection (ref-based to avoid re-renders)
+  const pinnedLeftRef = useRef<HTMLDivElement>(null);
+  const pinnedRightRef = useRef<HTMLDivElement>(null);
   const horizontalScrollRef = useRef<HTMLDivElement>(null);
+  const headerScrollRef = useRef<HTMLDivElement>(null);
 
   const handleHorizontalScroll = useCallback(() => {
     const el = horizontalScrollRef.current;
     if (!el) return;
-    setScrollShadow({
-      left: el.scrollLeft > 0,
-      right: el.scrollLeft < el.scrollWidth - el.clientWidth - 1,
-    });
+    const hasLeft = el.scrollLeft > 0;
+    const hasRight = el.scrollLeft < el.scrollWidth - el.clientWidth - 1;
+    if (pinnedLeftRef.current) {
+      pinnedLeftRef.current.dataset.shadow = hasLeft ? 'true' : '';
+    }
+    if (pinnedRightRef.current) {
+      pinnedRightRef.current.dataset.shadow = hasRight ? 'true' : '';
+    }
+    if (headerScrollRef.current) {
+      headerScrollRef.current.scrollLeft = el.scrollLeft;
+    }
   }, []);
 
   // --- Render cells for a section ---
@@ -292,7 +303,6 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
         sorted={getSortState(col.field)}
         pinned={colState.state.pinned[col.field] || false}
         filterFields={filterFields}
-        width={colState.getWidth(col.field)}
         onSort={(direction) => on.sort?.(col.field, direction)}
         onSetFilter={(field, operator, value) => on.setFilter?.(field, operator, value)}
         onPin={(side) => {
@@ -307,85 +317,82 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
       />
     ));
 
-  // --- Render a section (header + body) ---
-  const renderSection = (
-    sectionColumns: ColumnDef[],
-    gridTemplate: string,
-    showSelect: boolean,
-  ) => (
-    <>
-      <Datagrid.Header gridTemplate={gridTemplate}>
-        {showSelect && (
-          <Datagrid.SelectHeader
-            allSelected={selectedRows.length === records.length && records.length > 0}
-            indeterminate={selectedRows.length > 0 && selectedRows.length < records.length}
-            onSelectAll={(checked) => on.selectAll?.(checked)}
-          />
-        )}
-        <DatagridDndProvider
-          items={sectionColumns.map((c) => c.field)}
-          onReorder={handleReorder}
-          renderOverlay={(field) => {
-            const col = sectionColumns.find((c) => c.field === field);
-            return col ? <DragOverlayCell label={col.label} /> : null;
-          }}
-        >
-          {renderHeaderCells(sectionColumns)}
-        </DatagridDndProvider>
-      </Datagrid.Header>
+  // --- Render header for a section ---
+  const renderHeader = (sectionColumns: ColumnDef[], gridTemplate: string, showSelect: boolean) => (
+    <Datagrid.Header gridTemplate={gridTemplate}>
+      {showSelect && (
+        <Datagrid.SelectHeader
+          allSelected={selectedRows.length === records.length && records.length > 0}
+          indeterminate={selectedRows.length > 0 && selectedRows.length < records.length}
+          onSelectAll={(checked) => on.selectAll?.(checked)}
+        />
+      )}
+      <DatagridDndProvider
+        items={sectionColumns.map((c) => c.field)}
+        onReorder={handleReorder}
+        renderOverlay={(field) => {
+          const col = sectionColumns.find((c) => c.field === field);
+          return col ? <DragOverlayCell label={col.label} /> : null;
+        }}
+      >
+        {renderHeaderCells(sectionColumns)}
+      </DatagridDndProvider>
+    </Datagrid.Header>
+  );
 
-      <Datagrid.Body totalHeight={showSkeleton ? undefined : virtualizer.getTotalSize()}>
-        {showSkeleton ? (
-          Array.from({ length: 10 }, (_, i) => (
+  // --- Render body for a section ---
+  const renderBody = (sectionColumns: ColumnDef[], gridTemplate: string, showSelect: boolean) => (
+    <Datagrid.Body totalHeight={showSkeleton ? undefined : virtualizer.getTotalSize()}>
+      {showSkeleton ? (
+        Array.from({ length: 10 }, (_, i) => (
+          <Datagrid.Row
+            key={`skeleton-${i}`}
+            gridTemplate={gridTemplate}
+            rowHeight={rowHeight}
+            offset={i * rowHeight}
+          >
+            {showSelect && <Datagrid.Cell />}
+            {sectionColumns.map((col) => (
+              <Datagrid.Cell key={col.field}>
+                <span className="h-4 w-3/4 animate-pulse rounded bg-foreground/10" />
+              </Datagrid.Cell>
+            ))}
+          </Datagrid.Row>
+        ))
+      ) : records.length === 0 ? (
+        <Datagrid.Row gridTemplate="1fr" rowHeight={rowHeight * 3} offset={0}>
+          <Datagrid.Cell className="text-muted-foreground justify-center">
+            {emptyText}
+          </Datagrid.Cell>
+        </Datagrid.Row>
+      ) : (
+        virtualizer.getVirtualItems().map((virtualRow) => {
+          const row = records[virtualRow.index];
+          const idx = virtualRow.index;
+          const rowId = (row.id as string) ?? String(idx);
+          const isSelected = selectedRows.includes(rowId);
+          return (
             <Datagrid.Row
-              key={`skeleton-${i}`}
+              key={rowId}
               gridTemplate={gridTemplate}
               rowHeight={rowHeight}
-              offset={i * rowHeight}
+              offset={virtualRow.start}
+              selected={isSelected}
+              onClick={() => on.rowClick?.(row)}
             >
-              {showSelect && <Datagrid.Cell />}
-              {sectionColumns.map((col) => (
-                <Datagrid.Cell key={col.field}>
-                  <span className="h-4 w-3/4 animate-pulse rounded bg-foreground/10" />
-                </Datagrid.Cell>
-              ))}
+              {showSelect && (
+                <Datagrid.SelectCell
+                  rowNumber={idx + 1}
+                  selected={isSelected}
+                  onSelectChange={(checked) => on.select?.(row, checked)}
+                />
+              )}
+              {renderCells(sectionColumns, row, rowId)}
             </Datagrid.Row>
-          ))
-        ) : records.length === 0 ? (
-          <Datagrid.Row gridTemplate="1fr" rowHeight={rowHeight * 3} offset={0}>
-            <Datagrid.Cell className="text-muted-foreground justify-center">
-              {emptyText}
-            </Datagrid.Cell>
-          </Datagrid.Row>
-        ) : (
-          virtualizer.getVirtualItems().map((virtualRow) => {
-            const row = records[virtualRow.index];
-            const idx = virtualRow.index;
-            const rowId = (row.id as string) ?? String(idx);
-            const isSelected = selectedRows.includes(rowId);
-            return (
-              <Datagrid.Row
-                key={rowId}
-                gridTemplate={gridTemplate}
-                rowHeight={rowHeight}
-                offset={virtualRow.start}
-                selected={isSelected}
-                onClick={() => on.rowClick?.(row)}
-              >
-                {showSelect && (
-                  <Datagrid.SelectCell
-                    rowNumber={idx + 1}
-                    selected={isSelected}
-                    onSelectChange={(checked) => on.select?.(row, checked)}
-                  />
-                )}
-                {renderCells(sectionColumns, row, rowId)}
-              </Datagrid.Row>
-            );
-          })
-        )}
-      </Datagrid.Body>
-    </>
+          );
+        })
+      )}
+    </Datagrid.Body>
   );
 
   // --- Main render ---
@@ -401,47 +408,70 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
       <Datagrid ref={gridRef} maxHeight={maxHeight}>
         <Datagrid.ScrollArea ref={scrollRef}>
           {hasPinning || selectable ? (
-            <div className="flex min-h-0">
-              {/* Select + pinned left columns always pinned */}
-              {(selectable || pinnedLeftColumns.length > 0) && (
-                <Datagrid.PinnedSection
-                  side="left"
-                  showShadow={scrollShadow.left}
-                  style={{ width: colState.pinnedLeftWidth + (selectable ? 40 : 0) }}
+            <>
+              {/* Sticky header row */}
+              <div className="sticky top-0 z-30 flex">
+                {(selectable || pinnedLeftColumns.length > 0) && (
+                  <div
+                    className="sticky top-0 left-0 z-30 flex-shrink-0 bg-card"
+                    style={{ width: colState.pinnedLeftWidth + (selectable ? 40 : 0) }}
+                  >
+                    {renderHeader(pinnedLeftColumns, pinnedLeftGrid, selectable)}
+                  </div>
+                )}
+                <div ref={headerScrollRef} className="flex-1 min-w-0 overflow-hidden">
+                  {renderHeader(centerColumns, centerGrid, false)}
+                </div>
+                {pinnedRightColumns.length > 0 && (
+                  <div
+                    className="flex-shrink-0 bg-card"
+                    style={{ width: colState.pinnedRightWidth }}
+                  >
+                    {renderHeader(pinnedRightColumns, pinnedRightGrid, false)}
+                  </div>
+                )}
+              </div>
+              {/* Body row */}
+              <div className="flex min-h-0">
+                {(selectable || pinnedLeftColumns.length > 0) && (
+                  <Datagrid.PinnedSection
+                    ref={pinnedLeftRef}
+                    side="left"
+                    style={{ width: colState.pinnedLeftWidth + (selectable ? 40 : 0) }}
+                  >
+                    {renderBody(pinnedLeftColumns, pinnedLeftGrid, selectable)}
+                  </Datagrid.PinnedSection>
+                )}
+                <Datagrid.ScrollableSection
+                  ref={horizontalScrollRef}
+                  onScroll={handleHorizontalScroll}
                 >
-                  {renderSection(
-                    pinnedLeftColumns,
-                    buildGridTemplate(pinnedLeftColumns, selectable),
-                    selectable,
-                  )}
-                </Datagrid.PinnedSection>
-              )}
-              <Datagrid.ScrollableSection
-                ref={horizontalScrollRef}
-                onScroll={handleHorizontalScroll}
-              >
-                {renderSection(centerColumns, buildGridTemplate(centerColumns, false), false)}
-              </Datagrid.ScrollableSection>
-              {pinnedRightColumns.length > 0 && (
-                <Datagrid.PinnedSection
-                  side="right"
-                  showShadow={scrollShadow.right}
-                  style={{ width: colState.pinnedRightWidth }}
-                >
-                  {renderSection(
-                    pinnedRightColumns,
-                    buildGridTemplate(pinnedRightColumns, false),
-                    false,
-                  )}
-                </Datagrid.PinnedSection>
-              )}
-            </div>
+                  {renderBody(centerColumns, centerGrid, false)}
+                </Datagrid.ScrollableSection>
+                {pinnedRightColumns.length > 0 && (
+                  <Datagrid.PinnedSection
+                    ref={pinnedRightRef}
+                    side="right"
+                    style={{ width: colState.pinnedRightWidth }}
+                  >
+                    {renderBody(pinnedRightColumns, pinnedRightGrid, false)}
+                  </Datagrid.PinnedSection>
+                )}
+              </div>
+            </>
           ) : (
-            renderSection(
-              colState.orderedColumns,
-              buildGridTemplate(colState.orderedColumns, false),
-              false,
-            )
+            <>
+              {renderHeader(
+                colState.orderedColumns,
+                selectable ? `40px ${colState.centerTemplate}`.trim() : colState.centerTemplate,
+                selectable,
+              )}
+              {renderBody(
+                colState.orderedColumns,
+                selectable ? `40px ${colState.centerTemplate}`.trim() : colState.centerTemplate,
+                selectable,
+              )}
+            </>
           )}
         </Datagrid.ScrollArea>
 
@@ -484,6 +514,8 @@ function EditableCell({ fieldType, value, col, onCommit, onCancel }: EditableCel
   const committed = useRef(false);
   const onCommitRef = useRef(onCommit);
   onCommitRef.current = onCommit;
+  const draftRef = useRef(draft);
+  draftRef.current = draft;
   const isImmediate = IMMEDIATE_COMMIT_TYPES.has(fieldType ?? '');
 
   const handleChange = useCallback(
@@ -505,9 +537,9 @@ function EditableCell({ fieldType, value, col, onCommit, onCancel }: EditableCel
       const related = e.relatedTarget as HTMLElement | null;
       if (related?.closest?.('.fixed.z-50')) return;
       committed.current = true;
-      onCommitRef.current(draft);
+      onCommitRef.current(draftRef.current);
     },
-    [draft, isImmediate],
+    [isImmediate],
   );
 
   useEffect(() => {
@@ -516,7 +548,7 @@ function EditableCell({ fieldType, value, col, onCommit, onCancel }: EditableCel
         e.preventDefault();
         if (committed.current) return;
         committed.current = true;
-        onCommitRef.current(draft);
+        onCommitRef.current(draftRef.current);
       } else if (e.key === 'Escape') {
         e.preventDefault();
         if (committed.current) return;
@@ -527,7 +559,7 @@ function EditableCell({ fieldType, value, col, onCommit, onCancel }: EditableCel
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [draft, isImmediate, onCancel]);
+  }, [isImmediate, onCancel]);
 
   return (
     <div onBlur={isImmediate ? undefined : handleBlur} className="contents">
@@ -543,7 +575,6 @@ interface SortableHeaderCellProps {
   sorted: 'asc' | 'desc' | null;
   pinned: 'left' | 'right' | false;
   filterFields: FilterFieldDeclaration[];
-  width: number;
   onSort: (direction: 'asc' | 'desc' | null) => void;
   onSetFilter: (field: string, operator: string, value: unknown) => void;
   onPin: (side: 'left' | 'right') => void;
@@ -556,7 +587,6 @@ function SortableHeaderCell({
   sorted,
   pinned,
   filterFields,
-  width: _width,
   onSort,
   onSetFilter,
   onPin,

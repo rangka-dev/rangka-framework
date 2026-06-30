@@ -406,20 +406,19 @@ DatagridFooterCount.displayName = 'Datagrid.FooterCount';
 export type DatagridPinnedSectionProps = ComponentProps<'div'> & {
   /** Which side this section is pinned to */
   side: 'left' | 'right';
-  /** Whether the center content is scrolled (shows shadow) */
-  showShadow?: boolean;
 };
 
 const DatagridPinnedSection = forwardRef<HTMLDivElement, DatagridPinnedSectionProps>(
-  ({ className, side, showShadow, style, ...props }, ref) => (
+  ({ className, side, style, ...props }, ref) => (
     <div
       ref={ref}
       data-slot="datagrid-pinned-section"
       data-side={side}
       className={cn(
-        'flex flex-col flex-shrink-0 relative z-20 bg-card overflow-visible',
-        side === 'left' && showShadow && 'shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]',
-        side === 'right' && showShadow && 'shadow-[-2px_0_4px_-2px_rgba(0,0,0,0.1)]',
+        'flex flex-col flex-shrink-0 z-20 bg-card overflow-visible',
+        side === 'left' &&
+          'sticky left-0 data-[shadow=true]:shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]',
+        side === 'right' && 'data-[shadow=true]:shadow-[-2px_0_4px_-2px_rgba(0,0,0,0.1)]',
         className,
       )}
       style={style}
