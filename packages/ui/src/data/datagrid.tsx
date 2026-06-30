@@ -55,7 +55,7 @@ const DatagridScrollArea = forwardRef<HTMLDivElement, DatagridScrollAreaProps>(
     <div
       ref={ref}
       data-slot="datagrid-scroll-area"
-      className={cn('flex-1 min-h-0 overflow-auto', className)}
+      className={cn('flex-1 min-h-0 overflow-auto scrollbar-none', className)}
       {...props}
     />
   ),

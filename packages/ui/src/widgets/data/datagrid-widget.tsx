@@ -263,7 +263,7 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
     count: records.length,
     getScrollElement: () => scrollRef.current,
     estimateSize: () => rowHeight,
-    overscan: 10,
+    overscan: 20,
   });
 
   // Infinite scroll: fetch next page when near bottom
