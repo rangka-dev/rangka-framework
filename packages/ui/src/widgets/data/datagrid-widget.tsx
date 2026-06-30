@@ -59,7 +59,9 @@ interface VirtualRowProps {
   gridTemplate: string;
   rowHeight: number;
   columns: ColumnDef[];
+  pinnedState: Record<string, 'left' | 'right' | false>;
   showSelect: boolean;
+  getColWidth: (field: string) => number;
   selected: boolean;
   activeRowId: string | null;
   activeField: string | null;
@@ -82,7 +84,9 @@ const VirtualRow = memo(function VirtualRow({
   gridTemplate,
   rowHeight,
   columns,
+  pinnedState,
   showSelect,
+  getColWidth,
   selected,
   activeRowId,
   activeField,
@@ -96,6 +100,8 @@ const VirtualRow = memo(function VirtualRow({
   onCancel,
   getCellValue,
 }: VirtualRowProps) {
+  const selectWidth = showSelect ? 40 : 0;
+
   return (
     <Datagrid.Row
       data-index={index}
@@ -110,18 +116,38 @@ const VirtualRow = memo(function VirtualRow({
           rowNumber={index + 1}
           selected={selected}
           onSelectChange={onSelect ? (checked) => onSelect(row, checked) : undefined}
+          className="sticky left-0 z-10 bg-card"
         />
       )}
       {columns.map((col) => {
         const cellActive = activeRowId === rowId && activeField === col.field;
         const cellEditing = editingRowId === rowId && editingField === col.field;
         const cellValue = getCellValue(row, rowId, col.field);
+        const pinSide = pinnedState[col.field];
+
+        let stickyClass = '';
+        let stickyStyle: React.CSSProperties | undefined;
+        if (pinSide === 'left') {
+          const colIdx = columns.findIndex((c) => c.field === col.field);
+          let leftOffset = selectWidth;
+          for (let i = 0; i < colIdx; i++) {
+            if (pinnedState[columns[i].field] === 'left') {
+              leftOffset += getColWidth(columns[i].field);
+            }
+          }
+          stickyClass = 'sticky z-10 bg-card';
+          stickyStyle = { left: leftOffset };
+        } else if (pinSide === 'right') {
+          stickyClass = 'sticky z-10 bg-card right-0';
+        }
 
         return (
           <Datagrid.Cell
             key={col.field}
             active={cellActive}
             editing={cellEditing}
+            className={stickyClass || undefined}
+            style={stickyStyle}
             onClick={(e) => {
               e.stopPropagation();
               onCellClick(rowId, col.field, col);
@@ -408,6 +434,7 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
                 allSelected={selectedRows.length === records.length && records.length > 0}
                 indeterminate={selectedRows.length > 0 && selectedRows.length < records.length}
                 onSelectAll={(checked) => on.selectAll?.(checked)}
+                className="sticky left-0 z-10 bg-card"
               />
             )}
             <DatagridDndProvider
@@ -462,7 +489,9 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
                     gridTemplate={fullGridTemplate}
                     rowHeight={rowHeight}
                     columns={allColumns}
+                    pinnedState={colState.state.pinned}
                     showSelect={selectable}
+                    getColWidth={colState.getWidth}
                     selected={isSelected}
                     activeRowId={activeCell?.rowId ?? null}
                     activeField={activeCell?.field ?? null}
@@ -667,7 +696,12 @@ function SortableHeaderCell({
     <div
       ref={setNodeRef}
       style={style}
-      className={cn('relative flex items-center', isDragging && 'opacity-50')}
+      className={cn(
+        'relative flex items-center',
+        isDragging && 'opacity-50',
+        pinned && 'sticky z-10 bg-card',
+        pinned === 'right' && 'right-0',
+      )}
       {...attributes}
     >
       <Popover open={popoverOpen} onOpenChange={handleOpenChange}>
