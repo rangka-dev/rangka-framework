@@ -300,7 +300,7 @@ export class StudioServer {
         this.reinitializeAgent();
         break;
       case 'settings.fetch_models':
-        this.handleFetchModels(ws);
+        this.handleFetchModels(ws, msg);
         break;
       case 'settings.set_model': {
         const currentConfig = loadConfig();
@@ -358,21 +358,24 @@ export class StudioServer {
     }
   }
 
-  private async handleFetchModels(ws: WebSocket): Promise<void> {
+  private async handleFetchModels(
+    ws: WebSocket,
+    msg: { provider: 'anthropic' | 'openai'; apiKey: string; baseUrl?: string },
+  ): Promise<void> {
     try {
-      const config = loadConfig();
-      if (!config?.apiKey) {
+      const { provider, apiKey, baseUrl: rawBaseUrl } = msg;
+      if (!apiKey) {
         this.send(ws, { type: 'settings.models', models: [] });
         return;
       }
 
-      const baseUrl = (config.baseUrl ?? 'https://api.anthropic.com').replace(/\/+$/, '');
+      const baseUrl = (rawBaseUrl ?? 'https://api.anthropic.com').replace(/\/+$/, '');
       const modelsUrl = baseUrl.endsWith('/v1')
         ? `${baseUrl}/models?limit=100`
         : `${baseUrl}/v1/models?limit=100`;
       const response = await fetch(modelsUrl, {
         headers: {
-          'x-api-key': config.apiKey,
+          'x-api-key': apiKey,
           'anthropic-version': '2023-06-01',
         },
       });
@@ -390,7 +393,7 @@ export class StudioServer {
       const models = body.data.map((m) => ({
         id: m.id,
         name: m.display_name || m.id,
-        provider: config.provider,
+        provider,
       }));
 
       this.send(ws, { type: 'settings.models', models });
