@@ -450,7 +450,10 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
           </Datagrid.Header>
 
           {/* Single body */}
-          <Datagrid.Body totalHeight={showSkeleton ? undefined : virtualizer.getTotalSize()}>
+          <Datagrid.Body
+            totalHeight={showSkeleton ? undefined : virtualizer.getTotalSize()}
+            rowHeight={rowHeight}
+          >
             {showSkeleton ? (
               Array.from({ length: 10 }, (_, i) => (
                 <Datagrid.Row

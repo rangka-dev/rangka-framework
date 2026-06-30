@@ -183,16 +183,25 @@ DatagridResizeHandle.displayName = 'Datagrid.ResizeHandle';
 export type DatagridBodyProps = ComponentProps<'div'> & {
   /** Total height for virtual scroll spacer */
   totalHeight?: number;
+  /** Row height for placeholder background pattern */
+  rowHeight?: number;
 };
 
 const DatagridBody = forwardRef<HTMLDivElement, DatagridBodyProps>(
-  ({ className, totalHeight, style, ...props }, ref) => (
+  ({ className, totalHeight, rowHeight, style, ...props }, ref) => (
     <div
       ref={ref}
       role="rowgroup"
       data-slot="datagrid-body"
       className={cn('relative', className)}
-      style={{ ...style, height: totalHeight }}
+      style={{
+        ...style,
+        height: totalHeight,
+        backgroundImage: rowHeight
+          ? `linear-gradient(to bottom, var(--color-border) 1px, transparent 1px)`
+          : undefined,
+        backgroundSize: rowHeight ? `100% ${rowHeight}px` : undefined,
+      }}
       {...props}
     />
   ),
