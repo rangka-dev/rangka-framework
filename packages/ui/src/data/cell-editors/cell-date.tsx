@@ -63,7 +63,7 @@ export const CellDate = forwardRef<HTMLDivElement, CellDateProps>(
           className="flex items-center h-full w-full text-2xs text-foreground outline-none"
         >
           <span className={cn('flex-1 text-left truncate', !dateValue && 'text-muted-foreground')}>
-            {dateValue ? format(dateValue, 'PPP') : placeholder}
+            {dateValue ? format(dateValue, 'MMM dd, yyyy') : placeholder}
           </span>
         </button>
         {open && (

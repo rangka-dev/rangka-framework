@@ -55,7 +55,7 @@ const DatagridScrollArea = forwardRef<HTMLDivElement, DatagridScrollAreaProps>(
     <div
       ref={ref}
       data-slot="datagrid-scroll-area"
-      className={cn('flex-1 min-h-0 overflow-auto', className)}
+      className={cn('flex-1 min-h-0 overflow-auto scrollbar-none', className)}
       {...props}
     />
   ),
@@ -75,7 +75,7 @@ const DatagridHeader = forwardRef<HTMLDivElement, DatagridHeaderProps>(
       ref={ref}
       role="row"
       data-slot="datagrid-header"
-      className={cn('sticky top-0 z-10 grid border-b border-border bg-card', className)}
+      className={cn('sticky top-0 z-20 grid min-w-fit border-b border-border bg-card', className)}
       style={{ ...style, gridTemplateColumns: gridTemplate }}
       {...props}
     />
@@ -183,16 +183,25 @@ DatagridResizeHandle.displayName = 'Datagrid.ResizeHandle';
 export type DatagridBodyProps = ComponentProps<'div'> & {
   /** Total height for virtual scroll spacer */
   totalHeight?: number;
+  /** Row height for placeholder background pattern */
+  rowHeight?: number;
 };
 
 const DatagridBody = forwardRef<HTMLDivElement, DatagridBodyProps>(
-  ({ className, totalHeight, style, ...props }, ref) => (
+  ({ className, totalHeight, rowHeight, style, ...props }, ref) => (
     <div
       ref={ref}
       role="rowgroup"
       data-slot="datagrid-body"
       className={cn('relative', className)}
-      style={{ ...style, height: totalHeight }}
+      style={{
+        ...style,
+        height: totalHeight,
+        backgroundImage: rowHeight
+          ? `linear-gradient(to bottom, var(--color-border) 1px, transparent 1px)`
+          : undefined,
+        backgroundSize: rowHeight ? `100% ${rowHeight}px` : undefined,
+      }}
       {...props}
     />
   ),
@@ -223,7 +232,7 @@ const DatagridRow = forwardRef<HTMLDivElement, DatagridRowProps>(
       data-selected={selected || undefined}
       data-active={active || undefined}
       className={cn(
-        'absolute left-0 min-w-full grid border-b border-border/50',
+        'absolute top-0 left-0 min-w-full grid border-b border-border/50 will-change-transform',
         selected && 'bg-primary/5',
         active && 'bg-foreground/3',
         !selected && !active && 'hover:bg-foreground/3',
@@ -233,7 +242,7 @@ const DatagridRow = forwardRef<HTMLDivElement, DatagridRowProps>(
         ...style,
         gridTemplateColumns: gridTemplate,
         height: rowHeight,
-        transform: offset != null ? `translateY(${offset}px)` : undefined,
+        transform: offset != null ? `translate3d(0, ${offset}px, 0)` : undefined,
       }}
       {...props}
     />
@@ -341,7 +350,7 @@ const DatagridSelectHeader = forwardRef<HTMLDivElement, DatagridSelectHeaderProp
       ref={ref}
       role="columnheader"
       data-slot="datagrid-select-header"
-      className={cn('flex items-center justify-center border-r border-border', className)}
+      className={cn('flex items-center justify-center h-9 border-r border-border', className)}
       {...props}
     >
       <input
@@ -401,6 +410,49 @@ const DatagridFooterCount = forwardRef<HTMLSpanElement, DatagridFooterCountProps
 );
 DatagridFooterCount.displayName = 'Datagrid.FooterCount';
 
+// --- Datagrid.PinnedSection ---
+
+export type DatagridPinnedSectionProps = ComponentProps<'div'> & {
+  /** Which side this section is pinned to */
+  side: 'left' | 'right';
+};
+
+const DatagridPinnedSection = forwardRef<HTMLDivElement, DatagridPinnedSectionProps>(
+  ({ className, side, style, ...props }, ref) => (
+    <div
+      ref={ref}
+      data-slot="datagrid-pinned-section"
+      data-side={side}
+      className={cn(
+        'flex flex-col flex-shrink-0 z-20 bg-card overflow-visible',
+        side === 'left' &&
+          'sticky left-0 data-[shadow=true]:shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]',
+        side === 'right' && 'data-[shadow=true]:shadow-[-2px_0_4px_-2px_rgba(0,0,0,0.1)]',
+        className,
+      )}
+      style={style}
+      {...props}
+    />
+  ),
+);
+DatagridPinnedSection.displayName = 'Datagrid.PinnedSection';
+
+// --- Datagrid.ScrollableSection ---
+
+export type DatagridScrollableSectionProps = ComponentProps<'div'>;
+
+const DatagridScrollableSection = forwardRef<HTMLDivElement, DatagridScrollableSectionProps>(
+  ({ className, ...props }, ref) => (
+    <div
+      ref={ref}
+      data-slot="datagrid-scrollable-section"
+      className={cn('flex flex-col flex-1 min-w-0 overflow-x-auto relative z-10', className)}
+      {...props}
+    />
+  ),
+);
+DatagridScrollableSection.displayName = 'Datagrid.ScrollableSection';
+
 // --- Compose ---
 
 export const Datagrid = Object.assign(DatagridRoot, {
@@ -415,4 +467,6 @@ export const Datagrid = Object.assign(DatagridRoot, {
   SelectHeader: DatagridSelectHeader,
   Footer: DatagridFooter,
   FooterCount: DatagridFooterCount,
+  PinnedSection: DatagridPinnedSection,
+  ScrollableSection: DatagridScrollableSection,
 });
