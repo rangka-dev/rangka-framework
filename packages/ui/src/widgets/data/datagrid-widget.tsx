@@ -20,6 +20,7 @@ import {
   Paperclip,
   FileText,
 } from 'lucide-react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { cn } from '../../lib/cn';
 import { Datagrid } from '../../data/datagrid';
 import { FilterBar } from '../../data/filter-bar';
@@ -78,7 +79,6 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
   const maxHeight = props.maxHeight as number | undefined;
   const emptyText = (props.emptyText as string) ?? 'No records';
   const loading = props.loading as boolean | undefined;
-  const rawFetching = props.fetching as boolean | undefined;
   const addRow = (props.addRow as boolean) ?? false;
   const editable = (props.editable as boolean) ?? true;
 
@@ -89,6 +89,9 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
 
   const columns = resolveColumns(props.columns as ColumnDef[] | undefined, childNodes);
   const records = (bind.value as Record<string, unknown>[]) ?? [];
+
+  // Only show skeleton on true initial load — not on filter/sort changes
+  const showSkeleton = loading && records.length === 0;
 
   const rowHeights = { compact: 32, default: 40, comfortable: 52 };
   const rowHeight = rowHeights[rowHeightKey];
@@ -105,28 +108,48 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
 
   const [activeCell, setActiveCell] = useState<CellRef | null>(null);
   const [editingCell, setEditingCell] = useState<CellRef | null>(null);
-  const [pendingEdits, setPendingEdits] = useState<Map<string, unknown>>(new Map());
-  const [savingCells, setSavingCells] = useState<Set<string>>(new Set());
   const gridRef = useRef<HTMLDivElement>(null);
-
-  const fetching = rawFetching && pendingEdits.size === 0 && savingCells.size === 0;
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const localValues = useRef<Map<string, unknown>>(new Map());
 
   const cellKey = (rowId: string, field: string) => `${rowId}:${field}`;
 
   const getCellValue = (row: Record<string, unknown>, rowId: string, field: string) => {
     const key = cellKey(rowId, field);
-    if (pendingEdits.has(key)) return pendingEdits.get(key);
+    if (localValues.current.has(key)) {
+      const localVal = localValues.current.get(key);
+      // Clear once the cache has caught up
+      if (row[field] === localVal) {
+        localValues.current.delete(key);
+      }
+      return localVal;
+    }
     return row[field];
   };
+
+  // TanStack Virtual
+  const virtualizer = useVirtualizer({
+    count: records.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => rowHeight,
+    overscan: 10,
+  });
 
   useEffect(() => {
     if (!activeCell && !editingCell) return;
 
     const handleMouseDown = (e: MouseEvent) => {
-      if (gridRef.current && !gridRef.current.contains(e.target as Node)) {
-        setActiveCell(null);
-        setEditingCell(null);
-      }
+      const target = e.target as Node;
+      // Don't deactivate if clicking inside the grid
+      if (gridRef.current && gridRef.current.contains(target)) return;
+      // Don't deactivate if clicking inside a portaled cell editor (dropdowns, date pickers)
+      const portal =
+        (target as HTMLElement).closest?.('[data-slot="datagrid-cell-portal"]') ||
+        (target as HTMLElement).closest?.('.fixed.z-50');
+      if (portal) return;
+
+      setActiveCell(null);
+      setEditingCell(null);
     };
 
     document.addEventListener('mousedown', handleMouseDown);
@@ -138,43 +161,6 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
     if (sorted.field === field) return sorted.direction;
     return null;
   };
-
-  const commitCell = useCallback(
-    (rowId: string, field: string, value: unknown, originalValue: unknown) => {
-      if (value === originalValue) return;
-
-      const key = cellKey(rowId, field);
-      setPendingEdits((prev) => {
-        const next = new Map(prev);
-        next.set(key, value);
-        return next;
-      });
-      setSavingCells((prev) => new Set(prev).add(key));
-
-      Promise.resolve(on.cellChange?.(rowId, field, value)).then(
-        () => {
-          setPendingEdits((prev) => {
-            const next = new Map(prev);
-            next.delete(key);
-            return next;
-          });
-          setSavingCells((prev) => {
-            const next = new Set(prev);
-            next.delete(key);
-            return next;
-          });
-        },
-        () => {
-          setSavingCells((prev) => {
-            const next = new Set(prev);
-            next.delete(key);
-            return next;
-          });
-        },
-      );
-    },
-    [on],
-  );
 
   const handleCellClick = useCallback(
     (rowId: string, field: string, col: ColumnDef) => {
@@ -203,6 +189,21 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
     [editingCell, editable],
   );
 
+  const handleCommit = useCallback(
+    (rowId: string, field: string, value: unknown) => {
+      localValues.current.set(cellKey(rowId, field), value);
+      setEditingCell(null);
+      setActiveCell({ rowId, field });
+      on.cellChange?.(rowId, field, value);
+    },
+    [on],
+  );
+
+  const handleCancel = useCallback((rowId: string, field: string) => {
+    setEditingCell(null);
+    setActiveCell({ rowId, field });
+  }, []);
+
   const isCellActive = (rowId: string, field: string) =>
     activeCell?.rowId === rowId && activeCell?.field === field;
 
@@ -229,7 +230,7 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
         />
       )}
       <Datagrid ref={gridRef} maxHeight={maxHeight}>
-        <Datagrid.ScrollArea>
+        <Datagrid.ScrollArea ref={scrollRef}>
           <Datagrid.Header gridTemplate={gridTemplate}>
             {selectable && (
               <Datagrid.SelectHeader
@@ -250,8 +251,8 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
             ))}
           </Datagrid.Header>
 
-          <Datagrid.Body totalHeight={loading ? undefined : records.length * rowHeight}>
-            {loading ? (
+          <Datagrid.Body totalHeight={showSkeleton ? undefined : virtualizer.getTotalSize()}>
+            {showSkeleton ? (
               Array.from({ length: 10 }, (_, i) => (
                 <Datagrid.Row
                   key={`skeleton-${i}`}
@@ -274,7 +275,9 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
                 </Datagrid.Cell>
               </Datagrid.Row>
             ) : (
-              records.map((row, idx) => {
+              virtualizer.getVirtualItems().map((virtualRow) => {
+                const row = records[virtualRow.index];
+                const idx = virtualRow.index;
                 const rowId = (row.id as string) ?? String(idx);
                 const isSelected = selectedRows.includes(rowId);
                 return (
@@ -282,10 +285,9 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
                     key={rowId}
                     gridTemplate={gridTemplate}
                     rowHeight={rowHeight}
-                    offset={idx * rowHeight}
+                    offset={virtualRow.start}
                     selected={isSelected}
                     onClick={() => on.rowClick?.(row)}
-                    className={fetching ? 'opacity-50' : undefined}
                   >
                     {selectable && (
                       <Datagrid.SelectCell
@@ -297,16 +299,13 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
                     {columns.map((col) => {
                       const cellActive = isCellActive(rowId, col.field);
                       const cellEditing = isCellEditing(rowId, col.field);
-                      const key = cellKey(rowId, col.field);
                       const cellValue = getCellValue(row, rowId, col.field);
-                      const isSaving = savingCells.has(key);
 
                       return (
                         <Datagrid.Cell
                           key={col.field}
                           active={cellActive}
                           editing={cellEditing}
-                          pending={isSaving}
                           onClick={(e) => {
                             e.stopPropagation();
                             handleCellClick(rowId, col.field, col);
@@ -317,17 +316,10 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
                           {cellEditing ? (
                             <EditableCell
                               fieldType={col.fieldType}
-                              initialValue={cellValue}
+                              value={cellValue}
                               col={toCellColumn(col)}
-                              onCommit={(val) => {
-                                commitCell(rowId, col.field, val, row[col.field]);
-                                setEditingCell(null);
-                                setActiveCell({ rowId, field: col.field });
-                              }}
-                              onCancel={() => {
-                                setEditingCell(null);
-                                setActiveCell({ rowId, field: col.field });
-                              }}
+                              onCommit={(val) => handleCommit(rowId, col.field, val)}
+                              onCancel={() => handleCancel(rowId, col.field)}
                             />
                           ) : (
                             renderDisplay(col.fieldType, cellValue, toCellColumn(col))
@@ -357,7 +349,7 @@ export function DatagridWidget({ props, bind, on, childNodes }: WidgetComponentP
   );
 }
 
-// --- Editable Cell (holds local draft, commits on blur/Enter) ---
+// --- Editable Cell ---
 
 const IMMEDIATE_COMMIT_TYPES = new Set([
   'boolean',
@@ -370,45 +362,54 @@ const IMMEDIATE_COMMIT_TYPES = new Set([
 
 interface EditableCellProps {
   fieldType: string | undefined;
-  initialValue: unknown;
+  value: unknown;
   col: CellColumn;
   onCommit: (value: unknown) => void;
   onCancel: () => void;
 }
 
-function EditableCell({ fieldType, initialValue, col, onCommit, onCancel }: EditableCellProps) {
-  const [draft, setDraft] = useState<unknown>(initialValue);
+function EditableCell({ fieldType, value, col, onCommit, onCancel }: EditableCellProps) {
+  const [draft, setDraft] = useState<unknown>(value);
   const committed = useRef(false);
+  const onCommitRef = useRef(onCommit);
+  onCommitRef.current = onCommit;
   const isImmediate = IMMEDIATE_COMMIT_TYPES.has(fieldType ?? '');
 
-  const commit = useCallback(
-    (value?: unknown) => {
+  const handleChange = useCallback(
+    (newValue: unknown) => {
       if (committed.current) return;
-      committed.current = true;
-      onCommit(value !== undefined ? value : draft);
-    },
-    [draft, onCommit],
-  );
-
-  const handleDraftChange = useCallback(
-    (value: unknown) => {
-      setDraft(value);
       if (isImmediate) {
-        if (committed.current) return;
         committed.current = true;
-        onCommit(value);
+        onCommitRef.current(newValue);
+      } else {
+        setDraft(newValue);
       }
     },
-    [isImmediate, onCommit],
+    [isImmediate],
+  );
+
+  const handleBlur = useCallback(
+    (e: React.FocusEvent) => {
+      if (committed.current || isImmediate) return;
+      // Don't commit if focus moved to a portaled element (dropdown, datepicker)
+      const related = e.relatedTarget as HTMLElement | null;
+      if (related?.closest?.('.fixed.z-50')) return;
+      committed.current = true;
+      onCommitRef.current(draft);
+    },
+    [draft, isImmediate],
   );
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Enter' && !isImmediate) {
         e.preventDefault();
-        commit();
+        if (committed.current) return;
+        committed.current = true;
+        onCommitRef.current(draft);
       } else if (e.key === 'Escape') {
         e.preventDefault();
+        if (committed.current) return;
         committed.current = true;
         onCancel();
       }
@@ -416,15 +417,11 @@ function EditableCell({ fieldType, initialValue, col, onCommit, onCancel }: Edit
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [commit, onCancel, isImmediate]);
-
-  const handleBlur = useCallback(() => {
-    if (!isImmediate) commit();
-  }, [isImmediate, commit]);
+  }, [draft, isImmediate, onCancel]);
 
   return (
-    <div onBlur={handleBlur} className="contents">
-      {renderEditor(fieldType, draft, handleDraftChange, col)}
+    <div onBlur={isImmediate ? undefined : handleBlur} className="contents">
+      {renderEditor(fieldType, isImmediate ? value : draft, handleChange, col)}
     </div>
   );
 }

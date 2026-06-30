@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from 'react';
+import { useQueryClient, useMutation as useTanstackMutation } from '@tanstack/react-query';
 import type { WidgetNode } from '@rangka/shared';
 import type { WidgetProps } from '../types.js';
 import { useWidgetComponent } from '../../ui/UIProvider.js';
@@ -8,11 +9,13 @@ import { useModelQuery } from '../data/useModelQuery.js';
 import { useDataQuery } from '../hooks/useDataQuery.js';
 import { useModelMeta } from '../../data/useModelMeta.js';
 import { useMeta } from '../../context/MetaContext.js';
-import { useMutation } from '../../data/useMutation.js';
+import { apiClient } from '../../api/client.js';
+import { modelToPath } from '../../api/paths.js';
 
 export function DatagridController({ props, on, childNodes }: WidgetProps) {
   const ctx = useWidgetContext();
   const store = usePageState();
+  const queryClient = useQueryClient();
   const Datagrid = useWidgetComponent('datagrid');
   const { models } = useMeta();
 
@@ -21,7 +24,7 @@ export function DatagridController({ props, on, childNodes }: WidgetProps) {
   const pageSize = (props.pageSize as number | undefined) ?? 50;
 
   const { modelMeta } = useModelMeta(model);
-  const mutation = useMutation(model || '');
+  const basePath = modelToPath(model || '');
 
   const linkFields = useMemo(() => {
     if (!modelMeta) return [];
@@ -39,6 +42,45 @@ export function DatagridController({ props, on, childNodes }: WidgetProps) {
   const { filters: activeFilters } = useDataQuery(model || '');
 
   const records = source.data ?? [];
+
+  const cellUpdateMutation = useTanstackMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Record<string, unknown> }) => {
+      const response = await apiClient(`${basePath}/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw response;
+      return response.json();
+    },
+  });
+
+  const handleCellChange = useCallback(
+    async (rowId: string, field: string, value: unknown) => {
+      if (!model) return;
+
+      // Optimistic cache update — match any query for this model
+      queryClient.setQueriesData({ queryKey: ['model', model] }, (old: unknown) => {
+        if (!old || typeof old !== 'object') return old;
+        const cache = old as { data?: Record<string, unknown>[] };
+        if (!Array.isArray(cache.data)) return old;
+        return {
+          ...cache,
+          data: cache.data.map((row) =>
+            String(row.id) === rowId ? { ...row, [field]: value } : row,
+          ),
+        };
+      });
+
+      try {
+        await cellUpdateMutation.mutateAsync({ id: rowId, data: { [field]: value } });
+      } catch {
+        queryClient.invalidateQueries({ queryKey: ['model', model] });
+      }
+
+      on.cellChange?.(rowId, field, value);
+    },
+    [model, queryClient, cellUpdateMutation, on, basePath],
+  );
 
   const handleSort = useCallback(
     (field: string, direction?: 'asc' | 'desc' | null) => {
@@ -96,19 +138,6 @@ export function DatagridController({ props, on, childNodes }: WidgetProps) {
       store.set(`$page.${model}`, 1);
     },
     [model, store],
-  );
-
-  const handleCellChange = useCallback(
-    async (rowId: string, field: string, value: unknown) => {
-      if (!model) return;
-      try {
-        await mutation.update(rowId, { [field]: value });
-      } catch {
-        // Widget handles error display via the returned promise rejection
-      }
-      on.cellChange?.(rowId, field, value);
-    },
-    [model, mutation, on],
   );
 
   if (!Datagrid) return null;
