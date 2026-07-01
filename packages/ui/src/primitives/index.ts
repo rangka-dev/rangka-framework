@@ -80,3 +80,10 @@ export {
 } from './tooltip';
 export { Text, textVariants, type TextProps } from './text';
 export { Image, imageVariants, type ImageProps } from './image';
+export {
+  InlineField,
+  inlineFieldVariants,
+  type InlineFieldProps,
+  type InlineFieldValueProps,
+  type InlineFieldEmptyProps,
+} from './inline-field';

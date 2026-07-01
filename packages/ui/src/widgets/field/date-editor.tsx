@@ -1,9 +1,9 @@
 import { useState, useCallback } from 'react';
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Icon } from '../../../primitives/icon';
-import { useClickOutside } from '../../../lib/use-click-outside';
-import { cn } from '../../../lib/cn';
-import { FieldDisplay, EmptyValue } from '../field-display';
+import { Icon } from '../../primitives/icon';
+import { InlineField } from '../../primitives/inline-field';
+import { useClickOutside } from '../../lib/use-click-outside';
+import { cn } from '../../lib/cn';
 
 interface DateEditorProps {
   label?: string;
@@ -46,24 +46,26 @@ export function DateEditor({ label, value, readOnly, onSave }: DateEditorProps) 
 
   return (
     <div ref={containerRef}>
-      <FieldDisplay
+      <InlineField
         label={label}
         icon={Calendar}
-        value={formatted ?? <EmptyValue />}
         readOnly={readOnly}
         editing={editing}
-        saving={saving}
-        onClick={handleClick}
+        onClick={!editing ? handleClick : undefined}
       >
-        {editing && (
+        {editing ? (
           <>
-            <span className={cn('text-2xs block truncate font-medium', saving && 'opacity-50')}>
-              {formatted ?? <EmptyValue />}
-            </span>
+            <InlineField.Value saving={saving}>
+              {formatted ?? <InlineField.Empty />}
+            </InlineField.Value>
             <CalendarPopover value={value} onSelect={handleSelect} />
           </>
+        ) : (
+          <InlineField.Value saving={saving} readOnly={readOnly}>
+            {formatted ?? <InlineField.Empty />}
+          </InlineField.Value>
         )}
-      </FieldDisplay>
+      </InlineField>
     </div>
   );
 }

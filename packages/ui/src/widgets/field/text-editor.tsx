@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { Type, Hash, DollarSign } from 'lucide-react';
-import { Input } from '../../../primitives/input';
-import { cn } from '../../../lib/cn';
-import { FieldDisplay, EmptyValue } from '../field-display';
+import { InlineField } from '../../primitives/inline-field';
+import { Input } from '../../primitives/input';
+import { cn } from '../../lib/cn';
 
 interface TextEditorProps {
   label?: string;
@@ -62,16 +62,14 @@ export function TextEditor({
   const step = fieldType === 'decimal' || fieldType === 'money' ? '0.01' : undefined;
 
   return (
-    <FieldDisplay
+    <InlineField
       label={label}
       icon={icon}
-      value={formatValue(value, fieldType, currency)}
       readOnly={readOnly}
       editing={editing}
-      saving={saving}
-      onClick={handleClick}
+      onClick={!editing ? handleClick : undefined}
     >
-      {editing && (
+      {editing ? (
         <div className="flex items-center gap-1">
           {fieldType === 'money' && (
             <span className="text-2xs text-muted-foreground">{currency}</span>
@@ -91,13 +89,17 @@ export function TextEditor({
             )}
           />
         </div>
+      ) : (
+        <InlineField.Value saving={saving} readOnly={readOnly}>
+          {formatValue(value, fieldType, currency)}
+        </InlineField.Value>
       )}
-    </FieldDisplay>
+    </InlineField>
   );
 }
 
 function formatValue(value: unknown, fieldType?: string, currency?: string): React.ReactNode {
-  if (value == null || value === '') return <EmptyValue />;
+  if (value == null || value === '') return <InlineField.Empty />;
   switch (fieldType) {
     case 'int':
       return <span className="tabular-nums">{Number(value).toLocaleString()}</span>;

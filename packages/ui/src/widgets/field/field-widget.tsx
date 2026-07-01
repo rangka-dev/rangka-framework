@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
-import { TextEditor } from './editors/text-editor';
-import { SelectEditor } from './editors/select-editor';
-import { CheckboxEditor } from './editors/checkbox-editor';
-import { DateEditor } from './editors/date-editor';
-import { DateTimeEditor } from './editors/datetime-editor';
-import { LinkEditor } from './editors/link-editor';
+import { TextEditor } from './text-editor';
+import { SelectEditor } from './select-editor';
+import { CheckboxEditor } from './checkbox-editor';
+import { DateEditor } from './date-editor';
+import { DateTimeEditor } from './datetime-editor';
+import { LinkEditor } from './link-editor';
 import type { WidgetComponentProps } from '../types';
 
 export function FieldWidget({ props, bind, on }: WidgetComponentProps) {

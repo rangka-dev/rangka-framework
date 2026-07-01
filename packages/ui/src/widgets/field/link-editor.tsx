@@ -1,9 +1,9 @@
 import { useState, useCallback } from 'react';
 import { Link2 } from 'lucide-react';
-import { Input } from '../../../primitives/input';
-import { useClickOutside } from '../../../lib/use-click-outside';
-import { cn } from '../../../lib/cn';
-import { FieldDisplay, EmptyValue } from '../field-display';
+import { Input } from '../../primitives/input';
+import { InlineField } from '../../primitives/inline-field';
+import { useClickOutside } from '../../lib/use-click-outside';
+import { cn } from '../../lib/cn';
 
 interface LinkEditorProps {
   label?: string;
@@ -46,25 +46,21 @@ export function LinkEditor({ label, value, options = [], readOnly, onSave }: Lin
   const displayValue = selected ? (
     <span className="text-primary">{selected.label}</span>
   ) : (
-    <EmptyValue />
+    <InlineField.Empty />
   );
 
   return (
     <div ref={containerRef}>
-      <FieldDisplay
+      <InlineField
         label={label}
         icon={Link2}
-        value={displayValue}
         readOnly={readOnly}
         editing={editing}
-        saving={saving}
-        onClick={handleClick}
+        onClick={!editing ? handleClick : undefined}
       >
-        {editing && (
+        {editing ? (
           <>
-            <span className={cn('text-2xs block truncate font-medium', saving && 'opacity-50')}>
-              {displayValue}
-            </span>
+            <InlineField.Value saving={saving}>{displayValue}</InlineField.Value>
             <div className="absolute top-full left-0 mt-1 z-50">
               <div className="min-w-[200px] shadow-md border border-border rounded-md bg-popover py-1">
                 <div className="px-2 pb-1">
@@ -96,8 +92,12 @@ export function LinkEditor({ label, value, options = [], readOnly, onSave }: Lin
               </div>
             </div>
           </>
+        ) : (
+          <InlineField.Value saving={saving} readOnly={readOnly}>
+            {displayValue}
+          </InlineField.Value>
         )}
-      </FieldDisplay>
+      </InlineField>
     </div>
   );
 }

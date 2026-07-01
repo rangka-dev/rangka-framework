@@ -1,10 +1,10 @@
 import { useState, useCallback } from 'react';
 import { Clock, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Icon } from '../../../primitives/icon';
-import { Input } from '../../../primitives/input';
-import { useClickOutside } from '../../../lib/use-click-outside';
-import { cn } from '../../../lib/cn';
-import { FieldDisplay, EmptyValue } from '../field-display';
+import { Icon } from '../../primitives/icon';
+import { Input } from '../../primitives/input';
+import { InlineField } from '../../primitives/inline-field';
+import { useClickOutside } from '../../lib/use-click-outside';
+import { cn } from '../../lib/cn';
 
 interface DateTimeEditorProps {
   label?: string;
@@ -59,20 +59,18 @@ export function DateTimeEditor({ label, value, readOnly, onSave }: DateTimeEdito
 
   return (
     <div ref={containerRef}>
-      <FieldDisplay
+      <InlineField
         label={label}
         icon={Clock}
-        value={formatted ?? <EmptyValue />}
         readOnly={readOnly}
         editing={editing}
-        saving={saving}
-        onClick={handleClick}
+        onClick={!editing ? handleClick : undefined}
       >
-        {editing && (
+        {editing ? (
           <>
-            <span className={cn('text-2xs block truncate font-medium', saving && 'opacity-50')}>
-              {formatted ?? <EmptyValue />}
-            </span>
+            <InlineField.Value saving={saving}>
+              {formatted ?? <InlineField.Empty />}
+            </InlineField.Value>
             <div
               className="absolute top-full left-0 mt-1 z-50 rounded-md border border-border bg-card p-3 shadow-md"
               onClick={(e) => e.stopPropagation()}
@@ -85,8 +83,12 @@ export function DateTimeEditor({ label, value, readOnly, onSave }: DateTimeEdito
               />
             </div>
           </>
+        ) : (
+          <InlineField.Value saving={saving} readOnly={readOnly}>
+            {formatted ?? <InlineField.Empty />}
+          </InlineField.Value>
         )}
-      </FieldDisplay>
+      </InlineField>
     </div>
   );
 }
