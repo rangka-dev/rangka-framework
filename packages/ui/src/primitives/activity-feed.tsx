@@ -198,13 +198,13 @@ const ActivityFeedCommentInput = forwardRef<HTMLDivElement, ActivityFeedCommentI
   ({ className, placeholder = 'Write a comment...', onSubmit, onAttach, ...props }, ref) => {
     return (
       <div ref={ref} className={cn('relative z-10 flex flex-col gap-2 pt-3', className)} {...props}>
-        <div className="relative">
+        <div className="flex flex-col rounded-md border border-border">
           <textarea
-            className="min-h-[72px] w-full resize-none rounded-md border border-border bg-transparent px-3 py-2 pb-9 text-2xs text-foreground placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-border"
+            className="min-h-[72px] w-full resize-none bg-transparent px-3 pt-3 py-2 text-2xs text-foreground placeholder:text-muted-foreground/50 focus-visible:outline-none"
             placeholder={placeholder}
             rows={3}
           />
-          <div className="absolute right-2 bottom-2 flex items-center gap-2">
+          <div className="flex items-center justify-end gap-2 px-3 py-2">
             <button
               type="button"
               className="inline-flex size-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-foreground/6 hover:text-foreground"
@@ -214,7 +214,7 @@ const ActivityFeedCommentInput = forwardRef<HTMLDivElement, ActivityFeedCommentI
             </button>
             <button
               type="button"
-              className="inline-flex size-6 items-center justify-center rounded bg-foreground text-background transition-colors hover:bg-foreground/80"
+              className="inline-flex size-6 items-center justify-center rounded bg-primary text-primary-foreground transition-colors hover:bg-primary-hover"
               onClick={() => onSubmit?.('')}
             >
               <Icon icon={SendHorizonal} size="sm" />
