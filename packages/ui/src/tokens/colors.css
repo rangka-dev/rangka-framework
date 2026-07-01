@@ -4,20 +4,20 @@
    ========================================================================== */
 
 :root {
-  /* ---------- Primitive: Neutral scale ---------- */
+  /* ---------- Primitive: Neutral scale (near-achromatic, slight warm lean) ---------- */
   --neutral-white: oklch(1 0 0);
-  --neutral-50: oklch(0.985 0.0003 230.66);
-  --neutral-100: oklch(0.97 0.0007 230.67);
-  --neutral-200: oklch(0.954 0.001 230.67);
-  --neutral-300: oklch(0.939 0.0014 230.68);
-  --neutral-400: oklch(0.924 0.0017 230.69);
-  --neutral-500: oklch(0.893 0.0024 230.7);
-  --neutral-600: oklch(0.861 0.0032 230.71);
-  --neutral-700: oklch(0.667 0.0079 230.82);
-  --neutral-800: oklch(0.529 0.0083 230.88);
-  --neutral-900: oklch(0.438 0.0066 230.87);
-  --neutral-1000: oklch(0.238 0.0029 230.83);
-  --neutral-black: oklch(0.147 0.0034 230.83);
+  --neutral-50: oklch(0.985 0.001 70);
+  --neutral-100: oklch(0.975 0.001 70);
+  --neutral-200: oklch(0.965 0.001 70);
+  --neutral-300: oklch(0.94 0.002 70);
+  --neutral-400: oklch(0.91 0.002 70);
+  --neutral-500: oklch(0.88 0.002 70);
+  --neutral-600: oklch(0.82 0.003 70);
+  --neutral-700: oklch(0.65 0.005 65);
+  --neutral-800: oklch(0.5 0.006 60);
+  --neutral-900: oklch(0.4 0.005 58);
+  --neutral-1000: oklch(0.25 0.006 60);
+  --neutral-black: oklch(0.15 0.004 55);
 
   /* ---------- Primitive: Brand scale ---------- */
   --brand-100: oklch(0.985 0.008 236.56);
@@ -69,7 +69,7 @@
      ========================================================================== */
 
   /* Backgrounds */
-  --color-background: var(--neutral-white);
+  --color-background: var(--neutral-50);
   --color-foreground: var(--neutral-1000);
   --color-canvas: var(--neutral-200);
   --color-surface: var(--neutral-white);
@@ -84,7 +84,7 @@
   /* Brand / Accent */
   --color-primary: var(--brand-default);
   --color-primary-hover: var(--brand-900);
-  --color-primary-foreground: var(--neutral-50);
+  --color-primary-foreground: var(--neutral-white);
   --color-accent: var(--brand-100);
   --color-accent-foreground: var(--brand-default);
 
@@ -123,12 +123,12 @@
   --color-error-foreground: var(--red-900);
 
   /* Borders */
-  --color-border: var(--neutral-300);
-  --color-border-strong: var(--neutral-500);
-  --color-border-subtle: var(--neutral-200);
+  --color-border: var(--neutral-500);
+  --color-border-strong: var(--neutral-700);
+  --color-border-subtle: var(--neutral-400);
 
   /* Input */
-  --color-input: var(--neutral-300);
+  --color-input: var(--neutral-500);
   --color-ring: var(--brand-default);
 
   /* Cards & Popovers */
@@ -141,10 +141,12 @@
   --color-backdrop: var(--alpha-black-500);
 
   /* Shadows */
-  --shadow-sm: 0px 1px 6px -1px oklch(0.2 0 0 / 3%), 0px 1px 4px 0px oklch(0.2 0 0 / 4%);
-  --shadow-md: 0px 2px 4px -1px oklch(0.2 0 0 / 4%), 0px 4px 6px -1px oklch(0.2 0 0 / 5%);
-  --shadow-lg: 0px 10px 10px -5px oklch(0.2 0 0 / 4%), 0px 10px 40px -5px oklch(0.2 0 0 / 4%);
-  --shadow-xl: 0px 10px 10px -10px oklch(0.2 0 0 / 4%), 0px 30px 60px -12px oklch(0.2 0 0 / 10%);
+  --shadow-sm: 0px 1px 6px -1px oklch(0.2 0.002 60 / 4%), 0px 1px 4px 0px oklch(0.2 0.002 60 / 5%);
+  --shadow-md: 0px 2px 4px -1px oklch(0.2 0.002 60 / 5%), 0px 4px 6px -1px oklch(0.2 0.002 60 / 6%);
+  --shadow-lg:
+    0px 10px 10px -5px oklch(0.2 0.002 60 / 4%), 0px 10px 40px -5px oklch(0.2 0.002 60 / 5%);
+  --shadow-xl:
+    0px 10px 10px -10px oklch(0.2 0.002 60 / 5%), 0px 30px 60px -12px oklch(0.2 0.002 60 / 10%);
 }
 
 /* ==========================================================================
@@ -153,12 +155,12 @@
 
 .dark {
   /* Backgrounds */
-  --color-background: var(--neutral-black);
-  --color-foreground: var(--neutral-100);
+  --color-background: oklch(0.15 0.004 230.83);
+  --color-foreground: oklch(0.97 0.001 230.67);
   --color-canvas: oklch(0.17 0.003 230.83);
   --color-surface: oklch(0.19 0.003 230.83);
   --color-muted: oklch(0.22 0.003 230.83);
-  --color-muted-foreground: var(--neutral-600);
+  --color-muted-foreground: oklch(0.82 0.003 230.71);
 
   /* Layers */
   --color-layer: oklch(0.22 0.003 230.83);
@@ -168,30 +170,30 @@
   /* Brand / Accent */
   --color-primary: var(--brand-700);
   --color-primary-hover: var(--brand-600);
-  --color-primary-foreground: var(--neutral-white);
+  --color-primary-foreground: oklch(0.995 0.001 230.66);
   --color-accent: oklch(0.25 0.02 242);
   --color-accent-foreground: var(--brand-500);
 
   /* Secondary */
   --color-secondary: oklch(0.25 0.003 230.83);
-  --color-secondary-foreground: var(--neutral-100);
+  --color-secondary-foreground: oklch(0.97 0.001 230.67);
 
   /* Destructive */
   --color-destructive: var(--red-500);
   --color-destructive-hover: var(--red-700);
-  --color-destructive-foreground: var(--neutral-white);
+  --color-destructive-foreground: oklch(0.995 0.001 230.66);
   --color-destructive-subtle: oklch(0.25 0.04 25);
 
   /* Success */
   --color-success: var(--green-500);
-  --color-success-foreground: var(--neutral-black);
+  --color-success-foreground: oklch(0.15 0.004 230.83);
   --color-success-subtle: oklch(0.25 0.04 150);
   --color-success-bg: oklch(0.25 0.04 150);
   --color-success-border: var(--green-700);
 
   /* Warning */
   --color-warning: var(--amber-500);
-  --color-warning-foreground: var(--neutral-black);
+  --color-warning-foreground: oklch(0.15 0.004 230.83);
   --color-warning-subtle: oklch(0.25 0.04 80);
   --color-warning-bg: oklch(0.25 0.04 80);
   --color-warning-border: var(--amber-700);
@@ -217,9 +219,9 @@
 
   /* Cards & Popovers */
   --color-card: oklch(0.19 0.003 230.83);
-  --color-card-foreground: var(--neutral-100);
+  --color-card-foreground: oklch(0.97 0.001 230.67);
   --color-popover: oklch(0.21 0.003 230.83);
-  --color-popover-foreground: var(--neutral-100);
+  --color-popover-foreground: oklch(0.97 0.001 230.67);
 
   /* Backdrop */
   --color-backdrop: oklch(0 0 0 / 60%);
