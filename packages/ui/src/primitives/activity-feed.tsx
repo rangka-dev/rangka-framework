@@ -1,4 +1,12 @@
-import { forwardRef, createContext, useContext, Children, type ComponentProps } from 'react';
+import {
+  forwardRef,
+  createContext,
+  useContext,
+  Children,
+  cloneElement,
+  isValidElement,
+  type ComponentProps,
+} from 'react';
 import { SendHorizonal, Paperclip } from 'lucide-react';
 import { cn } from '../lib/cn';
 import { Icon } from './icon';
@@ -64,11 +72,10 @@ const ActivityFeedRoot = forwardRef<HTMLDivElement, ActivityFeedProps>(
           {...props}
         >
           {items.map((child, i) => {
-            if (typeof child === 'object' && 'type' in child && child.type === ActivityFeedItem) {
-              return {
-                ...child,
-                props: { ...child.props, 'data-last': i === lastItemIndex || undefined },
-              };
+            if (isValidElement(child) && child.type === ActivityFeedItem) {
+              return cloneElement(child, {
+                'data-last': i === lastItemIndex || undefined,
+              } as Record<string, unknown>);
             }
             return child;
           })}

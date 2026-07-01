@@ -38,6 +38,7 @@ import {
   columnPropsSchema,
   modalPropsSchema,
   drawerPropsSchema,
+  tabsPropsSchema,
 } from './layout-widgets.js';
 import { buttonPropsSchema, formPropsSchema } from './action-widgets.js';
 import {
@@ -89,6 +90,7 @@ const _BUILT_IN_WIDGET_PROP_SCHEMAS = {
   column: columnPropsSchema,
   modal: modalPropsSchema,
   drawer: drawerPropsSchema,
+  tabs: tabsPropsSchema,
 
   // Action widgets
   button: buttonPropsSchema,
@@ -164,6 +166,7 @@ export {
   columnPropsSchema,
   modalPropsSchema,
   drawerPropsSchema,
+  tabsPropsSchema,
   buttonPropsSchema,
   formPropsSchema,
   tablePropsSchema,

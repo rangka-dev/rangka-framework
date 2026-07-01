@@ -112,3 +112,19 @@ export const drawerPropsSchema = z
     closable: z.boolean().optional(),
   })
   .optional();
+
+export const tabsPropsSchema = z
+  .object({
+    tabs: z
+      .array(
+        z.object({
+          label: z.string(),
+          icon: z.string().optional(),
+          badge: z.string().optional(),
+        }),
+      )
+      .optional(),
+    defaultTab: z.number().optional(),
+    size: z.enum(['sm', 'md']).optional(),
+  })
+  .optional();
