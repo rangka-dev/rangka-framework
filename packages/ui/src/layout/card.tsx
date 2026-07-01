@@ -19,7 +19,10 @@ const CardRoot = forwardRef<HTMLDivElement, CardProps>(({ className, ...props },
   return (
     <div
       ref={ref}
-      className={cn('rounded-lg border border-border bg-card text-card-foreground', className)}
+      className={cn(
+        'rounded-lg border border-border bg-card text-card-foreground shadow-xs',
+        className,
+      )}
       {...props}
     />
   );
