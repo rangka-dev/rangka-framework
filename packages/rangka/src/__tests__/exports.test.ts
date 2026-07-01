@@ -233,7 +233,7 @@ describe('rangka public API exports', () => {
 
     it('exports BUILT_IN_WIDGET_TYPES', () => {
       expect(rangka.BUILT_IN_WIDGET_TYPES).toBeInstanceOf(Array);
-      expect(rangka.BUILT_IN_WIDGET_TYPES.length).toBe(39);
+      expect(rangka.BUILT_IN_WIDGET_TYPES.length).toBe(40);
     });
 
     it('exports validateWidgetProps', () => {

@@ -116,6 +116,10 @@ interface DrawerOptions {
   on?: Record<string, WidgetAction | WidgetAction[]>;
 }
 
+interface FieldOptions {
+  label?: string;
+}
+
 interface DatagridOptions {
   sortable?: boolean;
   pageSize?: number;
@@ -167,6 +171,12 @@ export const widget = Object.assign(
     return buildNode(type, opts);
   },
   {
+    field(fieldName: string, opts?: FieldOptions): WidgetNode {
+      const node: WidgetNode = { type: 'field', bind: { field: fieldName } };
+      if (opts?.label) node.props = { label: opts.label };
+      return node;
+    },
+
     input(field: string, opts?: InputOptions): WidgetNode {
       return inputNode(field, 'input', opts);
     },

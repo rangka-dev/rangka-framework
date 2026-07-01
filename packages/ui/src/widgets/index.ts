@@ -56,8 +56,10 @@ import { DatagridWidget } from './data/datagrid-widget';
 import { ColumnWidget } from './data/column-widget';
 import { ModalWidget } from './overlay/modal-widget';
 import { DrawerWidget } from './overlay/drawer-widget';
+import { FieldWidget } from './field';
 
 export const widgetComponents: WidgetRegistry = {
+  field: FieldWidget,
   input: InputWidget,
   select: SelectWidget,
   checkbox: CheckboxWidget,

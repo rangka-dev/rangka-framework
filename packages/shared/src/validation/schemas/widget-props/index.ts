@@ -1,5 +1,6 @@
 import type * as z from 'zod';
 import {
+  fieldPropsSchema,
   inputPropsSchema,
   selectPropsSchema,
   textareaPropsSchema,
@@ -50,6 +51,7 @@ import {
 // An explicit Record<string, ...> annotation would widen keys to `string`.
 const _BUILT_IN_WIDGET_PROP_SCHEMAS = {
   // Input widgets
+  field: fieldPropsSchema,
   input: inputPropsSchema,
   select: selectPropsSchema,
   textarea: textareaPropsSchema,
@@ -128,6 +130,7 @@ export function validateWidgetProps(
 }
 
 export {
+  fieldPropsSchema,
   inputPropsSchema,
   selectPropsSchema,
   textareaPropsSchema,
