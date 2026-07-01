@@ -1,5 +1,6 @@
 import type * as z from 'zod';
 import {
+  fieldPropsSchema,
   inputPropsSchema,
   selectPropsSchema,
   textareaPropsSchema,
@@ -37,6 +38,7 @@ import {
   columnPropsSchema,
   modalPropsSchema,
   drawerPropsSchema,
+  tabsPropsSchema,
 } from './layout-widgets.js';
 import { buttonPropsSchema, formPropsSchema } from './action-widgets.js';
 import {
@@ -50,6 +52,7 @@ import {
 // An explicit Record<string, ...> annotation would widen keys to `string`.
 const _BUILT_IN_WIDGET_PROP_SCHEMAS = {
   // Input widgets
+  field: fieldPropsSchema,
   input: inputPropsSchema,
   select: selectPropsSchema,
   textarea: textareaPropsSchema,
@@ -87,6 +90,7 @@ const _BUILT_IN_WIDGET_PROP_SCHEMAS = {
   column: columnPropsSchema,
   modal: modalPropsSchema,
   drawer: drawerPropsSchema,
+  tabs: tabsPropsSchema,
 
   // Action widgets
   button: buttonPropsSchema,
@@ -128,6 +132,7 @@ export function validateWidgetProps(
 }
 
 export {
+  fieldPropsSchema,
   inputPropsSchema,
   selectPropsSchema,
   textareaPropsSchema,
@@ -161,6 +166,7 @@ export {
   columnPropsSchema,
   modalPropsSchema,
   drawerPropsSchema,
+  tabsPropsSchema,
   buttonPropsSchema,
   formPropsSchema,
   tablePropsSchema,

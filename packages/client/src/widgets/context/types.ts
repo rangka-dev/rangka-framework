@@ -4,7 +4,7 @@ export interface WidgetContext {
   record: Record<string, unknown>;
   records?: Record<string, unknown>[];
   model: string;
-  mode: 'view' | 'edit';
+  mode: 'create' | 'record';
   index?: number;
   parent?: WidgetContext;
   __columns?: WidgetNode[];

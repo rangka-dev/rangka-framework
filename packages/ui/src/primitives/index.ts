@@ -80,3 +80,31 @@ export {
 } from './tooltip';
 export { Text, textVariants, type TextProps } from './text';
 export { Image, imageVariants, type ImageProps } from './image';
+export {
+  InlineField,
+  inlineFieldVariants,
+  type InlineFieldProps,
+  type InlineFieldValueProps,
+  type InlineFieldEmptyProps,
+} from './inline-field';
+export {
+  Tabs,
+  tabsListVariants,
+  tabsTriggerVariants,
+  type TabsProps,
+  type TabsListProps,
+  type TabsTriggerProps,
+  type TabsContentProps,
+} from './tabs';
+export {
+  ActivityFeed,
+  type ActivityFeedProps,
+  type ActivityFeedItemProps,
+  type ActivityFeedAvatarProps,
+  type ActivityFeedContentProps,
+  type ActivityFeedHeaderProps,
+  type ActivityFeedBodyProps,
+  type ActivityFeedDiffProps,
+  type ActivityFeedEmptyProps,
+  type ActivityFeedCommentInputProps,
+} from './activity-feed';

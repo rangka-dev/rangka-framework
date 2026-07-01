@@ -127,6 +127,21 @@ widget.split({ sizes: [60, 40], direction: 'horizontal' }, [
   widget.card({ title: 'Right' }, [...]),
 ]);
 
+widget.tabs(
+  [{ label: 'General' }, { label: 'History' }, { label: 'Attachments' }],
+  [
+    widget.section('General', [...]),
+    widget.stack({}, [...]),
+    widget.stack({}, [...]),
+  ]
+);
+
+widget.tabs(
+  [{ label: 'Info' }, { label: 'Notes' }],
+  { defaultTab: 0, size: 'sm' },
+  [widget.section('Info', [...]), widget.section('Notes', [...])],
+);
+
 widget.modal({ size: 'lg', title: 'Confirm' }, [...]);
 widget.drawer({ width: 'md', title: 'Details' }, [...]);
 widget.scrollArea({ direction: 'vertical', maxHeight: '400px' }, [...]);
@@ -177,6 +192,21 @@ SectionOptions:
 | `defaultCollapsed` | boolean | Start collapsed   |
 | `padding`          | enum    | Padding size      |
 | `icon`             | string  | Icon beside label |
+
+TabsOptions:
+
+| Field        | Type   | Description                                 |
+| ------------ | ------ | ------------------------------------------- |
+| `defaultTab` | number | Index of the initially active tab (0-based) |
+| `size`       | enum   | `sm`, `md`                                  |
+
+Each tab in the `tabs` array accepts:
+
+| Field   | Type   | Description          |
+| ------- | ------ | -------------------- |
+| `label` | string | Tab label (required) |
+| `icon`  | string | Icon name            |
+| `badge` | string | Badge text           |
 
 ModalOptions:
 

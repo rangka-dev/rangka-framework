@@ -9,13 +9,6 @@ export {
   type CardFooterProps,
 } from './card';
 export {
-  Tabs,
-  type TabsProps,
-  type TabsListProps,
-  type TabsTriggerProps,
-  type TabsContentProps,
-} from './tabs';
-export {
   Collapsible,
   type CollapsibleProps,
   type CollapsibleTriggerProps,

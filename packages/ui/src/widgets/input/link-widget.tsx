@@ -1,10 +1,11 @@
-import { useState, useCallback, type ChangeEvent } from 'react';
+import { useState, useCallback } from 'react';
 import { Search } from 'lucide-react';
 import { Icon } from '../../primitives/icon';
 import { Field } from '../../form/field';
 import { Listbox } from '../../form/listbox';
 import { useClickOutside } from '../../lib/use-click-outside';
 import type { WidgetComponentProps } from '../types';
+import type { ChangeEvent } from 'react';
 
 export function LinkWidget({ props, bind, on }: WidgetComponentProps) {
   const label = (props.label as string) ?? bind.meta?.label;

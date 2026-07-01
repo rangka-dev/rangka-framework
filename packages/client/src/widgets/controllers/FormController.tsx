@@ -13,25 +13,24 @@ export function FormController({ props, bind, on, children }: WidgetProps) {
   const state = usePageState();
   const stateVersion = useStateVersion();
 
-  const resolvedMode = useMemo((): 'create' | 'edit' | 'view' | undefined => {
+  const resolvedMode = useMemo((): 'create' | 'record' | undefined => {
     const modeValue = props.mode as string | undefined;
     if (!modeValue) return undefined;
 
     if (modeValue.startsWith('$state.')) {
       const key = modeValue.slice(7);
       const stateVal = state.get(key);
-      return stateVal ? 'edit' : 'view';
+      return stateVal ? 'record' : 'record';
     }
 
-    if (modeValue === 'create' || modeValue === 'edit' || modeValue === 'view') {
-      return modeValue;
-    }
+    if (modeValue === 'create') return 'create';
+    if (modeValue === 'record' || modeValue === 'edit' || modeValue === 'view') return 'record';
 
     return undefined;
   }, [props.mode, state, stateVersion]);
 
   const handleSuccess = useCallback(
-    (record: Record<string, unknown>, mode: 'create' | 'edit') => {
+    (record: Record<string, unknown>, mode: 'create' | 'record') => {
       on.success?.({ record, mode });
     },
     [on],

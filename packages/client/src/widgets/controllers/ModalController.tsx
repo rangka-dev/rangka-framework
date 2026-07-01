@@ -24,7 +24,7 @@ export function ModalController({ props, children }: WidgetProps) {
         setValue: (val) => handleOpenChange(val as boolean),
       }}
       on={{ close: () => handleOpenChange(false) }}
-      context={{ record: {}, model: '', mode: 'view' }}
+      context={{ record: {}, model: '', mode: 'record' }}
     >
       {children}
     </Modal>

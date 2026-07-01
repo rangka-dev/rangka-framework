@@ -20,9 +20,7 @@ export function useBind(
     const result = resolveBinding(bind, ctx, fieldMeta, setValue, state);
     if (!result) return result;
 
-    const isViewMode = (ctx.mode === 'view' && !form) || form?.mode === 'view';
-
-    if (bind?.field && form && !isViewMode) {
+    if (bind?.field && form) {
       const error = form.getError(bind.field);
       return {
         value: form.getValue(bind.field),
@@ -33,29 +31,6 @@ export function useBind(
         meta: result.meta ?? form.getFieldMeta(bind.field),
         error,
       };
-    }
-
-    if (bind?.field && form && isViewMode) {
-      return {
-        value: form.getValue(bind.field),
-        setValue: undefined,
-        meta: {
-          ...(result.meta ??
-            form.getFieldMeta(bind.field) ?? {
-              type: 'string',
-              label: '',
-              required: false,
-              readOnly: true,
-            }),
-          readOnly: true,
-        },
-        error: undefined,
-      };
-    }
-
-    if (isViewMode) {
-      const meta = result.meta ?? { type: 'string', label: '', required: false, readOnly: true };
-      return { ...result, meta: { ...meta, readOnly: true } };
     }
 
     return result;

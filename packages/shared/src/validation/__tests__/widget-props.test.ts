@@ -85,7 +85,7 @@ describe('validateWidgetProps', () => {
   });
 
   it('has schemas for all expected built-in widgets', () => {
-    expect(BUILT_IN_WIDGET_TYPES.length).toBe(39);
+    expect(BUILT_IN_WIDGET_TYPES.length).toBe(41);
   });
 
   it('covers all widget categories', () => {

@@ -54,7 +54,7 @@ describe('UIKit types API surface', () => {
     it('context has record, model, mode', () => {
       expectTypeOf<WidgetProps['context']['record']>().toEqualTypeOf<Record<string, unknown>>();
       expectTypeOf<WidgetProps['context']['model']>().toBeString();
-      expectTypeOf<WidgetProps['context']['mode']>().toEqualTypeOf<'view' | 'edit'>();
+      expectTypeOf<WidgetProps['context']['mode']>().toEqualTypeOf<'create' | 'record'>();
     });
   });
 

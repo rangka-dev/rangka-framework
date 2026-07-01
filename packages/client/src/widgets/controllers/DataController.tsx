@@ -52,7 +52,7 @@ function DataRecordMode({
   const ctx: WidgetContext = {
     record: data,
     model,
-    mode: 'view',
+    mode: 'record',
     parent: parentCtx,
   };
 
@@ -94,7 +94,7 @@ function DataListMode({
     record: data?.[0] ?? {},
     records: data ?? [],
     model,
-    mode: 'view',
+    mode: 'record',
     parent: parentCtx,
   };
 

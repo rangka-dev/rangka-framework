@@ -109,7 +109,7 @@ function generateListPage(model: ResolvedModel): PageDefinition | null {
           on: { close: action.setValue('$state.selectedId', null) },
         },
         [
-          widget.data(model.qualifiedName, { id: '$state.selectedId' }, [
+          widget.form(model.qualifiedName, { id: '$state.selectedId' }, [
             ...peekFields,
             widget.group({ direction: 'row', gap: 'sm', justify: 'end' }, [
               widget.button('View Full', {
@@ -117,7 +117,7 @@ function generateListPage(model: ResolvedModel): PageDefinition | null {
                 icon: 'external-link',
                 on: {
                   click: action.sequence([
-                    action.navigate(`${basePath}/{{id}}`),
+                    action.navigate(`${basePath}/{{$state.selectedId}}`),
                     action.setValue('$state.selectedId', null),
                   ]),
                 },
@@ -179,7 +179,16 @@ function generateEditPage(model: ResolvedModel): PageDefinition {
   const modelLabel = model.label ?? toTitleCase(model.name);
   const basePath = `/${model.app}/${model.name}`;
   const groups = groupFields(model, false);
-  const sections = buildFormSections(groups, true);
+  const sections = buildRecordSections(groups);
+
+  const headerWidgets: import('@rangka/shared').WidgetNode[] = [];
+  const sequenceField = model.fields.find((f) => f.config.type === 'sequence');
+  if (sequenceField) {
+    headerWidgets.push(widget.text(sequenceField.name, { style: 'caption' }));
+  }
+  if (model.naming) {
+    headerWidgets.push(widget.text(model.naming, { style: 'heading' }));
+  }
 
   return {
     key: `${model.qualifiedName}.edit`,
@@ -193,45 +202,12 @@ function generateEditPage(model: ResolvedModel): PageDefinition {
         variant: 'ghost',
         action: action.navigate(basePath),
       },
-      {
-        type: 'button',
-        label: 'Edit',
-        icon: 'pencil',
-        variant: 'secondary',
-        visible: { field: '$state.editing', operator: 'neq', value: true },
-        action: action.setValue('$state.editing', true),
-      },
-      {
-        type: 'button',
-        label: 'Cancel',
-        variant: 'ghost',
-        visible: { field: '$state.editing', operator: 'eq', value: true },
-        action: action.sequence([action.reset(), action.setValue('$state.editing', false)]),
-      },
-      {
-        type: 'button',
-        label: 'Save',
-        icon: 'check',
-        variant: 'primary',
-        visible: { field: '$state.editing', operator: 'eq', value: true },
-        action: action.submit(),
-      },
     ],
     widgets: [
-      widget.form(
-        model.qualifiedName,
-        {
-          id: '$route.id',
-          mode: '$state.editing',
-          on: {
-            success: action.sequence([
-              action.toast('Changes saved', 'success'),
-              action.setValue('$state.editing', false),
-            ]),
-          },
-        },
-        sections,
-      ),
+      widget.form(model.qualifiedName, { id: '$route.id' }, [
+        ...(headerWidgets.length > 0 ? [widget.group({ gap: 'xs' }, headerWidgets)] : []),
+        widget.card({}, sections),
+      ]),
     ],
   };
 }
@@ -346,29 +322,57 @@ function getPeekFields(model: ResolvedModel): import('@rangka/shared').WidgetNod
   const nodes: import('@rangka/shared').WidgetNode[] = [];
 
   if (basic.length > 0) {
-    nodes.push(
-      widget.section('Overview', [
-        widget.grid({ columns: 2, gap: 'sm' }, basic.map(peekFieldNode)),
-      ]),
-    );
+    nodes.push(widget.section('Overview', basic.map(fieldToRecordWidget)));
   }
 
   if (details.length > 0) {
-    nodes.push(
-      widget.section('Details', [
-        widget.grid({ columns: 2, gap: 'sm' }, details.map(peekFieldNode)),
-      ]),
-    );
+    nodes.push(widget.section('Details', details.map(fieldToRecordWidget)));
   }
 
   return nodes;
 }
 
-function peekFieldNode(field: ResolvedField): import('@rangka/shared').WidgetNode {
-  return fieldToWidget(field);
+function fieldToRecordWidget(field: ResolvedField): import('@rangka/shared').WidgetNode {
+  return widget.field(field.name);
 }
 
 // --- Form section building ---
+
+function buildRecordSections(groups: FieldGroup): import('@rangka/shared').WidgetNode[] {
+  const sections: import('@rangka/shared').WidgetNode[] = [];
+
+  if (groups.basic.length > 0) {
+    sections.push(
+      widget.section('Basic Info', [
+        widget.grid({ columns: 2, gap: 'md' }, groups.basic.map(fieldToRecordWidget)),
+      ]),
+    );
+  }
+
+  if (groups.details.length > 0) {
+    sections.push(
+      widget.section('Details', [
+        widget.grid({ columns: 2, gap: 'md' }, groups.details.map(fieldToRecordWidget)),
+      ]),
+    );
+  }
+
+  if (groups.wide.length > 0) {
+    sections.push(
+      widget.section('Additional', { collapsible: true }, groups.wide.map(fieldToRecordWidget)),
+    );
+  }
+
+  if (groups.system.length > 0) {
+    sections.push(
+      widget.section('System', { collapsible: true, defaultCollapsed: true }, [
+        widget.grid({ columns: 2, gap: 'md' }, groups.system.map(fieldToRecordWidget)),
+      ]),
+    );
+  }
+
+  return sections;
+}
 
 function buildFormSections(
   groups: FieldGroup,

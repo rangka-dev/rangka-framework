@@ -121,6 +121,7 @@ export function validatePageBindings(
         page.key,
         filePath,
         null,
+        null,
         registry,
         warnings,
       );
@@ -136,10 +137,34 @@ function checkWidgetBindings(
   pageKey: string,
   file: string | undefined,
   sourceModel: string | null,
+  formHasId: boolean | null,
   registry: SchemaRegistry,
   warnings: PageValidationWarning[],
 ): void {
   const currentSource = node.source?.model ?? sourceModel;
+
+  let currentFormHasId = formHasId;
+  if (node.type === 'form') {
+    currentFormHasId = !!node.bind?.id;
+  }
+
+  if (node.type === 'field') {
+    if (currentFormHasId === null) {
+      warnings.push({
+        pageKey,
+        file,
+        location: path,
+        message: `widget.field('${node.bind?.field ?? ''}') requires a form ancestor. Use widget.input() outside of forms.`,
+      });
+    } else if (!currentFormHasId) {
+      warnings.push({
+        pageKey,
+        file,
+        location: path,
+        message: `widget.field('${node.bind?.field ?? ''}') requires a form with an id binding. Use widget.input('${node.bind?.field ?? ''}') for create forms.`,
+      });
+    }
+  }
 
   if (node.bind?.field) {
     if (!currentSource) {
@@ -173,6 +198,7 @@ function checkWidgetBindings(
         pageKey,
         file,
         currentSource,
+        currentFormHasId,
         registry,
         warnings,
       );

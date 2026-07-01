@@ -1,5 +1,11 @@
 import * as z from 'zod';
 
+export const fieldPropsSchema = z
+  .object({
+    label: z.string().optional(),
+  })
+  .optional();
+
 export const inputPropsSchema = z
   .object({
     label: z.string().optional(),

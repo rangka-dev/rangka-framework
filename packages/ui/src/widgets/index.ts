@@ -48,6 +48,7 @@ import { SplitWidget } from './layout/split-widget';
 import { ScrollAreaWidget } from './layout/scroll-area-widget';
 import { DividerWidget } from './layout/divider-widget';
 import { SpacerWidget } from './layout/spacer-widget';
+import { TabsWidget } from './layout/tabs-widget';
 import { DataWidget } from './data/data-widget';
 import { FormWidget } from './data/form-widget';
 import { RepeatWidget } from './data/repeat-widget';
@@ -56,8 +57,10 @@ import { DatagridWidget } from './data/datagrid-widget';
 import { ColumnWidget } from './data/column-widget';
 import { ModalWidget } from './overlay/modal-widget';
 import { DrawerWidget } from './overlay/drawer-widget';
+import { FieldWidget } from './field';
 
 export const widgetComponents: WidgetRegistry = {
+  field: FieldWidget,
   input: InputWidget,
   select: SelectWidget,
   checkbox: CheckboxWidget,
@@ -89,6 +92,7 @@ export const widgetComponents: WidgetRegistry = {
   'scroll-area': ScrollAreaWidget,
   divider: DividerWidget,
   spacer: SpacerWidget,
+  tabs: TabsWidget,
   data: DataWidget,
   form: FormWidget,
   repeat: RepeatWidget,

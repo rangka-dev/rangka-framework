@@ -4,7 +4,7 @@
 
 ## Overview
 
-The client package currently builds as a single chunk. All 38 built-in widgets are statically imported in `register.ts`, pulling in every widget component and their dependencies (Radix primitives, Recharts, etc.) regardless of what a page actually renders.
+The client package currently builds as a single chunk. All 41 built-in widgets are statically imported in `register.ts`, pulling in every widget component and their dependencies (Radix primitives, Recharts, etc.) regardless of what a page actually renders.
 
 This spec defines a code splitting strategy that reduces the initial bundle to a core shell plus on-demand widget chunks, without breaking the existing custom widget build pipeline.
 
@@ -30,7 +30,7 @@ This spec defines a code splitting strategy that reduces the initial bundle to a
 index.js (single chunk)
 ├── Shell (layout, sidebar, command palette)
 ├── Boot + routing
-├── 38 built-in widgets (register.ts imports all)
+├── 41 built-in widgets (register.ts imports all)
 ├── 70 shadcn/ui components
 ├── Radix primitives (used across widgets)
 ├── Recharts (imported in chart.tsx, never rendered)

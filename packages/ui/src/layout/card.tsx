@@ -19,7 +19,10 @@ const CardRoot = forwardRef<HTMLDivElement, CardProps>(({ className, ...props },
   return (
     <div
       ref={ref}
-      className={cn('rounded-lg border border-border bg-card text-card-foreground', className)}
+      className={cn(
+        'rounded-lg border border-border bg-card text-card-foreground shadow-xs',
+        className,
+      )}
       {...props}
     />
   );
@@ -57,7 +60,7 @@ const CardAction = forwardRef<HTMLDivElement, CardActionProps>(({ className, ...
 CardAction.displayName = 'Card.Action';
 
 const CardContent = forwardRef<HTMLDivElement, CardContentProps>(({ className, ...props }, ref) => {
-  return <div ref={ref} className={cn('flex flex-col gap-6 p-4 pt-0', className)} {...props} />;
+  return <div ref={ref} className={cn('flex flex-col gap-6 p-4', className)} {...props} />;
 });
 CardContent.displayName = 'Card.Content';
 

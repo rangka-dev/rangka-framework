@@ -314,7 +314,8 @@ describe('generateCrudPages', () => {
 
       const editPage = pages.find((p) => p.page.key === 'sales.invoice.edit')!;
       const form = editPage.page.widgets[0];
-      const systemSection = form.children!.find((c) => c.props?.label === 'System');
+      const card = form.children![0];
+      const systemSection = card.children!.find((c) => c.props?.label === 'System');
       expect(systemSection).toBeDefined();
       expect(systemSection!.props!.collapsible).toBe(true);
       expect(systemSection!.props!.defaultCollapsed).toBe(true);
@@ -340,7 +341,7 @@ describe('generateCrudPages', () => {
       expect(systemSection).toBeUndefined();
     });
 
-    it('edit page uses standalone form with source.id', () => {
+    it('edit page uses form with id binding and widget.field() children', () => {
       const model = makeModel('sales', 'invoice', [
         makeField('name', { type: 'string', required: true }),
       ]);
@@ -351,7 +352,15 @@ describe('generateCrudPages', () => {
       const form = editPage.page.widgets[0];
       expect(form.type).toBe('form');
       expect(form.source).toEqual({ model: 'sales.invoice', id: '$route.id' });
-      expect(form.props!.mode).toBe('$state.editing');
+      expect(form.props).toBeUndefined();
+
+      const card = form.children![0];
+      expect(card.type).toBe('card');
+      const section = card.children![0];
+      const grid = section.children![0];
+      const fieldNode = grid.children![0];
+      expect(fieldNode.type).toBe('field');
+      expect(fieldNode.bind).toEqual({ field: 'name' });
     });
 
     it('create page uses standalone form with source model', () => {

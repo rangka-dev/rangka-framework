@@ -18,7 +18,7 @@ export interface UseFormStateResult {
   setSubmitting(submitting: boolean): void;
   isDirty(): boolean;
   getDirtyFields(): Set<string>;
-  reset(mode: 'create' | 'edit'): void;
+  reset(mode: 'create' | 'record'): void;
   initValues(record: Record<string, unknown>): void;
 }
 
@@ -94,8 +94,8 @@ export function useFormState(
     return dirty;
   }, []);
 
-  const reset = useCallback((mode: 'create' | 'edit') => {
-    if (mode === 'edit') {
+  const reset = useCallback((mode: 'create' | 'record') => {
+    if (mode === 'record') {
       setValues({ ...originalRef.current });
     } else {
       setValues({});

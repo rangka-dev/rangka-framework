@@ -7,3 +7,4 @@ export { SplitWidget } from './split-widget';
 export { ScrollAreaWidget } from './scroll-area-widget';
 export { DividerWidget } from './divider-widget';
 export { SpacerWidget } from './spacer-widget';
+export { TabsWidget } from './tabs-widget';

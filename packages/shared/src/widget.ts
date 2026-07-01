@@ -116,6 +116,23 @@ interface DrawerOptions {
   on?: Record<string, WidgetAction | WidgetAction[]>;
 }
 
+interface FieldOptions {
+  label?: string;
+}
+
+interface TabDefinition {
+  label: string;
+  icon?: string;
+  badge?: string;
+}
+
+interface TabsOptions {
+  defaultTab?: number;
+  size?: 'sm' | 'md';
+  visible?: Condition | Condition[];
+  on?: Record<string, WidgetAction | WidgetAction[]>;
+}
+
 interface DatagridOptions {
   sortable?: boolean;
   pageSize?: number;
@@ -167,6 +184,12 @@ export const widget = Object.assign(
     return buildNode(type, opts);
   },
   {
+    field(fieldName: string, opts?: FieldOptions): WidgetNode {
+      const node: WidgetNode = { type: 'field', bind: { field: fieldName } };
+      if (opts?.label) node.props = { label: opts.label };
+      return node;
+    },
+
     input(field: string, opts?: InputOptions): WidgetNode {
       return inputNode(field, 'input', opts);
     },
@@ -337,6 +360,23 @@ export const widget = Object.assign(
       const node: WidgetNode = { type: 'card', props, children };
       if (visible) node.visible = visible;
       if (on) node.on = on;
+      return node;
+    },
+
+    tabs(
+      tabs: TabDefinition[],
+      optsOrChildren: TabsOptions | WidgetNode[],
+      maybeChildren?: WidgetNode[],
+    ): WidgetNode {
+      const isOpts = !Array.isArray(optsOrChildren);
+      const opts = isOpts ? optsOrChildren : undefined;
+      const children = isOpts ? maybeChildren! : optsOrChildren;
+      const props: Record<string, unknown> = { tabs };
+      if (opts?.defaultTab !== undefined) props.defaultTab = opts.defaultTab;
+      if (opts?.size) props.size = opts.size;
+      const node: WidgetNode = { type: 'tabs', props, children };
+      if (opts?.visible) node.visible = opts.visible;
+      if (opts?.on) node.on = opts.on;
       return node;
     },
 

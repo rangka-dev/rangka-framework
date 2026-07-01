@@ -8,6 +8,7 @@ import { useBind } from '../hooks/useBind.js';
 import { useTriggerHandlers } from '../hooks/useAction.js';
 import { useWidgetContext } from '../hooks/useWidgetContext.js';
 import { WidgetContextProvider } from '../hooks/useWidgetContext.js';
+import { useFormContext } from '../form/FormContext.js';
 import { buildContext } from '../context/builder.js';
 import { flattenContext } from '../context/types.js';
 import { parse, evaluate } from '../expression/index.js';
@@ -43,6 +44,17 @@ export function WidgetRenderer({ node, handlers = {}, fieldMeta, setValue }: Wid
   const stateVersion = useStateVersion();
   const binding = useBind(node.bind, fieldMeta, setValue);
   const triggerHandlers = useTriggerHandlers(node.on, handlers, node.bind?.field);
+  const formContext = useFormContext();
+
+  const onHandlers = useMemo(() => {
+    if (formContext && formContext.mode === 'record' && node.bind?.field) {
+      return {
+        ...triggerHandlers,
+        saveField: (value: unknown) => formContext.saveField(node.bind!.field!, value),
+      };
+    }
+    return triggerHandlers;
+  }, [triggerHandlers, formContext, node.bind?.field]);
 
   const resolvedProps = useResolvedProps(node.props);
 
@@ -86,7 +98,7 @@ export function WidgetRenderer({ node, handlers = {}, fieldMeta, setValue }: Wid
       error: binding?.error,
       id: resolveBindId(node.bind?.id ?? node.source?.id, parentCtx, routeParams, stateSnapshot),
     },
-    on: triggerHandlers,
+    on: onHandlers,
     context: {
       record: parentCtx.record,
       model: parentCtx.model,

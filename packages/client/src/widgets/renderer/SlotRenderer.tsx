@@ -26,7 +26,7 @@ export function SlotRenderer({
   fieldMeta,
   setValue,
 }: SlotRendererProps) {
-  const ctx = context ?? createRootContext({}, '', 'view');
+  const ctx = context ?? createRootContext({}, '', 'record');
   const fallbackStore = useMemo(() => new StateStore(), []);
 
   const content = (
