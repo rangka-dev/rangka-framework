@@ -166,8 +166,8 @@
   --color-layer-active: oklch(0.3 0.003 230.83);
 
   /* Brand / Accent */
-  --color-primary: var(--brand-600);
-  --color-primary-hover: var(--brand-700);
+  --color-primary: var(--brand-700);
+  --color-primary-hover: var(--brand-600);
   --color-primary-foreground: var(--neutral-white);
   --color-accent: oklch(0.25 0.02 242);
   --color-accent-foreground: var(--brand-500);

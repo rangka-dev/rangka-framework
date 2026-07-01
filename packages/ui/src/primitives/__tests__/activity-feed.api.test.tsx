@@ -22,8 +22,17 @@ describe('ActivityFeed API surface', () => {
     expect(ref.current).toBeInstanceOf(HTMLDivElement);
   });
 
-  it('renders with showConnector prop', () => {
-    const { container } = render(<ActivityFeed showConnector />);
+  it('renders connector line between items', () => {
+    const { container } = render(
+      <ActivityFeed showConnector>
+        <ActivityFeed.Item>
+          <span>First</span>
+        </ActivityFeed.Item>
+        <ActivityFeed.Item>
+          <span>Second</span>
+        </ActivityFeed.Item>
+      </ActivityFeed>,
+    );
     expect(container.querySelector('[aria-hidden]')).toBeTruthy();
   });
 

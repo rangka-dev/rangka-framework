@@ -1,7 +1,9 @@
-import { forwardRef, type ComponentProps } from 'react';
+import { forwardRef, createContext, useContext, Children, type ComponentProps } from 'react';
 import { SendHorizonal, Paperclip } from 'lucide-react';
 import { cn } from '../lib/cn';
 import { Icon } from './icon';
+
+const ConnectorContext = createContext(false);
 
 export type ActivityFeedProps = ComponentProps<'div'> & {
   /** Show vertical timeline connector between items */
@@ -46,18 +48,32 @@ export type ActivityFeedCommentInputProps = ComponentProps<'div'> & {
 
 const ActivityFeedRoot = forwardRef<HTMLDivElement, ActivityFeedProps>(
   ({ className, showConnector, maxHeight, style, children, ...props }, ref) => {
+    const items = Children.toArray(children);
+    const lastItemIndex = items.reduce<number>(
+      (acc, child, i) =>
+        typeof child === 'object' && 'type' in child && child.type === ActivityFeedItem ? i : acc,
+      -1,
+    );
+
     return (
-      <div
-        ref={ref}
-        className={cn('relative flex flex-col gap-4 overflow-y-auto', className)}
-        style={{ maxHeight, ...style }}
-        {...props}
-      >
-        {showConnector && (
-          <div className="absolute left-[15px] top-6 bottom-14 w-px bg-border" aria-hidden />
-        )}
-        {children}
-      </div>
+      <ConnectorContext.Provider value={!!showConnector}>
+        <div
+          ref={ref}
+          className={cn('relative flex flex-col gap-4 overflow-y-auto', className)}
+          style={{ maxHeight, ...style }}
+          {...props}
+        >
+          {items.map((child, i) => {
+            if (typeof child === 'object' && 'type' in child && child.type === ActivityFeedItem) {
+              return {
+                ...child,
+                props: { ...child.props, 'data-last': i === lastItemIndex || undefined },
+              };
+            }
+            return child;
+          })}
+        </div>
+      </ConnectorContext.Provider>
     );
   },
 );
@@ -65,8 +81,14 @@ ActivityFeedRoot.displayName = 'ActivityFeed';
 
 const ActivityFeedItem = forwardRef<HTMLDivElement, ActivityFeedItemProps>(
   ({ className, children, ...props }, ref) => {
+    const showConnector = useContext(ConnectorContext);
+    const isLast = props['data-last' as keyof typeof props];
+
     return (
       <div ref={ref} className={cn('relative z-10 flex items-start gap-3', className)} {...props}>
+        {showConnector && !isLast && (
+          <div className="absolute left-[15px] top-8 bottom-[-16px] w-px bg-border" aria-hidden />
+        )}
         {children}
       </div>
     );
@@ -168,14 +190,10 @@ ActivityFeedEmpty.displayName = 'ActivityFeed.Empty';
 const ActivityFeedCommentInput = forwardRef<HTMLDivElement, ActivityFeedCommentInputProps>(
   ({ className, placeholder = 'Write a comment...', onSubmit, onAttach, ...props }, ref) => {
     return (
-      <div
-        ref={ref}
-        className={cn('relative z-10 flex flex-col gap-2 bg-background pt-3', className)}
-        {...props}
-      >
+      <div ref={ref} className={cn('relative z-10 flex flex-col gap-2 pt-3', className)} {...props}>
         <div className="relative">
           <textarea
-            className="min-h-[72px] w-full resize-none rounded-md border border-border bg-background px-3 py-2 pb-9 text-2xs text-foreground placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-border"
+            className="min-h-[72px] w-full resize-none rounded-md border border-border bg-transparent px-3 py-2 pb-9 text-2xs text-foreground placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-border"
             placeholder={placeholder}
             rows={3}
           />
