@@ -537,6 +537,30 @@ Vertical stack with height control.
 
 ---
 
+### tabs
+
+Tabbed container. Each child maps to a tab panel by index. The `tabs` prop array defines the tab labels.
+
+| Property     | Type            | Default | Description                       |
+| ------------ | --------------- | ------- | --------------------------------- |
+| `tabs`       | TabDefinition[] |         | Array of tab labels and metadata  |
+| `defaultTab` | number          | `0`     | Index of the initially active tab |
+| `size`       | enum            | `'md'`  | `sm`, `md`                        |
+
+TabDefinition:
+
+| Field   | Type   | Description          |
+| ------- | ------ | -------------------- |
+| `label` | string | Tab label (required) |
+| `icon`  | string | Icon name            |
+| `badge` | string | Badge text           |
+
+- Binding: none
+- Triggers: none
+- Container: yes
+
+---
+
 ### column
 
 Declares a table column. Only valid as a direct child of `table` or `datagrid`.

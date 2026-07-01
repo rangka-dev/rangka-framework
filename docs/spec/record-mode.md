@@ -167,15 +167,15 @@ A single component in the UI layer that resolves the correct inline editor based
 ```
 packages/ui/src/widgets/field/
 ├── field-widget.tsx          — main component, dispatches by field type
-├── field-display.tsx         — shared display row (icon + label + formatted value + pencil)
-├── editors/
-│   ├── text-editor.tsx       — string, int, decimal, money (inline input)
-│   ├── select-editor.tsx     — enum (Listbox popover)
-│   ├── date-editor.tsx       — date (DatePicker popover)
-│   ├── datetime-editor.tsx   — datetime (DatePicker + time popover)
-│   ├── checkbox-editor.tsx   — boolean (direct toggle, no edit state)
-│   └── link-editor.tsx       — link/relation (Listbox with search)
+├── text-editor.tsx           — string, int, decimal, money (inline input)
+├── select-editor.tsx         — enum (Listbox popover)
+├── date-editor.tsx           — date (DatePicker popover)
+├── datetime-editor.tsx       — datetime (DatePicker + time popover)
+├── checkbox-editor.tsx       — boolean (direct toggle, no edit state)
+├── link-editor.tsx           — link/relation (Listbox with search)
 └── index.ts                  — exports FieldWidget
+
+packages/ui/src/primitives/inline-field.tsx — shared display row (icon + label + value + pencil)
 ```
 
 Each editor is a focused component that handles its own editing state, save trigger, and error display. The main `FieldWidget` resolves the field type and renders the appropriate editor.
@@ -210,8 +210,8 @@ Editors reuse existing primitives and form components. No new UI primitives need
 | Component         | Used by                                                 | Import from                   |
 | ----------------- | ------------------------------------------------------- | ----------------------------- |
 | `Input`           | text-editor (inline input)                              | `../../primitives/input`      |
-| `Badge`           | field-display (enum value)                              | `../../primitives/badge`      |
-| `Icon`            | field-display (field type icon, pencil)                 | `../../primitives/icon`       |
+| `Badge`           | inline-field (enum value)                               | `../../primitives/badge`      |
+| `Icon`            | inline-field (field type icon, pencil)                  | `../../primitives/icon`       |
 | `Listbox`         | select-editor, link-editor (popover dropdown)           | `../../form/listbox`          |
 | `DatePicker`      | date-editor, datetime-editor (calendar popover)         | `../../form/date-picker`      |
 | `useClickOutside` | select-editor, link-editor, date-editor (close popover) | `../../lib/use-click-outside` |
@@ -468,16 +468,16 @@ New directory `packages/ui/src/widgets/field/` with structure:
 
 ```
 field/
-├── field-widget.tsx       — main component, type dispatch
-├── field-display.tsx      — shared display row
-├── editors/
-│   ├── text-editor.tsx    — string, int, decimal, money
-│   ├── select-editor.tsx  — enum (uses Listbox)
-│   ├── date-editor.tsx    — date (uses DatePicker)
-│   ├── datetime-editor.tsx — datetime
-│   ├── checkbox-editor.tsx — boolean
-│   └── link-editor.tsx    — link/relation (uses Listbox with search)
-└── index.ts               — exports FieldWidget
+├── field-widget.tsx        — main component, type dispatch
+├── text-editor.tsx         — string, int, decimal, money
+├── select-editor.tsx       — enum (uses Listbox)
+├── date-editor.tsx         — date (uses DatePicker)
+├── datetime-editor.tsx     — datetime
+├── checkbox-editor.tsx     — boolean
+├── link-editor.tsx         — link/relation (uses Listbox with search)
+└── index.ts                — exports FieldWidget
+
+primitives/inline-field.tsx — shared display row (extracted primitive)
 ```
 
 Register in `packages/ui/src/widgets/index.ts`:
@@ -531,15 +531,13 @@ No changes to existing input widget components in this phase. Existing record mo
 - Remove backward compat mode mapping in FormController (no longer needed)
 - Build passes, tests pass
 
-### Phase 5: Detail page layout (planned)
+### Phase 5: Detail page layout
 
-> **Planned** — requires `widget.tabs()` widget type.
-
-The record detail page uses a split layout. Left panel (40%) contains inline fields in a card. Right panel (60%) contains tabbed content: activity, related records, wide fields.
+The record detail page uses a two-column grid layout. Left column contains inline fields grouped in card sections. Right column contains a tabbed card with activity, related records, and attachments.
 
 ```
 ┌────────────────────────────┬──────────────────────────────────┐
-│ Record header              │ [Activity] [Related] [Notes]     │
+│ Record header              │ [Activity] [Related] [Attach]    │
 │ ┌─ Basic Info ──────────┐  │                                  │
 │ │ widget.field() rows   │  │  (tab content here)              │
 │ └───────────────────────┘  │                                  │
@@ -549,10 +547,13 @@ The record detail page uses a split layout. Left panel (40%) contains inline fie
 └────────────────────────────┴──────────────────────────────────┘
 ```
 
-Prerequisites:
+Implemented:
 
-- `widget.tabs()` and `widget.tab()` widget types
-- Activity/timeline widget (for audit log display)
+- `widget.tabs()` helper (maps children to tab panels by index)
+- `TabsWidget` in UI package (chip-style active state)
+- `ActivityFeed` primitive (change tracking, events, comments, system events, CommentInput)
+
+Remaining:
+
 - FormController providing widget context with fetched record (for `{{id}}` resolution in child widgets)
-
-Left panel scrolls independently from the right panel.
+- Server-side activity/audit API endpoint
