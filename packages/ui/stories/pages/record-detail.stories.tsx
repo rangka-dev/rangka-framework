@@ -11,6 +11,10 @@ import {
   GridWidget,
   TabsWidget,
 } from '../../src/widgets/layout';
+import { ActivityFeed } from '../../src/primitives/activity-feed';
+import { Avatar } from '../../src/primitives/avatar';
+import { Icon } from '../../src/primitives/icon';
+import { Plus, Send, CreditCard } from 'lucide-react';
 
 const meta: Meta = {
   title: 'Widget Compose/Record Detail',
@@ -184,12 +188,72 @@ export const CustomerDetail: Story = {
               on={on}
               context={ctx}
             >
-              <TextWidget
-                props={{ variant: 'muted' }}
-                bind={{ value: 'Activity feed coming soon' }}
-                on={on}
-                context={ctx}
-              />
+              <ActivityFeed showConnector>
+                <ActivityFeed.Item type="comment">
+                  <ActivityFeed.Avatar>
+                    <Avatar size="sm">
+                      <Avatar.Fallback>JD</Avatar.Fallback>
+                    </Avatar>
+                  </ActivityFeed.Avatar>
+                  <ActivityFeed.Content>
+                    <ActivityFeed.Header timestamp="30 min ago">
+                      <span className="font-medium text-foreground">John Doe</span>
+                      <span className="text-muted-foreground">commented</span>
+                    </ActivityFeed.Header>
+                    <ActivityFeed.Body>
+                      <p className="text-2xs text-foreground/80">
+                        Updated billing contact to match their new finance team.
+                      </p>
+                    </ActivityFeed.Body>
+                  </ActivityFeed.Content>
+                </ActivityFeed.Item>
+                <ActivityFeed.Item type="change">
+                  <ActivityFeed.Avatar>
+                    <Avatar size="sm">
+                      <Avatar.Fallback>JD</Avatar.Fallback>
+                    </Avatar>
+                  </ActivityFeed.Avatar>
+                  <ActivityFeed.Content>
+                    <ActivityFeed.Header timestamp="1 hour ago">
+                      <span className="font-medium text-foreground">John Doe</span>
+                      <span className="text-muted-foreground">changed Email</span>
+                    </ActivityFeed.Header>
+                    <ActivityFeed.Body>
+                      <ActivityFeed.Diff from="info@acme.com" to="billing@acme.com" />
+                    </ActivityFeed.Body>
+                  </ActivityFeed.Content>
+                </ActivityFeed.Item>
+                <ActivityFeed.Item type="change">
+                  <ActivityFeed.Avatar>
+                    <Avatar size="sm">
+                      <Avatar.Fallback>AB</Avatar.Fallback>
+                    </Avatar>
+                  </ActivityFeed.Avatar>
+                  <ActivityFeed.Content>
+                    <ActivityFeed.Header timestamp="2 days ago">
+                      <span className="font-medium text-foreground">Alice Brown</span>
+                      <span className="text-muted-foreground">changed Category</span>
+                    </ActivityFeed.Header>
+                    <ActivityFeed.Body>
+                      <ActivityFeed.Diff from="SMB" to="Enterprise" />
+                    </ActivityFeed.Body>
+                  </ActivityFeed.Content>
+                </ActivityFeed.Item>
+                <ActivityFeed.Item type="system">
+                  <ActivityFeed.Avatar>
+                    <div className="flex size-8 items-center justify-center rounded-full bg-foreground/6">
+                      <Icon icon={Plus} size="sm" className="text-muted-foreground" />
+                    </div>
+                  </ActivityFeed.Avatar>
+                  <ActivityFeed.Content>
+                    <ActivityFeed.Header timestamp="Mar 12, 2025">
+                      <span className="text-muted-foreground">Record created by</span>
+                      <span className="font-medium text-foreground">Alice Brown</span>
+                    </ActivityFeed.Header>
+                  </ActivityFeed.Content>
+                </ActivityFeed.Item>
+                <ActivityFeed.CommentInput />
+              </ActivityFeed>
               <TextWidget
                 props={{ variant: 'muted' }}
                 bind={{ value: 'Related records will appear here' }}
@@ -397,12 +461,64 @@ export const OrderDetail: Story = {
               on={on}
               context={ctx}
             >
-              <TextWidget
-                props={{ variant: 'muted' }}
-                bind={{ value: 'Activity feed coming soon' }}
-                on={on}
-                context={ctx}
-              />
+              <ActivityFeed showConnector>
+                <ActivityFeed.Item type="event">
+                  <ActivityFeed.Avatar>
+                    <div className="flex size-8 items-center justify-center rounded-full bg-primary/10">
+                      <Icon icon={Send} size="sm" className="text-primary" />
+                    </div>
+                  </ActivityFeed.Avatar>
+                  <ActivityFeed.Content>
+                    <ActivityFeed.Header timestamp="1 hour ago">
+                      <span className="font-medium text-foreground">Invoice sent</span>
+                      <span className="text-muted-foreground">to billing@acme.com</span>
+                    </ActivityFeed.Header>
+                  </ActivityFeed.Content>
+                </ActivityFeed.Item>
+                <ActivityFeed.Item type="change">
+                  <ActivityFeed.Avatar>
+                    <Avatar size="sm">
+                      <Avatar.Fallback>JD</Avatar.Fallback>
+                    </Avatar>
+                  </ActivityFeed.Avatar>
+                  <ActivityFeed.Content>
+                    <ActivityFeed.Header timestamp="2 hours ago">
+                      <span className="font-medium text-foreground">John Doe</span>
+                      <span className="text-muted-foreground">changed Status</span>
+                    </ActivityFeed.Header>
+                    <ActivityFeed.Body>
+                      <ActivityFeed.Diff from="Draft" to="Confirmed" />
+                    </ActivityFeed.Body>
+                  </ActivityFeed.Content>
+                </ActivityFeed.Item>
+                <ActivityFeed.Item type="event">
+                  <ActivityFeed.Avatar>
+                    <div className="flex size-8 items-center justify-center rounded-full bg-green-500/10">
+                      <Icon icon={CreditCard} size="sm" className="text-green-600" />
+                    </div>
+                  </ActivityFeed.Avatar>
+                  <ActivityFeed.Content>
+                    <ActivityFeed.Header timestamp="yesterday">
+                      <span className="font-medium text-foreground">Payment received</span>
+                      <span className="text-muted-foreground">$4,675.00</span>
+                    </ActivityFeed.Header>
+                  </ActivityFeed.Content>
+                </ActivityFeed.Item>
+                <ActivityFeed.Item type="system">
+                  <ActivityFeed.Avatar>
+                    <div className="flex size-8 items-center justify-center rounded-full bg-foreground/6">
+                      <Icon icon={Plus} size="sm" className="text-muted-foreground" />
+                    </div>
+                  </ActivityFeed.Avatar>
+                  <ActivityFeed.Content>
+                    <ActivityFeed.Header timestamp="Jun 20, 2026">
+                      <span className="text-muted-foreground">Record created by</span>
+                      <span className="font-medium text-foreground">John Doe</span>
+                    </ActivityFeed.Header>
+                  </ActivityFeed.Content>
+                </ActivityFeed.Item>
+                <ActivityFeed.CommentInput />
+              </ActivityFeed>
               <TextWidget
                 props={{ variant: 'muted' }}
                 bind={{ value: 'Related records will appear here' }}
@@ -576,12 +692,54 @@ export const InventoryItemDetail: Story = {
               on={on}
               context={ctx}
             >
-              <TextWidget
-                props={{ variant: 'muted' }}
-                bind={{ value: 'Activity feed coming soon' }}
-                on={on}
-                context={ctx}
-              />
+              <ActivityFeed showConnector>
+                <ActivityFeed.Item type="change">
+                  <ActivityFeed.Avatar>
+                    <Avatar size="sm">
+                      <Avatar.Fallback>MK</Avatar.Fallback>
+                    </Avatar>
+                  </ActivityFeed.Avatar>
+                  <ActivityFeed.Content>
+                    <ActivityFeed.Header timestamp="3 hours ago">
+                      <span className="font-medium text-foreground">Mike Kim</span>
+                      <span className="text-muted-foreground">changed Selling Price</span>
+                    </ActivityFeed.Header>
+                    <ActivityFeed.Body>
+                      <ActivityFeed.Diff from="$450.00" to="$485.00" />
+                    </ActivityFeed.Body>
+                  </ActivityFeed.Content>
+                </ActivityFeed.Item>
+                <ActivityFeed.Item type="change">
+                  <ActivityFeed.Avatar>
+                    <Avatar size="sm">
+                      <Avatar.Fallback>AB</Avatar.Fallback>
+                    </Avatar>
+                  </ActivityFeed.Avatar>
+                  <ActivityFeed.Content>
+                    <ActivityFeed.Header timestamp="2 days ago">
+                      <span className="font-medium text-foreground">Alice Brown</span>
+                      <span className="text-muted-foreground">changed Reorder Point</span>
+                    </ActivityFeed.Header>
+                    <ActivityFeed.Body>
+                      <ActivityFeed.Diff from="10" to="25" />
+                    </ActivityFeed.Body>
+                  </ActivityFeed.Content>
+                </ActivityFeed.Item>
+                <ActivityFeed.Item type="system">
+                  <ActivityFeed.Avatar>
+                    <div className="flex size-8 items-center justify-center rounded-full bg-foreground/6">
+                      <Icon icon={Plus} size="sm" className="text-muted-foreground" />
+                    </div>
+                  </ActivityFeed.Avatar>
+                  <ActivityFeed.Content>
+                    <ActivityFeed.Header timestamp="Nov 2, 2025">
+                      <span className="text-muted-foreground">Record created by</span>
+                      <span className="font-medium text-foreground">Mike Kim</span>
+                    </ActivityFeed.Header>
+                  </ActivityFeed.Content>
+                </ActivityFeed.Item>
+                <ActivityFeed.CommentInput />
+              </ActivityFeed>
               <TextWidget
                 props={{ variant: 'muted' }}
                 bind={{ value: 'Related records will appear here' }}

@@ -96,3 +96,15 @@ export {
   type TabsTriggerProps,
   type TabsContentProps,
 } from './tabs';
+export {
+  ActivityFeed,
+  type ActivityFeedProps,
+  type ActivityFeedItemProps,
+  type ActivityFeedAvatarProps,
+  type ActivityFeedContentProps,
+  type ActivityFeedHeaderProps,
+  type ActivityFeedBodyProps,
+  type ActivityFeedDiffProps,
+  type ActivityFeedEmptyProps,
+  type ActivityFeedCommentInputProps,
+} from './activity-feed';
