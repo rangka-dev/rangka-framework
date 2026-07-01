@@ -48,6 +48,7 @@ import { SplitWidget } from './layout/split-widget';
 import { ScrollAreaWidget } from './layout/scroll-area-widget';
 import { DividerWidget } from './layout/divider-widget';
 import { SpacerWidget } from './layout/spacer-widget';
+import { TabsWidget } from './layout/tabs-widget';
 import { DataWidget } from './data/data-widget';
 import { FormWidget } from './data/form-widget';
 import { RepeatWidget } from './data/repeat-widget';
@@ -91,6 +92,7 @@ export const widgetComponents: WidgetRegistry = {
   'scroll-area': ScrollAreaWidget,
   divider: DividerWidget,
   spacer: SpacerWidget,
+  tabs: TabsWidget,
   data: DataWidget,
   form: FormWidget,
   repeat: RepeatWidget,

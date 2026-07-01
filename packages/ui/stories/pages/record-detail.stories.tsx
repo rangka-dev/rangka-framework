@@ -9,6 +9,7 @@ import {
   GroupWidget,
   SectionWidget,
   GridWidget,
+  TabsWidget,
 } from '../../src/widgets/layout';
 
 const meta: Meta = {
@@ -174,13 +175,34 @@ export const CustomerDetail: Story = {
               />
             </SectionWidget>
           </CardWidget>
-          <CardWidget props={{ title: 'Activity' }} bind={{ value: null }} on={on} context={ctx}>
-            <TextWidget
-              props={{ variant: 'muted' }}
-              bind={{ value: 'Activity feed coming soon' }}
+          <CardWidget props={{}} bind={{ value: null }} on={on} context={ctx}>
+            <TabsWidget
+              props={{
+                tabs: [{ label: 'Activity' }, { label: 'Relations' }, { label: 'Attachments' }],
+              }}
+              bind={{ value: null }}
               on={on}
               context={ctx}
-            />
+            >
+              <TextWidget
+                props={{ variant: 'muted' }}
+                bind={{ value: 'Activity feed coming soon' }}
+                on={on}
+                context={ctx}
+              />
+              <TextWidget
+                props={{ variant: 'muted' }}
+                bind={{ value: 'Related records will appear here' }}
+                on={on}
+                context={ctx}
+              />
+              <TextWidget
+                props={{ variant: 'muted' }}
+                bind={{ value: 'File attachments will appear here' }}
+                on={on}
+                context={ctx}
+              />
+            </TabsWidget>
           </CardWidget>
         </GridWidget>
       </StackWidget>
@@ -366,13 +388,34 @@ export const OrderDetail: Story = {
             </CardWidget>
           </StackWidget>
 
-          <CardWidget props={{ title: 'Activity' }} bind={{ value: null }} on={on} context={ctx}>
-            <TextWidget
-              props={{ variant: 'muted' }}
-              bind={{ value: 'Activity feed coming soon' }}
+          <CardWidget props={{}} bind={{ value: null }} on={on} context={ctx}>
+            <TabsWidget
+              props={{
+                tabs: [{ label: 'Activity' }, { label: 'Relations' }, { label: 'Attachments' }],
+              }}
+              bind={{ value: null }}
               on={on}
               context={ctx}
-            />
+            >
+              <TextWidget
+                props={{ variant: 'muted' }}
+                bind={{ value: 'Activity feed coming soon' }}
+                on={on}
+                context={ctx}
+              />
+              <TextWidget
+                props={{ variant: 'muted' }}
+                bind={{ value: 'Related records will appear here' }}
+                on={on}
+                context={ctx}
+              />
+              <TextWidget
+                props={{ variant: 'muted' }}
+                bind={{ value: 'File attachments will appear here' }}
+                on={on}
+                context={ctx}
+              />
+            </TabsWidget>
           </CardWidget>
         </GridWidget>
       </StackWidget>
@@ -524,13 +567,34 @@ export const InventoryItemDetail: Story = {
               />
             </SectionWidget>
           </CardWidget>
-          <CardWidget props={{ title: 'Activity' }} bind={{ value: null }} on={on} context={ctx}>
-            <TextWidget
-              props={{ variant: 'muted' }}
-              bind={{ value: 'Activity feed coming soon' }}
+          <CardWidget props={{}} bind={{ value: null }} on={on} context={ctx}>
+            <TabsWidget
+              props={{
+                tabs: [{ label: 'Activity' }, { label: 'Relations' }, { label: 'Attachments' }],
+              }}
+              bind={{ value: null }}
               on={on}
               context={ctx}
-            />
+            >
+              <TextWidget
+                props={{ variant: 'muted' }}
+                bind={{ value: 'Activity feed coming soon' }}
+                on={on}
+                context={ctx}
+              />
+              <TextWidget
+                props={{ variant: 'muted' }}
+                bind={{ value: 'Related records will appear here' }}
+                on={on}
+                context={ctx}
+              />
+              <TextWidget
+                props={{ variant: 'muted' }}
+                bind={{ value: 'File attachments will appear here' }}
+                on={on}
+                context={ctx}
+              />
+            </TabsWidget>
           </CardWidget>
         </GridWidget>
       </StackWidget>
