@@ -6,7 +6,6 @@ import { PageOutlet } from './shell/kit/PageOutlet';
 import { ShellToast } from './shell/kit/Toast';
 import { ShellConfirmDialog } from './shell/kit/ConfirmDialog';
 import { NotFound } from './shell/kit/NotFound';
-import { ModuleSelector } from './shell/kit/ModuleSelector';
 
 export const defaultKit: UIKit = {
   widgets: widgetComponents as UIKit['widgets'],
@@ -17,6 +16,5 @@ export const defaultKit: UIKit = {
     Toast: ShellToast,
     ConfirmDialog: ShellConfirmDialog,
     NotFound,
-    ModuleSelector,
   },
 };

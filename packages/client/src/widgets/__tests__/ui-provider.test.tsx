@@ -27,10 +27,6 @@ function NotFound() {
   return <div data-testid="not-found" />;
 }
 
-function ModuleSelector() {
-  return <div data-testid="module-selector" />;
-}
-
 const mockKit: UIKit = {
   widgets: {
     'test-widget': TestWidget,
@@ -41,7 +37,6 @@ const mockKit: UIKit = {
     Toast: Toast as unknown as UIKit['shell']['Toast'],
     ConfirmDialog: ConfirmDialog as unknown as UIKit['shell']['ConfirmDialog'],
     NotFound,
-    ModuleSelector: ModuleSelector as unknown as UIKit['shell']['ModuleSelector'],
   },
 };
 

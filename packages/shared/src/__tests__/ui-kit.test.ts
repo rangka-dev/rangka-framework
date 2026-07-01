@@ -8,7 +8,6 @@ import type {
   PageOutletProps,
   ToastProps,
   ConfirmDialogProps,
-  ModuleSelectorProps,
 } from '../types/ui-kit.js';
 import type { ComponentType, ReactNode } from 'react';
 
@@ -65,7 +64,6 @@ describe('UIKit types API surface', () => {
       expectTypeOf<ShellComponents>().toHaveProperty('Toast');
       expectTypeOf<ShellComponents>().toHaveProperty('ConfirmDialog');
       expectTypeOf<ShellComponents>().toHaveProperty('NotFound');
-      expectTypeOf<ShellComponents>().toHaveProperty('ModuleSelector');
     });
 
     it('Layout accepts ShellLayoutProps', () => {
@@ -83,12 +81,6 @@ describe('UIKit types API surface', () => {
     it('ConfirmDialog accepts ConfirmDialogProps', () => {
       expectTypeOf<ShellComponents['ConfirmDialog']>().toEqualTypeOf<
         ComponentType<ConfirmDialogProps>
-      >();
-    });
-
-    it('ModuleSelector accepts ModuleSelectorProps', () => {
-      expectTypeOf<ShellComponents['ModuleSelector']>().toEqualTypeOf<
-        ComponentType<ModuleSelectorProps>
       >();
     });
   });

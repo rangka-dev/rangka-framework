@@ -103,11 +103,6 @@ export interface ConfirmDialogProps {
   onCancel: () => void;
 }
 
-export interface ModuleSelectorProps {
-  apps: { name: string; label: string; icon?: string; color?: string }[];
-  onSelect: (app: string) => void;
-}
-
 export interface ShellComponents {
   Layout: ComponentType<ShellLayoutProps>;
   LoginScreen: ComponentType<LoginScreenProps>;
@@ -115,7 +110,6 @@ export interface ShellComponents {
   Toast: ComponentType<ToastProps>;
   ConfirmDialog: ComponentType<ConfirmDialogProps>;
   NotFound: ComponentType<object>;
-  ModuleSelector: ComponentType<ModuleSelectorProps>;
 }
 
 // --- UIKit ---

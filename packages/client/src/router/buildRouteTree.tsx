@@ -1,8 +1,13 @@
 import { useEffect } from 'react';
 import type { PageDefinition } from '@rangka/shared';
-import { createRootRoute, createRoute, Outlet, type AnyRoute } from '@tanstack/react-router';
+import {
+  createRootRoute,
+  createRoute,
+  redirect,
+  Outlet,
+  type AnyRoute,
+} from '@tanstack/react-router';
 import { ShellLayout } from '../shell/ShellLayout.js';
-import { ModuleSelectorPage } from '../shell/ModuleSelectorPage.js';
 import { useShellComponents } from '../ui/UIProvider.js';
 import { WidgetSlotRenderer } from '../widgets/shell/WidgetSlotRenderer.js';
 import { SurfaceProvider } from '../widgets/hooks/useSurfaceContext.js';
@@ -63,10 +68,14 @@ export function buildRouteTree(pages: PageDefinition[]) {
     component: RootLayout,
   });
 
+  const firstPagePath = pages.length > 0 ? (pages[0].path ?? pageKeyToPath(pages[0].key)) : '/';
+
   const indexRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/',
-    component: ModuleSelectorPage,
+    beforeLoad: () => {
+      throw redirect({ to: firstPagePath });
+    },
   });
 
   const childRoutes: AnyRoute[] = [indexRoute];
